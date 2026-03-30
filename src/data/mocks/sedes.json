@@ -1,0 +1,89 @@
+[
+  {
+    "id": 1,
+    "nombre": "Estadio El Campin",
+    "ciudad": "Bogotá",
+    "departamento": "Cundinamarca",
+    "direccion": "Carrera 30 No. 57-60",
+    "capacidad": 36000,
+    "telefono": "+571234567890",
+    "email": "info@elcampin.com",
+    "activo": 1,
+    "creado_en": "2026-01-01T00:00:00Z",
+    "canchas": [
+      {
+        "id": 101,
+        "nombre": "Cancha Principal",
+        "tipo": "pasto_natural",
+        "largo_metros": 105,
+        "ancho_metros": 68,
+        "capacidad": 36000,
+        "disponible": true
+      },
+      {
+        "id": 102,
+        "nombre": "Cancha Auxiliar",
+        "tipo": "pasto_sintetico",
+        "largo_metros": 100,
+        "ancho_metros": 64,
+        "capacidad": 5000,
+        "disponible": true
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "nombre": "Estadio Nemesio Camacho",
+    "ciudad": "Bogotá",
+    "departamento": "Cundinamarca",
+    "direccion": "Calle 57 No. 25-75",
+    "capacidad": 15000,
+    "telefono": "+571234567891",
+    "email": "info@nemesio.com",
+    "activo": 1,
+    "creado_en": "2026-01-05T00:00:00Z",
+    "canchas": [
+      {
+        "id": 201,
+        "nombre": "Cancha Central",
+        "tipo": "pasto_natural",
+        "largo_metros": 100,
+        "ancho_metros": 64,
+        "capacidad": 15000,
+        "disponible": true
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "nombre": "Complejo Deportivo La Arboleda",
+    "ciudad": "Medellín",
+    "departamento": "Antioquia",
+    "direccion": "Carrera 45 No. 10-100",
+    "capacidad": 8000,
+    "telefono": "+574234567890",
+    "email": "info@laarboleda.com",
+    "activo": 1,
+    "creado_en": "2026-01-10T00:00:00Z",
+    "canchas": [
+      {
+        "id": 301,
+        "nombre": "Cancha 1",
+        "tipo": "pasto_sintetico",
+        "largo_metros": 105,
+        "ancho_metros": 68,
+        "capacidad": 8000,
+        "disponible": true
+      },
+      {
+        "id": 302,
+        "nombre": "Cancha 2",
+        "tipo": "pasto_sintetico",
+        "largo_metros": 70,
+        "ancho_metros": 50,
+        "capacidad": 2000,
+        "disponible": false
+      }
+    ]
+  }
+]

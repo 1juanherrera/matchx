@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "clave": "nombre_aplicacion",
+    "valor": "matchX",
+    "tipo": "string",
+    "descripcion": "Nombre de la aplicación",
+    "editable": false
+  },
+  {
+    "id": 2,
+    "clave": "version_sistema",
+    "valor": "1.0.0",
+    "tipo": "string",
+    "descripcion": "Versión actual del sistema",
+    "editable": false
+  },
+  {
+    "id": 3,
+    "clave": "email_soporte",
+    "valor": "soporte@matchx.com",
+    "tipo": "string",
+    "descripcion": "Email de contacto para soporte",
+    "editable": true
+  },
+  {
+    "id": 4,
+    "clave": "telefono_soporte",
+    "valor": "+573001234567",
+    "tipo": "string",
+    "descripcion": "Teléfono de soporte",
+    "editable": true
+  },
+  {
+    "id": 5,
+    "clave": "modo_mantenimiento",
+    "valor": "false",
+    "tipo": "boolean",
+    "descripcion": "Activar modo de mantenimiento",
+    "editable": true
+  },
+  {
+    "id": 6,
+    "clave": "dias_expiracion_sesion",
+    "valor": "30",
+    "tipo": "number",
+    "descripcion": "Días para expiración de sesión",
+    "editable": true
+  },
+  {
+    "id": 7,
+    "clave": "permitir_inscripciones",
+    "valor": "true",
+    "tipo": "boolean",
+    "descripcion": "Permitir inscripciones nuevas",
+    "editable": true
+  },
+  {
+    "id": 8,
+    "clave": "tarifa_base_arbitro",
+    "valor": "150000",
+    "tipo": "number",
+    "descripcion": "Tarifa base para árbitros en pesos COP",
+    "editable": true
+  }
+]

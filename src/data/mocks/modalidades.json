@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "nombre": "Fútbol 5",
+    "codigo": "F5",
+    "descripcion": "Fútbol de salón con 5 jugadores por equipo",
+    "jugadores_por_equipo": 5,
+    "duracion_minutos": 40,
+    "descanso_minutos": 10,
+    "cambios_permitidos": 3,
+    "activo": 1,
+    "reglas": {
+      "fuera_de_juego": false,
+      "arquero_puede_recibir_pase": true,
+      "limite_pases_atras": false,
+      "tarjeta_roja_automatica": true
+    },
+    "creado_en": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "nombre": "Fútbol 7",
+    "codigo": "F7",
+    "descripcion": "Fútbol de campo reducido con 7 jugadores por equipo",
+    "jugadores_por_equipo": 7,
+    "duracion_minutos": 50,
+    "descanso_minutos": 10,
+    "cambios_permitidos": 5,
+    "activo": 1,
+    "reglas": {
+      "fuera_de_juego": true,
+      "arquero_puede_recibir_pase": false,
+      "limite_pases_atras": false,
+      "tarjeta_roja_automatica": false
+    },
+    "creado_en": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": 3,
+    "nombre": "Fútbol 11",
+    "codigo": "F11",
+    "descripcion": "Fútbol reglamentario con 11 jugadores por equipo",
+    "jugadores_por_equipo": 11,
+    "duracion_minutos": 90,
+    "descanso_minutos": 15,
+    "cambios_permitidos": 3,
+    "activo": 1,
+    "reglas": {
+      "fuera_de_juego": true,
+      "arquero_puede_recibir_pase": false,
+      "limite_pases_atras": true,
+      "tarjeta_roja_automatica": false
+    },
+    "creado_en": "2026-01-01T00:00:00Z"
+  }
+]

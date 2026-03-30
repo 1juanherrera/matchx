@@ -1,0 +1,132 @@
+
+<div id="app" style="font-family: sans-serif; font-size: 14px; color: var(--color-text-primary, #1a1a1a); padding: 8px 0;"></div>
+
+<script>
+const MOD = [
+  { name: "Configuración y usuarios", color: "#888780", tables: [
+    { name: "configuracion_sistema", short: "Parámetros globales del sistema: nombre, logo, colores, moneda, idioma.", uso: "Guarda todos los ajustes que el superadmin puede cambiar sin tocar código. Funciona como una tabla clave→valor flexible: moneda (COP), color primario de la interfaz, nombre de la plataforma, zona horaria, etc. Agregar un nuevo parámetro no requiere alterar la estructura de la BD.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"clave",t:"VARCHAR(100) UK",d:"Nombre del parámetro (ej: 'moneda')"},{n:"valor",t:"TEXT",d:"Valor del parámetro"},{n:"descripcion",t:"VARCHAR(255)",d:"Explicación del parámetro"}] },
+    { name: "usuarios", short: "Todos los que acceden al sistema con su rol: superadmin, admin_sede, admin_torneo, árbitro, delegado, capitán, público.", uso: "Tabla central de autenticación y autorización. El rol determina qué puede ver y hacer cada persona. El superadmin lo controla todo y es el único que crea usuarios. Un jugador puede también ser usuario si necesita acceder a su información.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"nombre",t:"VARCHAR(150)",d:"Nombre completo"},{n:"correo",t:"VARCHAR(150) UK",d:"Email usado para login"},{n:"contrasena_hash",t:"VARCHAR(255)",d:"Contraseña cifrada"},{n:"rol",t:"ENUM",d:"superadmin / admin_sede / admin_torneo / arbitro / delegado / capitan / publico"},{n:"activo",t:"TINYINT",d:"Si puede acceder al sistema"},{n:"ultimo_acceso",t:"DATETIME",d:"Último ingreso registrado"}] },
+    { name: "modalidades", short: "Define cada formato de fútbol (11, 9, 8, 7, 6, 5, microfútbol) con sus reglas base.", uso: "Cada modalidad configura cuántos jugadores van en cancha, cuántos cambios se permiten y cuánto dura cada tiempo. Cuando creas un torneo de Fútbol 5 el sistema ya sabe que son 2 tiempos de 20 minutos. Viene precargada con las 7 modalidades pero el admin puede ajustar los valores.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"nombre",t:"VARCHAR(100)",d:"Ej: Fútbol 11, Fútbol 5, Microfútbol"},{n:"jugadores_por_equipo",t:"TINYINT",d:"Jugadores simultáneos en cancha"},{n:"max_cambios",t:"TINYINT",d:"Cambios permitidos por partido"},{n:"duracion_tiempo_minutos",t:"SMALLINT",d:"Duración de cada tiempo"},{n:"numero_tiempos",t:"TINYINT",d:"Cantidad de tiempos (normalmente 2)"}] },
+  ]},
+  { name: "Jugadores y equipos", color: "#1D9E75", tables: [
+    { name: "jugadores", short: "Perfil global de cada jugador: nombre, documento, foto. Independiente de equipos y torneos.", uso: "Un jugador existe una sola vez aunque juegue en múltiples equipos y torneos. Sus datos básicos viven aquí. Los datos específicos del torneo (dorsal, estado, posición) van en la tabla plantilla. Si tiene cuenta en el sistema se vincula con usuarios mediante usuario_id.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"usuario_id",t:"INT FK",d:"Cuenta de usuario si tiene acceso al sistema"},{n:"nombre / apellido",t:"VARCHAR(100)",d:"Nombre completo"},{n:"tipo_documento",t:"ENUM",d:"CC, TI, CE, PAS, NIT"},{n:"numero_documento",t:"VARCHAR(30) UK",d:"Número de documento (único)"},{n:"fecha_nacimiento",t:"DATE",d:"Para validar categorías sub-12, sub-15, etc."},{n:"url_foto",t:"VARCHAR",d:"Foto del jugador para la plantilla"}] },
+    { name: "equipos", short: "Equipos del sistema con identidad visual: nombre, escudo, colores de camiseta.", uso: "Un equipo puede participar en múltiples torneos. Solo guardamos su identidad permanente: nombre, escudo, colores de uniforme. Los datos específicos de cada torneo (plantilla, grupo, estado) se guardan en inscripciones y plantilla.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"nombre",t:"VARCHAR(150)",d:"Nombre oficial del equipo"},{n:"nombre_corto",t:"VARCHAR(30)",d:"Apodo o nombre abreviado"},{n:"url_escudo",t:"VARCHAR",d:"Logo del equipo"},{n:"color_principal",t:"VARCHAR(7)",d:"Color primario camiseta en hex"},{n:"color_secundario",t:"VARCHAR(7)",d:"Color secundario camiseta en hex"},{n:"capitan_id",t:"INT FK",d:"Usuario representante del equipo"}] },
+  ]},
+  { name: "Sedes y canchas", color: "#185FA5", tables: [
+    { name: "sedes", short: "Complejos deportivos donde se juegan partidos: nombre, dirección, GPS.", uso: "Una sede es un complejo completo (ej: 'Complejo Deportivo Norte'). Puede tener múltiples canchas. Un torneo puede jugarse en varias sedes al tiempo. Las coordenadas GPS sirven para mostrar la ubicación al público en un mapa.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"nombre",t:"VARCHAR(150)",d:"Nombre de la sede"},{n:"direccion",t:"VARCHAR(255)",d:"Dirección completa"},{n:"ciudad / departamento",t:"VARCHAR",d:"Ubicación geográfica"},{n:"latitud / longitud",t:"DECIMAL(10,7)",d:"Coordenadas GPS para mapa"},{n:"url_foto",t:"VARCHAR",d:"Foto de la sede"}] },
+    { name: "canchas", short: "Canchas individuales dentro de una sede con tipo de superficie.", uso: "Cada sede puede tener varias canchas. Cada partido se asigna a una cancha específica. El índice idx_cancha_horario (cancha_id + fecha_hora) valida que no haya dos partidos simultáneos en la misma cancha.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"sede_id",t:"INT FK",d:"Sede a la que pertenece"},{n:"nombre",t:"VARCHAR(100)",d:"Ej: Cancha 1, Cancha Principal"},{n:"tipo_superficie",t:"ENUM",d:"sintetica / natural / cemento / parquet / otro"},{n:"activo",t:"TINYINT",d:"Si la cancha está disponible"}] },
+    { name: "torneo_sedes", short: "Tabla puente: un torneo puede jugarse en múltiples sedes simultáneamente.", uso: "Si el Torneo Copa Navidad se juega en Sede Norte y Sede Sur al tiempo, aquí hay dos registros. Luego cada partido especifica en cuál sede y cancha exacta se juega.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id",t:"INT FK",d:"Torneo al que aplica"},{n:"sede_id",t:"INT FK",d:"Sede asignada al torneo"}] },
+  ]},
+  { name: "Torneos y fases", color: "#BA7517", tables: [
+    { name: "torneos", short: "Núcleo del sistema: modalidad, categoría, fechas, tarifas y reglas de sanción configurables.", uso: "La tabla más completa. Concentra toda la configuración: modalidad de juego, categoría (sub-15, mayores), fechas, valor de matrícula, precio de tarjetas, amarillas para suspensión, si acepta inscripción pública, si el marcador es visible al público. Todo configurable por torneo.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"nombre / edicion",t:"VARCHAR",d:"Nombre y edición del torneo"},{n:"modalidad_id",t:"INT FK",d:"Modalidad de fútbol"},{n:"categoria",t:"VARCHAR(50)",d:"Sub-12, Sub-15, Mayores, etc."},{n:"estado",t:"ENUM",d:"borrador / inscripciones_abiertas / en_curso / finalizado / cancelado"},{n:"valor_matricula",t:"DECIMAL",d:"Costo de inscripción por equipo"},{n:"valor_tarjeta_amarilla/roja",t:"DECIMAL",d:"Precio de cada tipo de tarjeta"},{n:"amarillas_para_suspension",t:"TINYINT",d:"N° amarillas que generan suspensión"},{n:"partidos_suspension_roja",t:"TINYINT",d:"Partidos suspendido por roja directa"},{n:"admin_id",t:"INT FK",d:"Admin responsable del torneo"}] },
+    { name: "fases_torneo", short: "Fases configurables: grupos, eliminación, ida/vuelta, todos contra todos.", uso: "Un torneo puede tener varias fases en secuencia. Ej: Fase 1=Grupos, Fase 2=Cuartos, Fase 3=Semifinal, Fase 4=Final. El campo orden define la secuencia. Los criterios_desempate son un JSON con el orden de criterios para romper empates (puntos, dif_goles, goles_favor, tarjetas, etc.).", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id",t:"INT FK",d:"Torneo al que pertenece"},{n:"nombre",t:"VARCHAR(100)",d:"Ej: Fase de Grupos, Cuartos, Final"},{n:"tipo_fase",t:"ENUM",d:"grupos / eliminacion / eliminacion_ida_vuelta / todos_contra_todos"},{n:"orden",t:"TINYINT",d:"Posición en el torneo (1=primera fase)"},{n:"criterios_desempate",t:"JSON",d:"Array ordenado de criterios de desempate"}] },
+    { name: "grupos", short: "Grupos dentro de una fase de grupos: Grupo A, Grupo B, Grupo Norte...", uso: "Solo aplica cuando la fase es de tipo 'grupos'. Si hay 8 equipos en 2 grupos, se crean Grupo A y Grupo B. Los equipos se asignan al grupo en inscripciones y los partidos se relacionan con el grupo en partidos.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"fase_id",t:"INT FK",d:"Fase a la que pertenece"},{n:"nombre",t:"VARCHAR(50)",d:"Ej: Grupo A, Grupo B, Grupo Norte"}] },
+    { name: "inscripciones", short: "Registro de cada equipo en un torneo. Soporta inscripción pública con aprobación.", uso: "Cuando un equipo se inscribe (manual o públicamente), se crea un registro con estado 'pendiente'. El admin lo aprueba o rechaza. Una vez aprobado se asigna a un grupo. Esta tabla vincula equipo+torneo para plantilla, pagos y posiciones.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id",t:"INT FK",d:"Torneo al que se inscribe"},{n:"equipo_id",t:"INT FK",d:"Equipo que se inscribe"},{n:"grupo_id",t:"INT FK",d:"Grupo asignado si aplica"},{n:"estado",t:"ENUM",d:"pendiente / aprobada / rechazada / retirada"},{n:"aprobado_por",t:"INT FK",d:"Admin que aprobó o rechazó"},{n:"motivo_rechazo",t:"TEXT",d:"Razón si fue rechazada"}] },
+  ]},
+  { name: "Plantilla y árbitros", color: "#534AB7", tables: [
+    { name: "plantilla", short: "Jugadores inscritos por equipo en cada torneo: dorsal, posición, estado por torneo.", uso: "El dorsal puede ser diferente en cada torneo. El estado es por torneo: un jugador puede estar 'bloqueado_deuda' en el Torneo A pero 'activo' en el Torneo B. Registra si el torneo exige documento verificado y si la inscripción fue tardía (aplica tarifa extra).", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"inscripcion_id",t:"INT FK",d:"Inscripción equipo-torneo"},{n:"jugador_id",t:"INT FK",d:"Jugador de la plantilla"},{n:"numero_dorsal",t:"TINYINT",d:"Número de camiseta en este torneo"},{n:"posicion",t:"VARCHAR(50)",d:"Portero, Defensa, Volante, Delantero"},{n:"documento_verificado",t:"TINYINT",d:"Documento revisado por el admin"},{n:"inscripcion_tardia",t:"TINYINT",d:"Ingresó fuera del plazo (cobra tarifa extra)"},{n:"estado",t:"ENUM",d:"activo / suspendido / bloqueado_deuda / inactivo / descalificado"}] },
+    { name: "arbitros", short: "Árbitros registrados: licencia, categoría, honorario y vinculación a su usuario.", uso: "Cada árbitro tiene su usuario y un perfil aquí con número de licencia, vencimiento y honorario estándar. El sistema puede alertar si la licencia está vencida. El honorario se usa como valor predeterminado al asignarlo a un partido.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"usuario_id",t:"INT FK UK",d:"Cuenta de usuario del árbitro"},{n:"numero_licencia",t:"VARCHAR(50)",d:"Número de licencia de arbitraje"},{n:"vencimiento_licencia",t:"DATE",d:"Fecha de vencimiento de la licencia"},{n:"categoria",t:"VARCHAR(50)",d:"Nivel del árbitro (informativo)"},{n:"honorario_partido",t:"DECIMAL",d:"Pago estándar por partido dirigido"}] },
+    { name: "arbitros_partido", short: "Asignación de árbitros a partidos: principal y asistentes con su rol.", uso: "Permite asignar un árbitro principal y uno o más asistentes a cada partido. Cada árbitro tiene un rol y un honorario acordado para ese partido específico (puede diferir del estándar). La asignación la hace el admin manualmente.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"partido_id",t:"INT FK",d:"Partido al que aplica"},{n:"arbitro_id",t:"INT FK",d:"Árbitro asignado"},{n:"rol",t:"ENUM",d:"principal / asistente_1 / asistente_2 / cuarto_arbitro"},{n:"honorario",t:"DECIMAL",d:"Honorario acordado para este partido"}] },
+  ]},
+  { name: "Partidos y eventos", color: "#993C1D", tables: [
+    { name: "partidos", short: "Cada partido: equipos, sede, cancha, horario, marcador, árbitros y streaming.", uso: "Tabla operativa central. Registra cuándo y dónde se juega, el marcador en tiempo real, si hubo penaltis, si fue W.O. El índice idx_cancha_horario valida que no haya dos partidos en la misma cancha al mismo tiempo. Incluye el link de streaming y VOD si aplica.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id / fase_id / grupo_id",t:"INT FK",d:"A qué torneo, fase y grupo pertenece"},{n:"equipo_local_id / visitante_id",t:"INT FK",d:"Los dos equipos que juegan"},{n:"sede_id / cancha_id",t:"INT FK",d:"Dónde se juega el partido"},{n:"fecha_hora_programada",t:"DATETIME",d:"Fecha y hora oficial"},{n:"estado",t:"ENUM",d:"programado / en_curso / finalizado / aplazado / cancelado / walkover"},{n:"goles_local / goles_visitante",t:"TINYINT",d:"Marcador del partido"},{n:"penaltis_local / penaltis_visitante",t:"TINYINT",d:"Resultado en penaltis si aplica"},{n:"url_streaming",t:"VARCHAR(500)",d:"Link de transmisión en vivo (YouTube, Facebook, etc.)"},{n:"url_vod",t:"VARCHAR(500)",d:"Link de la grabación tras finalizar"},{n:"streaming_activo",t:"TINYINT",d:"Si la transmisión está activa en este momento"},{n:"delegado_id",t:"INT FK",d:"Delegado neutral que registra los eventos"}] },
+    { name: "convocatoria", short: "Alineación oficial de cada partido: titulares y suplentes.", uso: "Antes de cada partido el delegado registra los jugadores convocados (titular o suplente). Determina quiénes estaban disponibles para jugar ese día, lo que es importante para validar cambios y eventos. Solo pueden estar en convocatoria jugadores activos en la plantilla.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"partido_id",t:"INT FK",d:"Partido al que aplica"},{n:"jugador_id",t:"INT FK",d:"Jugador convocado"},{n:"equipo_id",t:"INT FK",d:"Equipo del jugador"},{n:"es_titular",t:"TINYINT",d:"1=titular, 0=suplente"},{n:"posicion",t:"VARCHAR",d:"Posición en este partido"}] },
+    { name: "eventos_partido", short: "Eventos en tiempo real del delegado: goles, tarjetas, cambios, lesiones, penaltis.", uso: "El corazón del partido en vivo. El delegado la llena minuto a minuto. De aquí se generan las estadísticas, los cobros de tarjetas y las sanciones automáticas. Un gol registra equipo, jugador, minuto y si fue autogol. Una tarjeta registra jugador y tipo. Un cambio registra quién sale y quién entra.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"partido_id",t:"INT FK",d:"Partido al que pertenece"},{n:"tipo_evento",t:"ENUM",d:"gol / tarjeta_amarilla / tarjeta_roja / doble_amarilla / cambio / lesion / penal_convertido / penal_fallado / var / observacion"},{n:"minuto / minuto_adicional",t:"TINYINT",d:"Momento exacto del evento"},{n:"equipo_id",t:"INT FK",d:"Equipo al que pertenece el evento"},{n:"jugador_id",t:"INT FK",d:"Jugador protagonista"},{n:"jugador_sale_id / jugador_entra_id",t:"INT FK",d:"Para registrar cambios"},{n:"es_autogol",t:"TINYINT",d:"Si fue gol en propia puerta"},{n:"registrado_por",t:"INT FK",d:"Delegado que capturó el evento"}] },
+  ]},
+  { name: "Sanciones y pagos", color: "#A32D2D", tables: [
+    { name: "sanciones", short: "Suspensiones, multas y descalificaciones por torneo con proceso de apelación.", uso: "Cuando un jugador acumula las amarillas configuradas o recibe una roja, el sistema crea una sanción aquí. Puede estar activa, apelada, anulada o cumplida. La sanción es solo por ese torneo. El admin puede anularla manualmente si hay apelación.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id / jugador_id / equipo_id",t:"INT FK",d:"A quién aplica y en qué torneo"},{n:"evento_id",t:"INT FK",d:"Evento que originó la sanción"},{n:"tipo_sancion",t:"ENUM",d:"suspension / multa / descalificacion / amonestacion"},{n:"partidos_sancion",t:"TINYINT",d:"Cuántos partidos queda suspendido"},{n:"valor_multa",t:"DECIMAL",d:"Monto de la multa si aplica"},{n:"estado",t:"ENUM",d:"activa / apelada / anulada / cumplida"},{n:"argumentos_apelacion",t:"TEXT",d:"Razones para apelar"},{n:"resuelto_por",t:"INT FK",d:"Admin que falló la apelación"}] },
+    { name: "pagos", short: "Todos los cobros: matrículas, tarjetas, multas e inscripciones tardías.", uso: "Cada cobro genera un registro con su estado. Un jugador con tarjetas pendientes queda 'bloqueado_deuda' en la plantilla. El admin registra quién recibió el dinero, el método de pago y el número de recibo.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id",t:"INT FK",d:"Torneo al que aplica"},{n:"equipo_id / jugador_id",t:"INT FK",d:"Quién debe pagar"},{n:"tipo_pago",t:"ENUM",d:"matricula / tarjeta_amarilla / tarjeta_roja / multa_inasistencia / jugador_tardio / otro"},{n:"valor",t:"DECIMAL",d:"Monto a cobrar"},{n:"estado",t:"ENUM",d:"pendiente / pagado / condonado / devuelto"},{n:"recibido_por",t:"INT FK",d:"Admin que recibió el dinero"},{n:"metodo_pago",t:"VARCHAR",d:"Efectivo, Nequi, transferencia, etc."},{n:"numero_recibo",t:"VARCHAR",d:"Comprobante del pago"}] },
+    { name: "pagos_arbitros", short: "Honorarios pagados a árbitros por cada partido dirigido.", uso: "Flujo separado de pagos: al asignar un árbitro el sistema crea un pago pendiente con su honorario estándar. El admin lo marca como pagado al entregar el dinero. Permite saber qué árbitros tienen pagos pendientes.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"partido_id",t:"INT FK",d:"Partido dirigido"},{n:"arbitro_id",t:"INT FK",d:"Árbitro que dirigió"},{n:"rol_arbitro",t:"ENUM",d:"principal / asistente"},{n:"valor",t:"DECIMAL",d:"Honorario acordado"},{n:"estado",t:"ENUM",d:"pendiente / pagado"},{n:"pagado_por",t:"INT FK",d:"Admin que entregó el pago"}] },
+  ]},
+  { name: "Estadísticas y documentos", color: "#3B6D11", tables: [
+    { name: "tabla_posiciones", short: "Posiciones por fase y grupo: PJ, G, E, P, GF, GC, DG, Pts, fairplay.", uso: "Tabla de cache actualizada automáticamente con cada resultado. Guarda PJ, victorias, empates, derrotas, goles, diferencia, puntos y tarjetas para fairplay. Al ser cache, las consultas son instantáneas sin recalcular sobre todos los eventos.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"fase_id",t:"INT FK",d:"Fase a la que pertenece"},{n:"grupo_id",t:"INT FK",d:"Grupo específico si aplica"},{n:"equipo_id",t:"INT FK",d:"Equipo en la tabla"},{n:"partidos_jugados",t:"SMALLINT",d:"Total de partidos jugados"},{n:"victorias / empates / derrotas",t:"SMALLINT",d:"Resultados"},{n:"goles_favor / goles_contra",t:"SMALLINT",d:"Goles anotados y recibidos"},{n:"diferencia_goles / puntos",t:"SMALLINT",d:"DG y puntos acumulados"},{n:"tarjetas_amarillas / rojas",t:"SMALLINT",d:"Para ranking de fairplay"}] },
+    { name: "estadisticas_jugador", short: "Estadísticas acumuladas por jugador en cada torneo: goles, asistencias, minutos, tarjetas.", uso: "Cache a nivel de jugador. Alimenta la tabla de goleadores, asistidores y fairplay. Se actualiza con cada evento del partido. Permite mostrar al público los goleadores en tiempo real sin consultas pesadas sobre eventos_partido.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"torneo_id / jugador_id / equipo_id",t:"INT FK",d:"A quién y en qué torneo"},{n:"partidos_jugados",t:"SMALLINT",d:"Partidos en los que participó"},{n:"goles / asistencias",t:"SMALLINT",d:"Producción ofensiva"},{n:"tarjetas_amarillas / rojas",t:"SMALLINT",d:"Para fairplay"},{n:"minutos_jugados",t:"SMALLINT",d:"Minutos totales en cancha"}] },
+    { name: "documentos_generados", short: "Historial de documentos exportados: actas, tablas de posiciones, certificados.", uso: "Cada vez que se genera un acta PDF, se exporta la tabla de posiciones o se crea un certificado de campeón, queda registrado aquí con la URL del archivo, quién lo generó y cuándo. Permite acceder a los últimos documentos sin regenerarlos.", cols: [{n:"id",t:"INT PK",d:"Identificador único"},{n:"tipo_documento",t:"ENUM",d:"acta_partido / tabla_posiciones / certificado_campeon / certificado_subcampeon / otro"},{n:"torneo_id / partido_id / equipo_id",t:"INT FK",d:"A qué objeto aplica"},{n:"url_archivo",t:"VARCHAR",d:"URL del PDF o archivo generado"},{n:"generado_por",t:"INT FK",d:"Admin que lo generó"},{n:"generado_en",t:"DATETIME",d:"Fecha y hora de generación"}] },
+  ]},
+];
+
+const BADGE = {
+  PK: { bg: "#E6F1FB", color: "#0C447C", label: "PK" },
+  FK: { bg: "#FAEEDA", color: "#633806", label: "FK" },
+  UK: { bg: "#EAF3DE", color: "#27500A", label: "UK" },
+};
+
+function getBadge(type) {
+  for (const [k, v] of Object.entries(BADGE)) {
+    if (type.includes(k)) return `<span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:500;background:${v.bg};color:${v.color};margin-right:4px;">${v.label}</span>`;
+  }
+  return "";
+}
+
+let active = null;
+
+function render() {
+  const app = document.getElementById("app");
+  let html = "";
+
+  if (active) {
+    const { mod, tbl } = active;
+    html += `
+      <div style="border:1px solid #d0cec6;border-radius:12px;padding:16px;margin-bottom:20px;background:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+          <code style="font-size:15px;font-weight:500;color:#1a1a1a;">${tbl.name}</code>
+          <button onclick="active=null;render();" style="background:none;border:1px solid #d0cec6;border-radius:6px;padding:2px 10px;font-size:12px;cursor:pointer;color:#666;">✕ cerrar</button>
+        </div>
+        <div style="font-size:11px;color:#888;margin-bottom:10px;">Módulo: ${mod.name}</div>
+        <div style="font-size:13px;color:#444;line-height:1.7;margin-bottom:14px;">${tbl.uso}</div>
+        <div style="font-size:11px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Columnas principales</div>
+        ${tbl.cols.map(c => `
+          <div style="display:flex;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid #f0ede6;font-size:12px;flex-wrap:wrap;">
+            <span style="min-width:170px;">${getBadge(c.t)}<code style="color:#1a1a1a;font-weight:500;">${c.n}</code></span>
+            <span style="color:#aaa;min-width:120px;">${c.t.replace(/ PK| FK| UK/g,"")}</span>
+            <span style="color:#666;">${c.d}</span>
+          </div>`).join("")}
+      </div>`;
+  }
+
+  MOD.forEach((mod, mi) => {
+    html += `
+      <div style="border:1px solid #d0cec6;border-radius:12px;margin-bottom:12px;overflow:hidden;">
+        <div onclick="toggleMod(${mi})" style="padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#faf9f7;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${mod.color};flex-shrink:0;display:inline-block;"></span>
+          <span style="font-size:13px;font-weight:500;flex:1;">${mod.name}</span>
+          <span style="font-size:12px;color:#888;">${mod.tables.length} tabla${mod.tables.length>1?"s":""}</span>
+          <span id="arr-${mi}" style="font-size:11px;color:#aaa;transition:transform .2s;">▶</span>
+        </div>
+        <div id="grid-${mi}" style="display:none;padding:0 10px 10px;display:flex;flex-direction:column;gap:6px;">
+          ${mod.tables.map((tbl, ti) => `
+            <div onclick="selectTable(${mi},${ti})" style="border:1px solid #e5e2d9;border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;transition:border-color .15s;" onmouseover="this.style.borderColor='#bbb'" onmouseout="this.style.borderColor='#e5e2d9'">
+              <code style="font-size:12px;font-weight:500;color:#1a1a1a;">${tbl.name}</code>
+              <div style="font-size:12px;color:#777;margin-top:3px;line-height:1.5;">${tbl.short}</div>
+              <div style="font-size:11px;color:#aaa;margin-top:4px;">${tbl.cols.length} columnas · click para ver detalle</div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  });
+
+  app.innerHTML = html;
+
+  MOD.forEach((_, mi) => {
+    const grid = document.getElementById("grid-"+mi);
+    const arr = document.getElementById("arr-"+mi);
+    if (grid) { grid.style.display = "flex"; }
+    if (arr) { arr.style.transform = "rotate(90deg)"; }
+  });
+}
+
+function toggleMod(mi) {
+  const grid = document.getElementById("grid-"+mi);
+  const arr = document.getElementById("arr-"+mi);
+  const open = grid.style.display !== "none";
+  grid.style.display = open ? "none" : "flex";
+  arr.style.transform = open ? "rotate(0deg)" : "rotate(90deg)";
+}
+
+function selectTable(mi, ti) {
+  active = { mod: MOD[mi], tbl: MOD[mi].tables[ti] };
+  render();
+  document.getElementById("app").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+render();
+</script>

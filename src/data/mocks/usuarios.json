@@ -1,0 +1,86 @@
+[
+  {
+    "id": 1,
+    "nombre": "Carlos Administrador",
+    "correo": "carlos@matchx.com",
+    "contrasena_hash": "hash_mock_1",
+    "telefono": "+573001234567",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=carlos",
+    "rol": "superadmin",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-30T10:00:00Z",
+    "creado_en": "2026-01-01T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "nombre": "Ana Admin Torneo",
+    "correo": "ana@matchx.com",
+    "contrasena_hash": "hash_mock_2",
+    "telefono": "+573009876543",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=ana",
+    "rol": "admin_torneo",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-30T09:30:00Z",
+    "creado_en": "2026-01-05T00:00:00Z"
+  },
+  {
+    "id": 3,
+    "nombre": "Juan Admin Sede",
+    "correo": "juan@matchx.com",
+    "contrasena_hash": "hash_mock_3",
+    "telefono": "+573005551234",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=juan",
+    "rol": "admin_sede",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-30T08:45:00Z",
+    "creado_en": "2026-01-10T00:00:00Z"
+  },
+  {
+    "id": 4,
+    "nombre": "Miguel Delegado",
+    "correo": "miguel@matchx.com",
+    "contrasena_hash": "hash_mock_4",
+    "telefono": "+573007775555",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=miguel",
+    "rol": "delegado",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-30T14:00:00Z",
+    "creado_en": "2026-01-15T00:00:00Z"
+  },
+  {
+    "id": 5,
+    "nombre": "Pedro Árbitro",
+    "correo": "pedro@matchx.com",
+    "contrasena_hash": "hash_mock_5",
+    "telefono": "+573003336666",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=pedro",
+    "rol": "arbitro",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-28T16:20:00Z",
+    "creado_en": "2026-01-20T00:00:00Z"
+  },
+  {
+    "id": 6,
+    "nombre": "Luis Capitán",
+    "correo": "luis@matchx.com",
+    "contrasena_hash": "hash_mock_6",
+    "telefono": "+573002224444",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=luis",
+    "rol": "capitan",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-29T11:00:00Z",
+    "creado_en": "2026-01-25T00:00:00Z"
+  },
+  {
+    "id": 7,
+    "nombre": "Usuario Público",
+    "correo": "publico@matchx.com",
+    "contrasena_hash": "hash_mock_7",
+    "telefono": "+573008881111",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=publico",
+    "rol": "publico",
+    "activo": 1,
+    "ultimo_acceso": "2026-03-30T13:15:00Z",
+    "creado_en": "2026-02-01T00:00:00Z"
+  }
+]
