@@ -9,6 +9,9 @@
   --color-text-muted: #8899aa;
   --color-accent-green: #00d4aa;
 }
+a:hover {
+  text-decoration: none;
+}
 
 html {
   scroll-behavior: smooth;

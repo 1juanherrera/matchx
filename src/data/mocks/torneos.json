@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "nombre": "Copa Bogotá F5 2026",
+    "descripcion": "Torneo relámpago de fútbol 5 en canchas sintéticas. Fase de grupos + eliminatorias.",
+    "modalidad_id": 1,
+    "modalidad_codigo": "F5",
+    "sede_id": 1,
+    "estado": "en_curso",
+    "fecha_inicio": "2026-03-01",
+    "fecha_fin": "2026-04-30",
+    "max_equipos": 8,
+    "premio": "COP 2.000.000",
+    "imagen_url": "https://picsum.photos/seed/torneo1/400/200",
+    "creado_en": "2026-02-01T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "nombre": "Liga Medellín F7 2026",
+    "descripcion": "Liga oficial de fútbol 7 en Medellín. Cuatro jornadas de ida y vuelta.",
+    "modalidad_id": 2,
+    "modalidad_codigo": "F7",
+    "sede_id": 3,
+    "estado": "programado",
+    "fecha_inicio": "2026-05-01",
+    "fecha_fin": "2026-07-31",
+    "max_equipos": 10,
+    "premio": "COP 5.000.000",
+    "imagen_url": "https://picsum.photos/seed/torneo2/400/200",
+    "creado_en": "2026-02-15T00:00:00Z"
+  },
+  {
+    "id": 3,
+    "nombre": "Torneo Nacional F11 2026",
+    "descripcion": "Fase clasificatoria nacional. Equipos de 5 departamentos compiten por el título.",
+    "modalidad_id": 3,
+    "modalidad_codigo": "F11",
+    "sede_id": 2,
+    "estado": "programado",
+    "fecha_inicio": "2026-06-15",
+    "fecha_fin": "2026-09-30",
+    "max_equipos": 16,
+    "premio": "COP 20.000.000",
+    "imagen_url": "https://picsum.photos/seed/torneo3/400/200",
+    "creado_en": "2026-03-01T00:00:00Z"
+  }
+]

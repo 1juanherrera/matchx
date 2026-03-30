@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import {
   LayoutDashboard, Users, Layers, Building2, Settings,
   Trophy, ClipboardList, UserCheck, CircleDot, BarChart3,
-  Radio, Calendar, Menu, Bell, LogOut,
+  Radio, Calendar, CalendarRange, Flag, Menu, Bell, LogOut,
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -21,8 +21,15 @@ const handleLogout = () => {
 const navigationItems = computed(() => {
   const role = authStore.userRole
 
+  const dashboardRoute = role === 'admin_torneo' ? '/torneo/dashboard'
+    : role === 'delegado' ? '/delegado/partidos'
+    : role === 'admin_sede' ? '/sede/dashboard'
+    : role === 'arbitro' ? '/arbitro/dashboard'
+    : role === 'capitan' ? '/capitan/dashboard'
+    : '/admin/dashboard'
+
   const baseItems = [
-    { label: 'Dashboard', icon: LayoutDashboard, route: '/admin/dashboard' },
+    { label: 'Dashboard', icon: LayoutDashboard, route: dashboardRoute },
   ]
 
   if (role === 'superadmin') {
@@ -59,6 +66,21 @@ const navigationItems = computed(() => {
       ...baseItems,
       { label: 'Canchas',    icon: Building2, route: '/sede/canchas' },
       { label: 'Calendario', icon: Calendar,  route: '/sede/calendario' },
+    ]
+  }
+
+  if (role === 'arbitro') {
+    return [
+      ...baseItems,
+      { label: 'Mis Partidos', icon: Flag, route: '/arbitro/partidos' },
+    ]
+  }
+
+  if (role === 'capitan') {
+    return [
+      ...baseItems,
+      { label: 'Mi Equipo', icon: Users,         route: '/capitan/equipo' },
+      { label: 'Fixture',   icon: CalendarRange, route: '/capitan/fixture' },
     ]
   }
 

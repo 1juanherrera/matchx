@@ -1,13 +1,17 @@
 <script setup lang="ts">
+type ModalSize = 'sm' | 'md' | 'lg'
+
 interface Props {
   open: boolean
   title?: string
   closeButton?: boolean
+  size?: ModalSize
 }
 
 const props = withDefaults(defineProps<Props>(), {
   open: false,
   closeButton: true,
+  size: 'md',
 })
 
 const emit = defineEmits<{
@@ -29,7 +33,12 @@ const closeModal = () => emit('update:open', false)
         @click.self="closeModal"
       >
         <div
-          class="bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-2xl max-w-md w-full mx-4 animate-in fade-in zoom-in-95 duration-200"
+          :class="[
+            'bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-2xl w-full mx-4 animate-in fade-in zoom-in-95 duration-200',
+            size === 'sm' && 'max-w-sm',
+            size === 'md' && 'max-w-md',
+            size === 'lg' && 'max-w-2xl',
+          ]"
           @click.stop
         >
           <!-- Header -->

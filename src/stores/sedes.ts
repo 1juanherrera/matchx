@@ -80,6 +80,15 @@ export const useSedesStore = defineStore('sedes', () => {
     return nuevaCancha
   }
 
+  const actualizarCancha = (sedeId: number, canchaId: number, datos: Partial<Cancha>) => {
+    const sede = sedes.value.find(s => s.id === sedeId)
+    if (!sede) return false
+    const idx = sede.canchas.findIndex(c => c.id === canchaId)
+    if (idx === -1) return false
+    sede.canchas[idx] = { ...sede.canchas[idx], ...datos }
+    return true
+  }
+
   const eliminarCancha = (sedeId: number, canchaId: number) => {
     const sede = sedes.value.find(s => s.id === sedeId)
     if (!sede) return false
@@ -101,6 +110,7 @@ export const useSedesStore = defineStore('sedes', () => {
     actualizarSede,
     eliminarSede,
     agregarCancha,
+    actualizarCancha,
     eliminarCancha,
     obtenerPorId,
   }

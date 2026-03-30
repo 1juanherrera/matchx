@@ -28,7 +28,17 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/',
-    redirect: '/admin/dashboard',
+    redirect: () => {
+      const auth = useAuthStore()
+      if (!auth.isAuthenticated) auth.initSession()
+      const role = auth.userRole
+      if (role === 'admin_torneo') return '/torneo/dashboard'
+      if (role === 'delegado') return '/delegado/partidos'
+      if (role === 'admin_sede') return '/sede/dashboard'
+      if (role === 'arbitro') return '/arbitro/dashboard'
+      if (role === 'capitan') return '/capitan/dashboard'
+      return '/admin/dashboard'
+    },
   },
   {
     path: '/admin',
@@ -96,11 +106,110 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'dashboard',
         name: 'TorneoDashboard',
-        component: () => import('@/views/admin-sistema/DashboardView.vue'),
-        meta: {
-          title: 'Dashboard Torneo',
-          requiereRol: ['admin_torneo'],
-        },
+        component: () => import('@/views/admin-torneo/TorneoDashboardView.vue'),
+        meta: { title: 'Dashboard', requiereRol: ['admin_torneo'] },
+      },
+      {
+        path: 'torneos',
+        name: 'TorneosTorneos',
+        component: () => import('@/views/admin-torneo/TorneosView.vue'),
+        meta: { title: 'Torneos', requiereRol: ['admin_torneo'] },
+      },
+      {
+        path: 'inscripciones',
+        name: 'TorneoInscripciones',
+        component: () => import('@/views/admin-torneo/InscripcionesView.vue'),
+        meta: { title: 'Inscripciones', requiereRol: ['admin_torneo'] },
+      },
+      {
+        path: 'plantilla',
+        name: 'TorneoPlantilla',
+        component: () => import('@/views/admin-torneo/PlantillaView.vue'),
+        meta: { title: 'Plantilla', requiereRol: ['admin_torneo'] },
+      },
+      {
+        path: 'partidos',
+        name: 'TorneoPartidos',
+        component: () => import('@/views/admin-torneo/PartidosView.vue'),
+        meta: { title: 'Partidos', requiereRol: ['admin_torneo'] },
+      },
+      {
+        path: 'posiciones',
+        name: 'TorneoPosiciones',
+        component: () => import('@/views/admin-torneo/PosicionesView.vue'),
+        meta: { title: 'Tabla de Posiciones', requiereRol: ['admin_torneo'] },
+      },
+    ],
+  },
+  {
+    path: '/sede',
+    component: () => import('@/layouts/AppLayout.vue'),
+    meta: {
+      layout: 'AppLayout',
+      requiereRol: ['admin_sede'],
+    },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'SedeDashboard',
+        component: () => import('@/views/admin-sede/SedeDashboardView.vue'),
+        meta: { title: 'Dashboard', requiereRol: ['admin_sede'] },
+      },
+      {
+        path: 'canchas',
+        name: 'SedeCanchas',
+        component: () => import('@/views/admin-sede/CanchasView.vue'),
+        meta: { title: 'Canchas', requiereRol: ['admin_sede'] },
+      },
+      {
+        path: 'calendario',
+        name: 'SedeCalendario',
+        component: () => import('@/views/admin-sede/CalendarioView.vue'),
+        meta: { title: 'Calendario', requiereRol: ['admin_sede'] },
+      },
+    ],
+  },
+  {
+    path: '/arbitro',
+    component: () => import('@/layouts/AppLayout.vue'),
+    meta: { layout: 'AppLayout', requiereRol: ['arbitro'] },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'ArbitroDashboard',
+        component: () => import('@/views/arbitro/ArbitroDashboardView.vue'),
+        meta: { title: 'Dashboard', requiereRol: ['arbitro'] },
+      },
+      {
+        path: 'partidos',
+        name: 'ArbitroPartidos',
+        component: () => import('@/views/arbitro/MisPartidosView.vue'),
+        meta: { title: 'Mis Partidos', requiereRol: ['arbitro'] },
+      },
+    ],
+  },
+  {
+    path: '/capitan',
+    component: () => import('@/layouts/AppLayout.vue'),
+    meta: { layout: 'AppLayout', requiereRol: ['capitan'] },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'CapitanDashboard',
+        component: () => import('@/views/capitan/CapitanDashboardView.vue'),
+        meta: { title: 'Dashboard', requiereRol: ['capitan'] },
+      },
+      {
+        path: 'equipo',
+        name: 'CapitanEquipo',
+        component: () => import('@/views/capitan/MiEquipoView.vue'),
+        meta: { title: 'Mi Equipo', requiereRol: ['capitan'] },
+      },
+      {
+        path: 'fixture',
+        name: 'CapitanFixture',
+        component: () => import('@/views/capitan/FixtureView.vue'),
+        meta: { title: 'Fixture', requiereRol: ['capitan'] },
       },
     ],
   },
@@ -157,6 +266,12 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) 
 
   // Redirect to home if trying to access login while authenticated
   if (isPublicRoute && isAuthenticated && to.path === '/login') {
+    const role = authStore.userRole
+    if (role === 'admin_torneo') return { path: '/torneo/dashboard' }
+    if (role === 'delegado') return { path: '/delegado/partidos' }
+    if (role === 'admin_sede') return { path: '/sede/dashboard' }
+    if (role === 'arbitro') return { path: '/arbitro/dashboard' }
+    if (role === 'capitan') return { path: '/capitan/dashboard' }
     return { path: '/admin/dashboard' }
   }
 

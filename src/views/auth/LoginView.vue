@@ -27,7 +27,16 @@ const handleSubmit = async ({ userId, role }: { userId: number; role: UserRole }
   isLoading.value = true
   try {
     await auth.login(userId, role)
-    const dest = (route.query.redirect as string) || '/admin/dashboard'
+    const roleDestinations: Record<string, string> = {
+      superadmin:   '/admin/dashboard',
+      admin_torneo: '/torneo/dashboard',
+      admin_sede:   '/sede/dashboard',
+      delegado:     '/delegado/partidos',
+      arbitro:      '/arbitro/dashboard',
+      capitan:      '/capitan/dashboard',
+      publico:      '/admin/dashboard',
+    }
+    const dest = (route.query.redirect as string) || roleDestinations[role] || '/admin/dashboard'
     router.push(dest)
   } catch {
     error.value = 'Error al iniciar sesión. Intenta de nuevo.'
