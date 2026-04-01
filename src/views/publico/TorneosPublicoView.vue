@@ -10,16 +10,16 @@ const router = useRouter()
 onMounted(() => torneosStore.fetchTorneos())
 
 const estadoConfig: Record<string, { label: string; classes: string }> = {
-  en_curso:   { label: 'En curso',   classes: 'bg-matchx-accent-green/15 text-matchx-accent-green border border-matchx-accent-green/30' },
-  programado: { label: 'Próximamente', classes: 'bg-blue-500/15 text-blue-400 border border-blue-500/30' },
-  finalizado: { label: 'Finalizado', classes: 'bg-matchx-text-muted/15 text-matchx-text-muted border border-matchx-text-muted/20' },
-  cancelado:  { label: 'Cancelado',  classes: 'bg-matchx-accent-orange/15 text-matchx-accent-orange border border-matchx-accent-orange/30' },
+  en_curso:   { label: 'En curso',   classes: 'bg-matchx-accent-green text-white border border-matchx-accent-green/30' },
+  programado: { label: 'Próximamente', classes: 'bg-blue-500 text-white border border-blue-500/30' },
+  finalizado: { label: 'Finalizado', classes: 'bg-matchx-text-muted text-white border border-matchx-text-muted/20' },
+  cancelado:  { label: 'Cancelado',  classes: 'bg-matchx-accent-orange text-white border border-matchx-accent-orange/30' },
 }
 
 const modalidadColor: Record<string, string> = {
-  F5:  'bg-matchx-accent-orange/10 text-matchx-accent-orange',
-  F7:  'bg-blue-500/10 text-blue-400',
-  F11: 'bg-purple-500/10 text-purple-400',
+  F5:  'bg-matchx-accent-orange text-white',
+  F7:  'bg-blue-500 text-white',
+  F11: 'bg-purple-500 text-white',
 }
 
 const formatDate = (iso: string) =>

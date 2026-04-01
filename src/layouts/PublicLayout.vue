@@ -38,7 +38,7 @@ const handleLogin = () => {
             <Trophy class="w-4 h-4 text-matchx-bg-base" :stroke-width="2.5" />
           </div>
           <span class="font-bold text-lg text-matchx-text-primary" style="font-family: 'Fira Code', monospace">
-            match<span class="text-matchx-accent-green">X</span>
+            Global<span class="text-matchx-accent-green">matchX</span>
           </span>
         </RouterLink>
 

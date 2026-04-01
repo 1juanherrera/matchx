@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Tech Stack**: Vue 3 + Vite + Tailwind CSS + Pinia + Vue Router + TypeScript
 - **Architecture**: SPA modular con 7 roles y 8 módulos funcionales
-- **Status**: Hitos 0, 1, 2, 4 y 5 completados. Pendiente Hito 3 (Delegado) y Hito 6 (Público)
+- **Status**: Hitos 0, 1, 2, 3, 4, 5 y 6 completados. Todos los hitos finalizados.
 - **Model**: 20 tablas relacionales definidas en `sistema_torneos.mwb`
 
 ---
@@ -382,12 +382,14 @@ items.value = data.default
 - [x] PosicionesView (AppDataTable + medallero Trophy/Medal)
 - [x] Mejoras visuales: iconos Lucide, empty states, skeleton loaders
 
-### Hito 3 ⏳ PENDIENTE — Delegado Mesa de Control (CRITICAL)
-- [ ] EnVivoView (mobile-first, 4 botones, timeline eventos)
-- [ ] Cronómetro widget (start/pause/reset)
-- [ ] Marcador en tiempo real
-- [ ] Cola offline con IndexedDB
-- [ ] DelegadoLayout (optimizado teléfono en cancha)
+### Hito 3 ✅ COMPLETO — Delegado Mesa de Control
+- [x] EnVivoView (mobile-first, 6 botones acción, timeline eventos)
+- [x] Cronómetro widget (start/pause/reset) con indicador pulsante
+- [x] Marcador en tiempo real (golesLocal / golesVisitante reactivos)
+- [x] Cola offline con IndexedDB (dbAdd/dbGetAll/dbDelete + sync automático)
+- [x] DelegadoLayout (optimizado teléfono en cancha, indicador online/offline)
+- [x] MisPartidosView con botón "Mesa de Control" por partido
+- [x] Rutas: /delegado/partidos (AppLayout) + /delegado/en-vivo/:id (DelegadoLayout)
 
 ### Hito 4 ✅ COMPLETO — Admin Sede
 - [x] SedeDashboardView (métricas sede)
@@ -401,11 +403,11 @@ items.value = data.default
 - [x] MiEquipoView (plantilla con avatares, búsqueda, resumen posición)
 - [x] FixtureView (partidos filtrable, equipo propio resaltado en verde)
 
-### Hito 6 ⏳ PENDIENTE — Vista Pública
-- [ ] Tabla de posiciones pública (sin login)
-- [ ] Fixture y resultados
-- [ ] Información de sedes
-- [ ] PublicLayout
+### Hito 6 ✅ COMPLETO — Vista Pública
+- [x] Tabla de posiciones pública (sin login)
+- [x] Fixture y resultados
+- [x] Información de sedes
+- [x] PublicLayout
 
 ### Later
 - [ ] PWA + Service Worker
@@ -455,5 +457,5 @@ npm run type-check       # TypeScript check (not yet configured)
 
 **Last Updated**: 2026-03-30
 **Completed**: Hitos 0, 1, 2, 4, 5
-**Next Focus**: Hito 3 — Delegado Mesa de Control (CRITICAL) o Hito 6 — Vista Pública
+**Next Focus**: PWA + Service Worker, Reports PDF, o Tests (Vitest)
 **Skills Used**: interface-design, vue-best-practices, ui-ux-pro-max

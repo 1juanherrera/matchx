@@ -266,9 +266,25 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'partidos',
         name: 'DelegadoPartidos',
-        component: () => import('@/views/admin-sistema/DashboardView.vue'),
+        component: () => import('@/views/delegado/MisPartidosView.vue'),
         meta: {
           title: 'Mis Partidos',
+          requiereRol: ['delegado'],
+        },
+      },
+    ],
+  },
+  {
+    path: '/delegado/en-vivo',
+    component: () => import('@/layouts/DelegadoLayout.vue'),
+    meta: { requiereRol: ['delegado'] },
+    children: [
+      {
+        path: ':id',
+        name: 'DelegadoEnVivo',
+        component: () => import('@/views/delegado/EnVivoView.vue'),
+        meta: {
+          title: 'Mesa de Control',
           requiereRol: ['delegado'],
         },
       },

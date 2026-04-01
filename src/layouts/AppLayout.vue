@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import {
   LayoutDashboard, Users, Layers, Building2, Settings,
   Trophy, ClipboardList, UserCheck, CircleDot, BarChart3,
-  Radio, Calendar, CalendarRange, Flag, Menu, Bell, LogOut,
+  Calendar, CalendarRange, Flag, Menu, Bell, LogOut,
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -55,9 +55,7 @@ const navigationItems = computed(() => {
 
   if (role === 'delegado') {
     return [
-      ...baseItems,
       { label: 'Mis Partidos', icon: CircleDot, route: '/delegado/partidos' },
-      { label: 'En Vivo',      icon: Radio,     route: '/delegado/en-vivo' },
     ]
   }
 
