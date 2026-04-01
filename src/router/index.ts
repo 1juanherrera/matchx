@@ -31,6 +31,7 @@ const routes: RouteRecordRaw[] = [
     redirect: () => {
       const auth = useAuthStore()
       if (!auth.isAuthenticated) auth.initSession()
+      if (!auth.isAuthenticated) return '/publico/torneos'
       const role = auth.userRole
       if (role === 'admin_torneo') return '/torneo/dashboard'
       if (role === 'delegado') return '/delegado/partidos'
@@ -39,6 +40,47 @@ const routes: RouteRecordRaw[] = [
       if (role === 'capitan') return '/capitan/dashboard'
       return '/admin/dashboard'
     },
+  },
+  {
+    path: '/publico',
+    component: () => import('@/layouts/PublicLayout.vue'),
+    meta: { requiresAuth: false },
+    children: [
+      {
+        path: '',
+        redirect: '/publico/torneos',
+      },
+      {
+        path: 'torneos',
+        name: 'PublicoTorneos',
+        component: () => import('@/views/publico/TorneosPublicoView.vue'),
+        meta: { title: 'Torneos', requiresAuth: false },
+      },
+      {
+        path: 'posiciones',
+        name: 'PublicoPosiciones',
+        component: () => import('@/views/publico/PosicionesPublicoView.vue'),
+        meta: { title: 'Tabla de Posiciones', requiresAuth: false },
+      },
+      {
+        path: 'fixture',
+        name: 'PublicoFixture',
+        component: () => import('@/views/publico/FixturePublicoView.vue'),
+        meta: { title: 'Fixture y Resultados', requiresAuth: false },
+      },
+      {
+        path: 'sedes',
+        name: 'PublicoSedes',
+        component: () => import('@/views/publico/SedesPublicoView.vue'),
+        meta: { title: 'Sedes', requiresAuth: false },
+      },
+      {
+        path: 'partidos/:id',
+        name: 'PublicoPartidoDetalle',
+        component: () => import('@/views/publico/PartidoDetallePublicoView.vue'),
+        meta: { title: 'Detalle Partido', requiresAuth: false },
+      },
+    ],
   },
   {
     path: '/admin',
@@ -256,7 +298,11 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) 
     authStore.initSession()
   }
 
-  const isPublicRoute = to.path === '/login' || to.path === '/no-autorizado'
+  const isPublicRoute =
+    to.path === '/login' ||
+    to.path === '/no-autorizado' ||
+    to.path.startsWith('/publico') ||
+    to.meta.requiresAuth === false
   const isAuthenticated = authStore.isAuthenticated
 
   // Redirect to login if not authenticated and trying to access protected route
