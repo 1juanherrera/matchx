@@ -2,20 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Dark mode (default) ───────────────────────────────────────────────── */
 :root {
   color-scheme: dark;
-  --color-bg-base: #0f1923;
-  --color-border-base: #2a3a4a;
-  --color-text-muted: #8899aa;
+
+  /* RGB triplets — sin rgb(), para que funcionen con opacity modifiers de Tailwind */
+  --matchx-bg-base:       15  25  35;
+  --matchx-bg-surface:    26  37  51;
+  --matchx-bg-elevated:   36  48  64;
+
+  --matchx-accent-green:  0   212 170;
+  --matchx-accent-orange: 255 107 53;
+
+  --matchx-text-primary:   240 244 248;
+  --matchx-text-secondary: 184 197 214;
+  --matchx-text-muted:     136 153 170;
+  --matchx-text-disabled:  85  102 119;
+
+  --matchx-border-base:   42  58  74;
+  --matchx-border-subtle: 31  45  57;
+
+  /* Para scrollbar y focus (necesitan hex directo) */
+  --color-border-base:  #2a3a4a;
+  --color-text-muted:   #8899aa;
   --color-accent-green: #00d4aa;
 }
-a:hover {
-  text-decoration: none;
+
+/* ─── Light mode ────────────────────────────────────────────────────────── */
+html.light {
+  color-scheme: light;
+
+  --matchx-bg-base:       248 250 252;
+  --matchx-bg-surface:    255 255 255;
+  --matchx-bg-elevated:   241 245 249;
+
+  --matchx-accent-green:  0   168 140;
+  --matchx-accent-orange: 211 83  27;
+
+  --matchx-text-primary:   15  23  42;
+  --matchx-text-secondary: 51  65  85;
+  --matchx-text-muted:     100 116 139;
+  --matchx-text-disabled:  148 163 184;
+
+  --matchx-border-base:   226 232 240;
+  --matchx-border-subtle: 241 245 249;
+
+  --color-border-base:  #e2e8f0;
+  --color-text-muted:   #64748b;
+  --color-accent-green: #00a88c;
 }
 
-html {
-  scroll-behavior: smooth;
+/* ─── Transición suave entre temas ─────────────────────────────────────── */
+/* Solo propiedades de color — NO incluir opacity/transform/filter para no
+   interferir con las animaciones de Vue <Transition> */
+@layer base {
+  *, *::before, *::after {
+    transition-property: color, background-color, border-color, fill, stroke;
+    transition-duration: 180ms;
+    transition-timing-function: ease;
+  }
 }
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+a:hover { text-decoration: none; }
+html    { scroll-behavior: smooth; }
 
 body {
   -webkit-font-smoothing: antialiased;
@@ -24,32 +74,22 @@ body {
   padding: 0;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-base);
   border-radius: 4px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-}
-
-/* Focus visible for accessibility */
+/* ─── Focus visible ─────────────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--color-accent-green);
   outline-offset: 2px;
 }
 
-/* Base component styles */
+/* ─── Typography ────────────────────────────────────────────────────────── */
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Fira Code', monospace;
@@ -63,22 +103,14 @@ body {
   }
 
   a {
-    color: #00d4aa;
+    color: var(--color-accent-green);
     text-decoration: none;
-    transition-property: color;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
   }
 
-  a:hover {
-    text-decoration: underline;
-  }
+  a:hover { text-decoration: underline; }
 
   button {
     font-weight: 500;
-    transition-property: color, background-color, border-color;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
   }
 
   input, textarea, select {
@@ -86,17 +118,9 @@ body {
   }
 }
 
-/* Utility classes */
+/* ─── Utilities ─────────────────────────────────────────────────────────── */
 @layer utilities {
-  .glow-sm {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  }
-
-  .glow {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
-  }
-
-  .glow-lg {
-    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.5);
-  }
+  .glow-sm { box-shadow: 0 1px 3px 0 rgba(0,0,0,0.3); }
+  .glow    { box-shadow: 0 4px 8px 0 rgba(0,0,0,0.4); }
+  .glow-lg { box-shadow: 0 8px 16px 0 rgba(0,0,0,0.5); }
 }

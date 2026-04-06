@@ -77,6 +77,7 @@ const openNewSedeModal = () => {
     email: '',
   }
   sedeFormErrors.value = { nombre: '', ciudad: '', departamento: '', direccion: '', email: '' }
+  saveError.value = ''
   showSedeModal.value = true
 }
 
@@ -93,6 +94,7 @@ const openEditSedeModal = (sede: Sede) => {
     email: sede.email,
   }
   sedeFormErrors.value = { nombre: '', ciudad: '', departamento: '', direccion: '', email: '' }
+  saveError.value = ''
   showSedeModal.value = true
 }
 
@@ -123,19 +125,26 @@ const validateSedeForm = () => {
   return valid
 }
 
-const saveSede = () => {
-  if (!validateSedeForm()) return
+const saveError = ref('')
 
-  if (isEditing.value && editingId.value !== null) {
-    store.actualizarSede(editingId.value, { ...sedeForm.value })
-  } else {
-    store.crearSede({
-      ...sedeForm.value,
-      activo: 1,
-      canchas: [],
-    })
+const saveSede = async () => {
+  if (!validateSedeForm()) return
+  saveError.value = ''
+
+  try {
+    if (isEditing.value && editingId.value !== null) {
+      await store.actualizarSede(editingId.value, { ...sedeForm.value })
+    } else {
+      await store.crearSede({
+        ...sedeForm.value,
+        activo: 1,
+        canchas: [],
+      })
+    }
+    showSedeModal.value = false
+  } catch (err: any) {
+    saveError.value = err.message ?? 'Error al guardar la sede'
   }
-  showSedeModal.value = false
 }
 
 const toggleActivoSede = (sede: Sede) => {
@@ -318,7 +327,7 @@ onMounted(() => {
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-matchx-text-primary text-sm truncate">{{ cancha.nombre }}</div>
                 <div class="text-xs text-matchx-text-muted mt-0.5">
-                  {{ tipoCanchaLabel(cancha.tipo) }} · {{ cancha.largo_metros }}×{{ cancha.ancho_metros }}m
+                  {{ tipoCanchaLabel(cancha.tipo) }} · {{ cancha.largo_metros || 0 }}×{{ cancha.ancho_metros || 0 }}m
                 </div>
               </div>
               <AppBadge :variant="cancha.disponible ? 'green' : 'orange'" :dot="false" class="shrink-0">
@@ -410,6 +419,8 @@ onMounted(() => {
         </div>
       </div>
 
+      <p v-if="saveError" class="text-sm text-matchx-accent-orange mb-3">{{ saveError }}</p>
+
       <template #footer>
         <div class="flex gap-3 justify-end">
           <AppButton variant="secondary" @click="showSedeModal = false">Cancelar</AppButton>
@@ -444,7 +455,7 @@ onMounted(() => {
             <div class="flex-1 min-w-0">
               <div class="font-medium text-matchx-text-primary text-sm">{{ cancha.nombre }}</div>
               <div class="text-xs text-matchx-text-muted mt-0.5">
-                {{ tipoCanchaLabel(cancha.tipo) }} · {{ cancha.largo_metros }}×{{ cancha.ancho_metros }}m · cap. {{ cancha.capacidad.toLocaleString() }}
+                {{ tipoCanchaLabel(cancha.tipo) }} · {{ cancha.largo_metros || 0 }}×{{ cancha.ancho_metros || 0 }}m · cap. {{ (cancha.capacidad || 0).toLocaleString() }}
               </div>
             </div>
             <button

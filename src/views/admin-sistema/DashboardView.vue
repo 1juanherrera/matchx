@@ -30,13 +30,31 @@ const usuariosRecientes = computed(() => {
     new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
   ).slice(0, 5)
 })
+
+function quitarGuionesBajos(texto: string): string {
+  return texto.replace(/_/g, ' ');
+}
+
+const rolColors: Record<string, string> = {
+  superadmin:   'bg-matchx-accent-green/20 text-matchx-accent-green',
+  admin_torneo: 'bg-blue-500/20 text-blue-400',
+  admin_sede:   'bg-purple-500/20 text-purple-400',
+  delegado:     'bg-matchx-accent-orange/20 text-matchx-accent-orange',
+  arbitro:      'bg-yellow-500/20 text-yellow-400',
+  capitan:      'bg-cyan-500/20 text-cyan-400',
+  jugador:      'bg-pink-500/20 text-pink-400',
+  publico:      'bg-matchx-text-muted/20 text-matchx-text-muted',
+}
+const avatarColor = (rol: string) => rolColors[rol] ?? 'bg-matchx-text-muted/20 text-matchx-text-muted'
+const iniciales = (nombre: string) =>
+  nombre.split(' ').slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase()
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-4xl font-bold text-matchx-text-primary">
+      <h1 class="text-3xl font-bold text-matchx-text-primary">
         {{ welcomeMessage }}, {{ authStore.userName }}
       </h1>
       <p class="text-matchx-text-secondary">Sistema de Gestión de Torneos - Administración</p>
@@ -98,15 +116,17 @@ const usuariosRecientes = computed(() => {
             class="flex items-center justify-between p-3 rounded-lg bg-matchx-bg-base/30 hover:bg-matchx-bg-base/50 transition-colors"
           >
             <div class="flex items-center gap-3 flex-1">
-              <img :src="usuario.url_avatar" alt="Avatar" class="w-8 h-8 rounded-full" />
+              <div
+                :class="['w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0', avatarColor(usuario.rol)]"
+              >{{ iniciales(usuario.nombre) }}</div>
               <div class="flex-1">
                 <div class="text-sm font-medium text-matchx-text-primary">{{ usuario.nombre }}</div>
                 <div class="text-xs text-matchx-text-muted">{{ usuario.correo }}</div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-xs font-medium text-matchx-text-secondary px-2.5 py-1 rounded-full bg-matchx-accent-green/10 text-matchx-accent-green">
-                {{ usuario.rol }}
+              <div class="text-xs font-medium capitalize text-matchx-accent-secondary px-2.5 py-1 rounded-full bg-matchx-accent-green/10 text-matchx-accent-green">
+                {{ quitarGuionesBajos(usuario.rol) }}
               </div>
             </div>
           </div>

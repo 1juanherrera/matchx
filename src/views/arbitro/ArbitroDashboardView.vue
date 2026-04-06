@@ -10,6 +10,12 @@ import { Flag, CheckCircle2, CalendarClock, Calendar, Clock, MapPin, Swords } fr
 
 const auth = useAuthStore()
 const partidosStore = usePartidosStore()
+
+const welcomeMessage = computed(() => {
+  const h = new Date().getHours()
+  const greeting = h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches'
+  return `${greeting}, ${auth.userName}`
+})
 const equiposStore = useEquiposStore()
 const sedesStore = useSedesStore()
 
@@ -66,8 +72,8 @@ const estadoBadge = (estado: string): 'green' | 'orange' | 'gray' | 'blue' => ({
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-4xl font-bold text-matchx-text-primary">Dashboard</h1>
-      <p class="text-matchx-text-secondary">Bienvenido, {{ auth.userName }}</p>
+      <h1 class="text-3xl font-bold text-matchx-text-primary">{{ welcomeMessage }}</h1>
+      <p class="text-matchx-text-secondary text-sm">Tu panel de arbitraje</p>
     </div>
 
     <!-- Métricas -->

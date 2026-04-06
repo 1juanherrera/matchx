@@ -5,9 +5,6 @@ import type { UserRole } from '@/stores/auth'
 // Lazy load views
 const LoginView = () => import('@/views/auth/LoginView.vue')
 
-// Layouts
-const AuthLayout = () => import('@/layouts/AuthLayout.vue')
-
 declare module 'vue-router' {
   interface RouteMeta {
     layout?: string
@@ -37,7 +34,7 @@ const routes: RouteRecordRaw[] = [
       if (role === 'delegado') return '/delegado/partidos'
       if (role === 'admin_sede') return '/sede/dashboard'
       if (role === 'arbitro') return '/arbitro/dashboard'
-      if (role === 'capitan') return '/capitan/dashboard'
+      if (role === 'capitan' || role === 'jugador') return '/capitan/dashboard'
       return '/admin/dashboard'
     },
   },
@@ -233,25 +230,25 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/capitan',
     component: () => import('@/layouts/AppLayout.vue'),
-    meta: { layout: 'AppLayout', requiereRol: ['capitan'] },
+    meta: { layout: 'AppLayout', requiereRol: ['capitan', 'jugador'] },
     children: [
       {
         path: 'dashboard',
         name: 'CapitanDashboard',
         component: () => import('@/views/capitan/CapitanDashboardView.vue'),
-        meta: { title: 'Dashboard', requiereRol: ['capitan'] },
+        meta: { title: 'Dashboard', requiereRol: ['capitan', 'jugador'] },
       },
       {
         path: 'equipo',
         name: 'CapitanEquipo',
         component: () => import('@/views/capitan/MiEquipoView.vue'),
-        meta: { title: 'Mi Equipo', requiereRol: ['capitan'] },
+        meta: { title: 'Mi Equipo', requiereRol: ['capitan', 'jugador'] },
       },
       {
         path: 'fixture',
         name: 'CapitanFixture',
         component: () => import('@/views/capitan/FixtureView.vue'),
-        meta: { title: 'Fixture', requiereRol: ['capitan'] },
+        meta: { title: 'Fixture', requiereRol: ['capitan', 'jugador'] },
       },
     ],
   },
@@ -333,7 +330,7 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) 
     if (role === 'delegado') return { path: '/delegado/partidos' }
     if (role === 'admin_sede') return { path: '/sede/dashboard' }
     if (role === 'arbitro') return { path: '/arbitro/dashboard' }
-    if (role === 'capitan') return { path: '/capitan/dashboard' }
+    if (role === 'capitan' || role === 'jugador') return { path: '/capitan/dashboard' }
     return { path: '/admin/dashboard' }
   }
 

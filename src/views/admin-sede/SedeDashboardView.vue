@@ -3,6 +3,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useSedesStore } from '@/stores/sedes'
 import { usePartidosStore } from '@/stores/partidos'
 import { useEquiposStore } from '@/stores/equipos'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+const welcomeMessage = computed(() => {
+  const h = new Date().getHours()
+  const greeting = h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches'
+  return `${greeting}, ${authStore.userName}`
+})
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
@@ -84,8 +93,8 @@ const tipoBadge = (tipo: string): 'green' | 'blue' | 'orange' => ({
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-4xl font-bold text-matchx-text-primary">Dashboard</h1>
-      <p class="text-matchx-text-secondary">Panel de administración de sede</p>
+      <h1 class="text-3xl font-bold text-matchx-text-primary">{{ welcomeMessage }}</h1>
+      <p class="text-matchx-text-secondary text-sm">Panel de administración de sede</p>
     </div>
 
     <!-- Selector sede -->

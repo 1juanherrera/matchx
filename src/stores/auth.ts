@@ -2,7 +2,15 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/services/auth.service'
 
-export type UserRole = 'superadmin' | 'admin_torneo' | 'admin_sede' | 'delegado' | 'arbitro' | 'capitan' | 'publico'
+export type UserRole =
+  | 'superadmin'
+  | 'admin_torneo'
+  | 'admin_sede'
+  | 'delegado'
+  | 'arbitro'
+  | 'capitan'
+  | 'jugador'
+  | 'publico'
 
 export interface AuthUser {
   usuario_id: number
@@ -13,6 +21,12 @@ export interface AuthUser {
   avatar?: string
 }
 
+export interface AuthProfile {
+  id_profiles: number
+  rol: string
+  nombre: string
+}
+
 // Mapeo de roles del backend a roles internos del frontend
 const rolMap: Record<string, UserRole> = {
   administrador: 'superadmin',
@@ -21,10 +35,10 @@ const rolMap: Record<string, UserRole> = {
   delegado:      'delegado',
   arbitro:       'arbitro',
   capitan:       'capitan',
+  jugador:       'jugador',
   publico:       'publico',
 }
 
-// Normaliza el usuario que devuelve el backend al shape interno
 function normalizeUser(raw: any, token: string): AuthUser {
   const backendRol = raw.rol ?? raw.role ?? 'publico'
   return {
@@ -43,6 +57,12 @@ export const useAuthStore = defineStore('auth', () => {
   const user      = ref<AuthUser | null>(null)
   const isLoading = ref(false)
 
+  // Estado intermedio del flujo select_profile
+  const pendingProfiles    = ref<AuthProfile[]>([])
+  const pendingUser        = ref<{ username: string; email: string } | null>(null)
+  const pendingCredentials = ref<{ username: string; password: string } | null>(null)
+  const requiresProfile    = computed(() => pendingProfiles.value.length > 0)
+
   const initSession = () => {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
@@ -58,36 +78,85 @@ export const useAuthStore = defineStore('auth', () => {
   const userRole        = computed(() => user.value?.rol ?? null)
   const userName        = computed(() => user.value?.nombre ?? 'Usuario')
 
-  const login = async (username: string, password: string) => {
+  /**
+   * Paso 1: envía credenciales.
+   * Si el backend responde con status "select_profile", almacena los perfiles
+   * y retorna true para que la vista muestre el selector.
+   * Si responde con token directamente, cierra la sesión en un solo paso.
+   */
+  const login = async (username: string, password: string): Promise<boolean> => {
     isLoading.value = true
     try {
-      // POST /api/login → { status, token, user: { rol, username, permisos, ... } }
-      const loginRes = await authService.login(username, password)
-      const { token, user: rawUser } = loginRes.data
+      const res  = await authService.login(username, password)
+      const data = res.data as any
 
+      if (data.status === 'select_profile') {
+        pendingProfiles.value    = data.profiles ?? []
+        pendingUser.value        = data.user ?? null
+        pendingCredentials.value = { username, password }
+        return true // indica que hay que seleccionar perfil
+      }
+
+      // Login directo (si el backend devuelve token sin selección de perfil)
+      const { token, user: rawUser } = data
       if (!token) throw new Error('El servidor no devolvió un token')
-
       user.value = normalizeUser(rawUser ?? {}, token)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
+      return false
     } finally {
       isLoading.value = false
     }
   }
 
+  /**
+   * Paso 2: selecciona un perfil — reutiliza /api/login con selectedRole.
+   */
+  const selectProfile = async (selectedRole: string): Promise<void> => {
+    if (!pendingCredentials.value) throw new Error('No hay credenciales pendientes')
+    isLoading.value = true
+    try {
+      const { username, password } = pendingCredentials.value
+      const res  = await authService.login(username, password, selectedRole)
+      const data = res.data as any
+      const { token, user: rawUser } = data
+
+      if (!token) throw new Error('El servidor no devolvió un token al seleccionar perfil')
+
+      user.value = normalizeUser(rawUser ?? {}, token)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
+      // Limpiar estado pendiente
+      pendingProfiles.value    = []
+      pendingUser.value        = null
+      pendingCredentials.value = null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const clearPending = () => {
+    pendingProfiles.value    = []
+    pendingUser.value        = null
+    pendingCredentials.value = null
+  }
+
   const logout = async () => {
     try { await authService.logout() } catch { /* ignorar errores de red al logout */ }
-    user.value = null
+    user.value               = null
+    pendingProfiles.value    = []
+    pendingUser.value        = null
+    pendingCredentials.value = null
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  const hasRole    = (requiredRoles: UserRole[]): boolean =>
+  const hasRole   = (requiredRoles: UserRole[]): boolean =>
     !!user.value && requiredRoles.includes(user.value.rol)
 
-  const canAccess  = (allowedRoles: UserRole[]): boolean => hasRole(allowedRoles)
+  const canAccess = (allowedRoles: UserRole[]): boolean => hasRole(allowedRoles)
 
   return {
     user, isLoading,
+    pendingProfiles, pendingUser, requiresProfile,
     isAuthenticated, userRole, userName,
-    initSession, login, logout, hasRole, canAccess,
+    initSession, login, selectProfile, clearPending, logout, hasRole, canAccess,
   }
 })

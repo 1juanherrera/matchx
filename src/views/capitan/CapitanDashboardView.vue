@@ -10,6 +10,12 @@ import AppBadge from '@/components/ui/AppBadge.vue'
 import { Users, Swords, Trophy, CalendarClock, Calendar, Clock } from 'lucide-vue-next'
 
 const auth = useAuthStore()
+
+const welcomeMessage = computed(() => {
+  const h = new Date().getHours()
+  const greeting = h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches'
+  return `${greeting}, ${auth.userName}`
+})
 const equiposStore = useEquiposStore()
 const jugadoresStore = useJugadoresStore()
 const partidosStore = usePartidosStore()
@@ -89,8 +95,8 @@ const formatHora = (iso: string) =>
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-4xl font-bold text-matchx-text-primary">Dashboard</h1>
-      <p class="text-matchx-text-secondary">Bienvenido, {{ auth.userName }}</p>
+      <h1 class="text-3xl font-bold text-matchx-text-primary">{{ welcomeMessage }}</h1>
+      <p class="text-matchx-text-secondary text-sm">Panel de tu equipo</p>
     </div>
 
     <!-- Sin equipo asignado -->

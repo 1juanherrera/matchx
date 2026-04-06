@@ -2,18 +2,19 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import type { UserRole } from '@/stores/auth'
 import { Trophy, Shield, Users, Activity } from 'lucide-vue-next'
-import RoleSelector from '@/components/auth/RoleSelector.vue'
+import ProfileSelector from '@/components/auth/ProfileSelector.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 
 const router = useRouter()
 const route  = useRoute()
 const auth   = useAuthStore()
 
-const selectedRole = ref<UserRole | null>(null)
-const isLoading    = ref(false)
-const error        = ref('')
+type LoginStep = 'credentials' | 'select_profile'
+
+const step      = ref<LoginStep>('credentials')
+const isLoading = ref(false)
+const error     = ref('')
 
 const features = [
   { icon: Trophy,   text: 'Gestión de torneos y fases' },
@@ -29,22 +30,52 @@ const roleDestinations: Record<string, string> = {
   delegado:     '/delegado/partidos',
   arbitro:      '/arbitro/dashboard',
   capitan:      '/capitan/dashboard',
+  jugador:      '/capitan/dashboard',
   publico:      '/publico/torneos',
 }
 
-const handleSubmit = async ({ username, password }: { username: string; password: string; role: UserRole }) => {
+// ── Paso 1: credenciales ────────────────────────────────────────────────────
+const handleCredentials = async ({ username, password }: { username: string; password: string }) => {
   error.value     = ''
   isLoading.value = true
   try {
-    await auth.login(username, password)
-    const role = auth.userRole ?? 'publico'
-    const dest = (route.query.redirect as string) || roleDestinations[role] || '/admin/dashboard'
-    router.push(dest)
+    const needsProfile = await auth.login(username, password)
+    if (needsProfile) {
+      step.value = 'select_profile'
+    } else {
+      redirectByRole()
+    }
   } catch {
     error.value = 'Credenciales incorrectas. Verifica tu usuario y contraseña.'
   } finally {
     isLoading.value = false
   }
+}
+
+// ── Paso 2: selección de perfil ─────────────────────────────────────────────
+const handleProfileSelect = async (rol: string) => {
+  error.value     = ''
+  isLoading.value = true
+  try {
+    await auth.selectProfile(rol)
+    redirectByRole()
+  } catch {
+    error.value = 'No se pudo cargar el perfil. Intenta de nuevo.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleBack = () => {
+  auth.clearPending()
+  step.value  = 'credentials'
+  error.value = ''
+}
+
+const redirectByRole = () => {
+  const role = auth.userRole ?? 'publico'
+  const dest = (route.query.redirect as string) || roleDestinations[role] || '/admin/dashboard'
+  router.push(dest)
 }
 </script>
 
@@ -59,9 +90,7 @@ const handleSubmit = async ({ username, password }: { username: string; password
     >
       <!-- Logo -->
       <div>
-        <div class="mb-2 text-2xl font-bold font-heading text-matchx-accent-green">
-          matchX
-        </div>
+        <div class="mb-2 text-2xl font-bold font-heading text-matchx-accent-green">matchX</div>
         <p class="text-sm text-matchx-text-muted">Sistema de Gestión de Torneos</p>
       </div>
 
@@ -92,60 +121,60 @@ const handleSubmit = async ({ username, password }: { username: string; password
       </div>
 
       <!-- Footer -->
-      <p class="text-xs text-matchx-text-muted">
-        matchX © 2026 · Mercado colombiano
-      </p>
+      <p class="text-xs text-matchx-text-muted">matchX © 2026 · Mercado colombiano</p>
     </aside>
 
     <!-- ─── RIGHT PANEL — Form ───────────────────────────────────────── -->
     <main class="flex flex-1 flex-col items-center justify-center px-5 py-10 sm:px-8">
-      <div class="w-full max-w-[400px] space-y-8">
+      <!-- El ancho se define en cada paso individualmente -->
+      <div class="w-full flex flex-col items-center">
 
         <!-- Mobile-only logo -->
-        <div class="text-center lg:hidden">
+        <div class="text-center lg:hidden w-full max-w-[400px] mb-8">
           <div class="text-3xl font-bold font-heading text-matchx-accent-green">matchX</div>
           <p class="mt-1 text-sm text-matchx-text-muted">Sistema de Gestión de Torneos</p>
         </div>
 
-        <!-- Heading -->
-        <div class="space-y-1">
-          <h1 class="text-2xl font-bold font-heading text-matchx-text-primary">
-            Bienvenido de vuelta
-          </h1>
-          <p class="text-sm text-matchx-text-secondary">
-            Selecciona tu rol para acceder al sistema
-          </p>
-        </div>
-
-        <!-- Role selector -->
-        <RoleSelector v-model="selectedRole" />
-
-        <!-- Form — solo aparece cuando hay rol seleccionado -->
+        <!-- Heading + contenido por paso — cada paso controla su propio ancho -->
         <Transition
           mode="out-in"
           enter-active-class="transition duration-200 ease-out"
-          enter-from-class="opacity-0 translate-y-3"
-          leave-active-class="transition duration-100 ease-in"
-          leave-to-class="opacity-0"
+          enter-from-class="opacity-0 translate-x-4"
+          leave-active-class="transition duration-150 ease-in"
+          leave-to-class="opacity-0 -translate-x-4"
         >
-          <div v-if="selectedRole" :key="selectedRole">
-            <!-- Divider -->
-            <div class="flex items-center gap-3 mb-6">
-              <div class="h-px flex-1 bg-matchx-border-base" />
-              <span class="text-xs text-matchx-text-muted">credenciales</span>
-              <div class="h-px flex-1 bg-matchx-border-base" />
+          <!-- Paso 1: credenciales — ancho estrecho -->
+          <div v-if="step === 'credentials'" key="step-credentials" class="w-full max-w-[400px] space-y-6">
+            <div class="space-y-1">
+              <h1 class="text-2xl font-bold font-heading text-matchx-text-primary">Bienvenido de vuelta</h1>
+              <p class="text-sm text-matchx-text-secondary">Ingresa tus credenciales para continuar</p>
             </div>
             <LoginForm
-              :role="selectedRole"
               :loading="isLoading"
               :error="error"
-              @submit="handleSubmit"
+              @submit="handleCredentials"
+            />
+          </div>
+
+          <!-- Paso 2: selección de perfil — ancho amplio para la grid de tarjetas -->
+          <div v-else key="step-profile" class="w-full max-w-3xl space-y-6">
+            <div class="space-y-1">
+              <h1 class="text-2xl font-bold font-heading text-matchx-text-primary">Selecciona tu perfil</h1>
+              <p class="text-sm text-matchx-text-secondary">Tu cuenta tiene acceso a múltiples perfiles</p>
+            </div>
+            <ProfileSelector
+              :profiles="auth.pendingProfiles"
+              :username="auth.pendingUser?.username ?? auth.pendingUser?.email ?? ''"
+              :loading="isLoading"
+              :error="error"
+              @select="handleProfileSelect"
+              @back="handleBack"
             />
           </div>
         </Transition>
 
         <!-- Footer -->
-        <p class="text-center text-xs text-matchx-text-muted">
+        <p class="text-center mt-5 text-xs text-matchx-text-muted">
           Conectado a API REST · 35.243.241.205:8082
         </p>
       </div>

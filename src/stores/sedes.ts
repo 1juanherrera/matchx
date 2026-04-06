@@ -35,7 +35,8 @@ export const useSedesStore = defineStore('sedes', () => {
     loading.value = true
     error.value   = null
     try {
-      sedes.value = (await sedesService.getAll()) as Sede[]
+      const lista = await sedesService.getAll()
+      sedes.value = (await Promise.all(lista.map(s => sedesService.getById(s.id)))) as Sede[]
     } catch (err: any) {
       error.value = err.response?.data?.message ?? 'Error cargando sedes'
     } finally {
@@ -47,13 +48,18 @@ export const useSedesStore = defineStore('sedes', () => {
 
   const crearSede = async (sede: Omit<Sede, 'id' | 'creado_en'>) => {
     const res = await sedesService.create({
-      nombre:     sede.nombre,
-      email:      sede.email,
-      estado:     sede.activo,
-      direccion:  sede.direccion,
-      telefono:   sede.telefono,
+      nombre:      sede.nombre,
+      ciudad:      sede.ciudad,
+      departamento: sede.departamento,
+      direccion:   sede.direccion,
+      capacidad:   sede.capacidad,
+      telefono:    sede.telefono,
+      email:       sede.email,
+      estado:      sede.activo,
     })
-    const nueva = res.data.data ?? res.data
+    const body = res.data
+    if (body.status === 'error') throw new Error(body.message)
+    const nueva = body.data ?? body
     sedes.value.push({ ...sede, id: nueva.id ?? nueva.id_sedes, creado_en: nueva.creado_en ?? '' })
     return nueva
   }

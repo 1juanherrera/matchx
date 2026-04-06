@@ -10,8 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Tech Stack**: Vue 3 + Vite + Tailwind CSS + Pinia + Vue Router + TypeScript
 - **Architecture**: SPA modular con 7 roles y 8 módulos funcionales
-- **Status**: Hitos 0, 1, 2, 3, 4, 5 y 6 completados. Todos los hitos finalizados.
+- **Status**: Hitos 0–6 completados. Backend real conectado. En fase de integración y bugfixes.
 - **Model**: 20 tablas relacionales definidas en `sistema_torneos.mwb`
+- **Backend**: API REST real (Laravel). Variable de entorno `VITE_API_BASE_URL` en `.env`.
 
 ---
 
@@ -47,8 +48,19 @@ src/
 ├── style.css               ← Tailwind + custom styles
 ├── router/
 │   └── index.ts            ← Vue Router con guards por rol
+├── services/               ← Capa de API (axios) — BACKEND REAL
+│   ├── api.ts              ← Instancia axios + interceptor JWT + redirect 401
+│   ├── auth.service.ts     ← /api/login, /api/logout, /api/user
+│   ├── sedes.service.ts    ← /api/torneos/sedes + normalizeCancha/normalizeSede
+│   ├── torneos.service.ts
+│   ├── equipos.service.ts
+│   ├── jugadores.service.ts
+│   ├── partidos.service.ts
+│   ├── modalidades.service.ts
+│   ├── usuarios.service.ts
+│   └── eventos.service.ts
 ├── stores/
-│   ├── auth.ts             ← Pinia auth store (session, roles, perms)
+│   ├── auth.ts             ← Pinia auth store (session, roles, perms, select_profile flow)
 │   ├── torneos.ts          ✅ CRUD torneos + torneosActivos
 │   ├── equipos.ts          ✅ CRUD equipos + equiposPorTorneo computed
 │   ├── jugadores.ts        ✅ CRUD jugadores + jugadoresPorEquipo computed
@@ -60,11 +72,11 @@ src/
 ├── layouts/
 │   ├── AppLayout.vue       ✅ Sidebar + topbar con nav por rol (7 roles)
 │   ├── AuthLayout.vue      ✅ Centered login/error layout
-│   ├── PublicLayout.vue    ← Simple navbar (público — TODO)
-│   └── DelegadoLayout.vue  ← Mobile-first mesa de control (TODO)
+│   ├── PublicLayout.vue    ✅ Simple navbar público
+│   └── DelegadoLayout.vue  ✅ Mobile-first mesa de control
 ├── views/
 │   ├── auth/
-│   │   ├── LoginView.vue           ✅ Mock login con 7 usuarios/roles
+│   │   ├── LoginView.vue           ✅ Login real con select_profile flow
 │   │   └── NoAutorizadoView.vue   ✅
 │   ├── admin-sistema/              ✅ HITO 1 COMPLETO
 │   │   ├── DashboardView.vue
@@ -90,8 +102,10 @@ src/
 │   │   ├── CapitanDashboardView.vue ← Equipo + stats + próximos + resultados
 │   │   ├── MiEquipoView.vue         ← Plantilla con avatares, búsqueda, resumen posición
 │   │   └── FixtureView.vue          ← Fixture del equipo (filtrable, equipo propio resaltado)
-│   ├── delegado/                   ← TODO: HITO 3 — CRITICAL
-│   └── publico/                    ← TODO: HITO 6
+│   ├── delegado/                   ✅ HITO 3 COMPLETO
+│   │   ├── MisPartidosView.vue
+│   │   └── EnVivoView.vue
+│   └── publico/                    ✅ HITO 6 COMPLETO
 ├── components/
 │   └── ui/
 │       ├── AppButton.vue      ✅ Variants: primary/secondary/ghost/danger + sizes
@@ -102,20 +116,22 @@ src/
 │       ├── AppModal.vue       ✅ size prop (sm/md/lg)
 │       └── AppDataTable.vue   ✅ sortable, slots por columna, empty slot
 └── data/
-    └── mocks/
-        ├── usuarios.json           ✅ 7 usuarios (uno por rol)
-        ├── torneos.json            ✅ 3 torneos (F5 Bogotá, F7 Medellín, F11 Cali)
-        ├── equipos.json            ✅ 8 equipos (capitan_id en equipo 1)
-        ├── jugadores.json          ✅ 40 jugadores (5 por equipo, equipos 1-8)
-        ├── partidos.json           ✅ 6 partidos torneo 1 (4 finalizados, 2 programados)
-        ├── sedes.json              ✅ 3 sedes con canchas
-        ├── modalidades.json        ✅
-        └── configuracion_sistema.json ✅
+    └── mocks/                 ← YA NO SE USAN EN PRODUCCIÓN, solo referencia
+        ├── usuarios.json
+        ├── torneos.json
+        ├── equipos.json
+        ├── jugadores.json
+        ├── partidos.json
+        ├── sedes.json
+        ├── modalidades.json
+        └── configuracion_sistema.json
 ```
 
 ---
 
-## Usuarios de Prueba (Mock Login)
+## Usuarios de Prueba (Backend Real)
+
+> Login contra `/api/login`. Soporta flujo `select_profile` cuando un usuario tiene múltiples roles.
 
 | Usuario | Correo | Rol | Ruta inicial |
 |---------|--------|-----|--------------|
@@ -125,9 +141,7 @@ src/
 | Miguel Delegado | miguel@matchx.com | delegado | /delegado/partidos |
 | Pedro Árbitro | pedro@matchx.com | arbitro | /arbitro/dashboard |
 | Luis Capitán | luis@matchx.com | capitan | /capitan/dashboard |
-| Usuario Público | publico@matchx.com | publico | /admin/dashboard |
-
-**Nota:** Luis Capitán está vinculado a "Águilas FC" (equipo id=1) mediante `capitan_id: 6` en equipos.json.
+| Usuario Público | publico@matchx.com | publico | /publico/torneos |
 
 ---
 
@@ -159,7 +173,14 @@ src/
 /capitan/equipo             → capitan
 /capitan/fixture            → capitan
 
-/delegado/partidos          → delegado (TODO — placeholder)
+/delegado/partidos          → delegado
+/delegado/en-vivo/:id       → delegado (DelegadoLayout)
+
+/publico/torneos            → público (sin login)
+/publico/posiciones         → público
+/publico/fixture            → público
+/publico/sedes              → público
+/publico/partidos/:id       → público
 ```
 
 ---
@@ -167,10 +188,11 @@ src/
 ## Key Decisions
 
 ### Authentication
-- **Mock login** with 7 predefined users (one per role)
+- **Login real** contra API (`/api/login`). Soporta flujo `select_profile` (2 pasos).
 - Session persisted to `localStorage` key: `matchx_session`
 - Guards check role on every route transition
 - `initSession()` se llama en el redirect de `/` para evitar race condition con localStorage
+- **IMPORTANTE**: `handleLogout` debe ser `async/await` — si no, el `router.push('/login')` dispara antes de que `user.value = null` y el guard rebota al usuario de vuelta al dashboard.
 
 ### Design System
 - **Dark Mode OLED**: `#0f1923` base, `#00d4aa` accent green, `#ff6b35` accent orange
@@ -182,7 +204,57 @@ src/
 ### State Management
 - **Pinia stores** por dominio — Composition API style (`defineStore(() => { ... })`)
 - Getters filtrados usan `computed(() => (param) => filter...)` — se llaman SIN `.value` desde el template
-- **No hay backend** — todos los datos son JSON mockeados cargados con `import()`
+- **Backend real** — los stores consumen `src/services/*.service.ts` vía axios. Los mocks en `src/data/mocks/` ya no se usan en producción.
+
+### Integración con API (patrones críticos)
+
+#### Normalización de respuestas
+El backend Laravel usa snake_case con prefijos de tabla (ej: `id_sedes`, `id_canchas`). Cada service tiene funciones `normalize*` que mapean al modelo interno del frontend.
+
+```ts
+// sedes.service.ts — el backend devuelve id_sedes, tipo_superficie, estado
+function normalizeSede(raw: any): Sede {
+  return {
+    id:      raw.id_sedes  ?? raw.id,
+    activo:  raw.estado    ?? raw.activo ?? 1,
+    canchas: (raw.canchas ?? []).map(normalizeCancha),
+    // ...
+  }
+}
+```
+
+#### Canchas incluidas solo en getById
+`GET /api/torneos/sedes` (lista) NO incluye canchas. Solo `GET /api/torneos/sedes/:id` las trae.
+Por eso `fetchSedes` en el store usa `Promise.all` + `getById` para enriquecer cada sede:
+
+```ts
+const lista = await sedesService.getAll()
+sedes.value = await Promise.all(lista.map(s => sedesService.getById(s.id)))
+```
+
+#### Manejo de errores del API en stores
+Si el backend responde `{ status: 'error', message: '...' }` con HTTP 200, hay que comprobarlo explícitamente y lanzar un Error — axios no lo detecta como error automáticamente:
+
+```ts
+const body = res.data
+if (body.status === 'error') throw new Error(body.message)
+```
+
+#### Formularios con errores del API
+Los formularios deben ser `async`, awaitar la acción del store, y mostrar el mensaje de error dentro del modal si falla:
+
+```ts
+const saveSede = async () => {
+  if (!validateSedeForm()) return
+  saveError.value = ''
+  try {
+    await store.crearSede({ ... })
+    showModal.value = false
+  } catch (err: any) {
+    saveError.value = err.message ?? 'Error al guardar'
+  }
+}
+```
 
 ### Patterns establecidos
 
@@ -235,11 +307,11 @@ const initiales = (nombre: string, apellido: string) =>
 
 ---
 
-## Offline Architecture (TODO — Hito 3)
-- **IndexedDB** for local event cache
-- **localStorage** for session + simple data
-- **Manual sync queue** for delegado registering events without connection
-- **Service Worker** (PWA) — NetworkFirst for data, CacheFirst for assets
+## Offline Architecture (Hito 3 — Implementado)
+- **IndexedDB** para cache local de eventos del delegado (`dbAdd/dbGetAll/dbDelete`)
+- **localStorage** para sesión + datos simples (`matchx_session`)
+- **Cola de sync manual** — delegado registra eventos sin conexión, se sincronizan al reconectar
+- **Service Worker** (PWA) — pendiente de implementar
 
 ---
 
@@ -270,11 +342,26 @@ export const useYourFeatureStore = defineStore('yourFeature', () => {
 })
 ```
 
-### 3. New JSON Mock
+### 3. New Service
 ```ts
-// En el store, cargar con:
-const data = await import('@/data/mocks/yourEntity.json')
-items.value = data.default
+// src/services/yourEntity.service.ts
+import api from './api'
+
+function normalizeEntity(raw: any): Entity {
+  return {
+    id:   raw.id_entity ?? raw.id,
+    // mapear todos los campos del backend al modelo interno
+  }
+}
+
+export const yourEntityService = {
+  getAll: async () => {
+    const { data } = await api.get('/api/your-entity')
+    return (data.data ?? data).map(normalizeEntity)
+  },
+  create: (payload: Partial<Entity>) => api.post('/api/your-entity', payload),
+  update: (id: number, payload: Partial<Entity>) => api.put(`/api/your-entity/${id}`, payload),
+}
 ```
 
 ### 4. New Component
@@ -310,7 +397,8 @@ items.value = data.default
 
 ### Before Coding
 1. **Load skills** — `interface-design`, `vue-best-practices`, `ui-ux-pro-max`
-2. **Explore domain** — Leer store y mocks antes de proponer UI
+2. **Explore domain** — Leer el service y el store del dominio antes de proponer cambios
+3. **Verificar el contrato de la API** — el backend puede devolver campos con prefijo (`id_sedes`) o estructura anidada (`ubicacion.ciudad`)
 
 ### During Coding
 1. **Composition API** + `<script setup>` es el estándar
@@ -363,8 +451,8 @@ items.value = data.default
 - [x] 4 layouts creados
 - [x] Vue Router con auth guards
 - [x] Pinia auth store
-- [x] Mock login view (7 usuarios/roles)
-- [x] usuarios.json mock data
+- [x] Login real contra API + flujo select_profile
+- [x] Capa de servicios axios con interceptors JWT
 
 ### Hito 1 ✅ COMPLETO — Admin Sistema
 - [x] DashboardView con métricas
@@ -409,17 +497,35 @@ items.value = data.default
 - [x] Información de sedes
 - [x] PublicLayout
 
+### Integración Backend ⚠️ EN CURSO
+- [x] Auth: login real + select_profile + logout async
+- [x] Sedes: CRUD + canchas (getById para traer canchas incluidas)
+- [ ] Torneos: conectar store al service real
+- [ ] Equipos: conectar store al service real
+- [ ] Jugadores: conectar store al service real
+- [ ] Partidos: conectar store al service real
+- [ ] Modalidades: conectar store al service real
+- [ ] Usuarios: conectar store al service real
+
+### Bugs Resueltos ✅
+- **Sedes — campos faltantes en create**: `ciudad`, `departamento`, `capacidad` no se enviaban al API (`stores/sedes.ts`)
+- **Sedes — error del API ignorado**: el store hacía push local aunque el backend respondiera `status: error` (`stores/sedes.ts`)
+- **Sedes — modal cerraba sin await**: `saveSede` en `SedesView.vue` no era async, cerraba el modal antes de confirmar éxito
+- **Sedes — canchas no visibles**: `fetchSedes` usaba solo `getAll()` (sin canchas); corregido con `Promise.all + getById` (`stores/sedes.ts`)
+- **Logout doble clic**: `handleLogout` en `AppLayout.vue` no awaita `authStore.logout()`, el guard redirigía al dashboard antes de que `user.value = null`
+
 ### Later
 - [ ] PWA + Service Worker
 - [ ] Reports PDF (jsPDF + html2canvas)
-- [ ] WebSocket para tiempo real (futuro backend)
+- [ ] WebSocket para tiempo real
 - [ ] Tests (Vitest)
 
 ---
 
 ## Resources
 
-- **Mockup data**: `src/data/mocks/*.json`
+- **API Base URL**: configurar en `.env` → `VITE_API_BASE_URL=http://...`
+- **Mock data (referencia)**: `src/data/mocks/*.json` — ya no se usan en producción
 - **Schema reference**: `explorador_tablas_torneos.html` (abrir en browser)
 - **DB Model**: `sistema_torneos.mwb` (MySQL Workbench)
 - **Design specs**: `.claude/skills/ui-ux-pro-max/` (design system database)
@@ -447,15 +553,17 @@ npm run type-check       # TypeScript check (not yet configured)
 
 ## Notes
 
-1. **No Backend Yet** — All data is mocked JSON, API calls are simulated
-2. **Session Storage** — Auth state lives in localStorage, not a database
-3. **Dark Mode Default** — All interfaces designed for dark mode, light mode TODO
-4. **Mobile First** — Delegado views optimized for 360px+ phones on cancha
-5. **Offline Critical** — Delegado puede perder conexión, debe guardar eventos localmente
+1. **Backend real conectado** — Laravel REST API via axios. Configurar `VITE_API_BASE_URL` en `.env`.
+2. **Normalización obligatoria** — El backend usa `id_sedes`, `id_canchas`, `estado` etc. Siempre pasar por `normalize*` en el service antes de guardar en el store.
+3. **Campos lista vs detalle** — Algunos endpoints de lista no retornan relaciones (ej: canchas). Usar `getById` cuando se necesiten datos completos.
+4. **Session Storage** — Auth state lives in localStorage key `matchx_session`. Token JWT adjuntado automáticamente por interceptor en `api.ts`.
+5. **Dark Mode Default** — All interfaces designed for dark mode, light mode TODO.
+6. **Mobile First** — Delegado views optimized for 360px+ phones on cancha.
+7. **Offline Critical** — Delegado puede perder conexión; eventos se guardan en IndexedDB y sincronizan al reconectar.
 
 ---
 
-**Last Updated**: 2026-03-30
-**Completed**: Hitos 0, 1, 2, 4, 5
-**Next Focus**: PWA + Service Worker, Reports PDF, o Tests (Vitest)
+**Last Updated**: 2026-04-06
+**Completed**: Hitos 0–6. Backend conectado en Auth + Sedes.
+**Next Focus**: Conectar stores restantes al backend (Torneos, Equipos, Jugadores, Partidos, Modalidades, Usuarios)
 **Skills Used**: interface-design, vue-best-practices, ui-ux-pro-max
