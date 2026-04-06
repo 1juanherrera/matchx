@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { sedesService } from '@/services/sedes.service'
 
 export interface Cancha {
   id: number
@@ -26,19 +27,17 @@ export interface Sede {
 }
 
 export const useSedesStore = defineStore('sedes', () => {
-  const sedes = ref<Sede[]>([])
+  const sedes   = ref<Sede[]>([])
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  const error   = ref<string | null>(null)
 
   const fetchSedes = async () => {
     loading.value = true
-    error.value = null
+    error.value   = null
     try {
-      const data = await import('@/data/mocks/sedes.json')
-      sedes.value = data.default
-    } catch (err) {
-      error.value = 'Error cargando sedes'
-      console.error(err)
+      sedes.value = (await sedesService.getAll()) as Sede[]
+    } catch (err: any) {
+      error.value = err.response?.data?.message ?? 'Error cargando sedes'
     } finally {
       loading.value = false
     }
@@ -46,72 +45,69 @@ export const useSedesStore = defineStore('sedes', () => {
 
   const sedesActivas = computed(() => sedes.value.filter(s => s.activo === 1))
 
-  const crearSede = (sede: Omit<Sede, 'id' | 'creado_en'>) => {
-    const nuevoId = Math.max(...sedes.value.map(s => s.id), 0) + 1
-    const nuevaSede: Sede = {
-      ...sede,
-      id: nuevoId,
-      creado_en: new Date().toISOString(),
+  const crearSede = async (sede: Omit<Sede, 'id' | 'creado_en'>) => {
+    const res = await sedesService.create({
+      nombre:     sede.nombre,
+      email:      sede.email,
+      estado:     sede.activo,
+      direccion:  sede.direccion,
+      telefono:   sede.telefono,
+    })
+    const nueva = res.data.data ?? res.data
+    sedes.value.push({ ...sede, id: nueva.id ?? nueva.id_sedes, creado_en: nueva.creado_en ?? '' })
+    return nueva
+  }
+
+  const actualizarSede = async (id: number, datos: Partial<Sede>) => {
+    await sedesService.update(id, datos)
+    const idx = sedes.value.findIndex(s => s.id === id)
+    if (idx !== -1) sedes.value[idx] = { ...sedes.value[idx], ...datos }
+  }
+
+  const eliminarSede = async (id: number) => {
+    await sedesService.toggle(id)
+    const idx = sedes.value.findIndex(s => s.id === id)
+    if (idx !== -1) sedes.value.splice(idx, 1)
+  }
+
+  // ─── Canchas ─────────────────────────────────────────────────────────────
+
+  const agregarCancha = async (sedeId: number, cancha: Omit<Cancha, 'id'>) => {
+    const res = await sedesService.crearCancha({
+      sede_id:         sedeId,
+      nombre:          cancha.nombre,
+      tipo_superficie: cancha.tipo,
+    })
+    const nueva = res.data.data ?? res.data
+    const sede  = sedes.value.find(s => s.id === sedeId)
+    if (sede) {
+      sede.canchas.push({ ...cancha, id: nueva.id ?? nueva.id_canchas })
     }
-    sedes.value.push(nuevaSede)
-    return nuevaSede
+    return nueva
   }
 
-  const actualizarSede = (id: number, datos: Partial<Sede>) => {
-    const idx = sedes.value.findIndex(s => s.id === id)
-    if (idx === -1) return false
-    sedes.value[idx] = { ...sedes.value[idx], ...datos }
-    return true
-  }
-
-  const eliminarSede = (id: number) => {
-    const idx = sedes.value.findIndex(s => s.id === id)
-    if (idx === -1) return false
-    sedes.value.splice(idx, 1)
-    return true
-  }
-
-  const agregarCancha = (sedeId: number, cancha: Omit<Cancha, 'id'>) => {
+  const actualizarCancha = async (sedeId: number, canchaId: number, datos: Partial<Cancha>) => {
+    await sedesService.actualizarCancha(canchaId, datos)
     const sede = sedes.value.find(s => s.id === sedeId)
-    if (!sede) return null
-    const nuevoId = Math.max(...sede.canchas.map(c => c.id), 0) + 1
-    const nuevaCancha: Cancha = { ...cancha, id: nuevoId }
-    sede.canchas.push(nuevaCancha)
-    return nuevaCancha
-  }
-
-  const actualizarCancha = (sedeId: number, canchaId: number, datos: Partial<Cancha>) => {
-    const sede = sedes.value.find(s => s.id === sedeId)
-    if (!sede) return false
+    if (!sede) return
     const idx = sede.canchas.findIndex(c => c.id === canchaId)
-    if (idx === -1) return false
-    sede.canchas[idx] = { ...sede.canchas[idx], ...datos }
-    return true
+    if (idx !== -1) sede.canchas[idx] = { ...sede.canchas[idx], ...datos }
   }
 
-  const eliminarCancha = (sedeId: number, canchaId: number) => {
+  const eliminarCancha = async (sedeId: number, canchaId: number) => {
+    await sedesService.eliminarCancha(canchaId)
     const sede = sedes.value.find(s => s.id === sedeId)
-    if (!sede) return false
+    if (!sede) return
     const idx = sede.canchas.findIndex(c => c.id === canchaId)
-    if (idx === -1) return false
-    sede.canchas.splice(idx, 1)
-    return true
+    if (idx !== -1) sede.canchas.splice(idx, 1)
   }
 
   const obtenerPorId = (id: number) => sedes.value.find(s => s.id === id)
 
   return {
-    sedes,
-    loading,
-    error,
+    sedes, loading, error,
     sedesActivas,
-    fetchSedes,
-    crearSede,
-    actualizarSede,
-    eliminarSede,
-    agregarCancha,
-    actualizarCancha,
-    eliminarCancha,
-    obtenerPorId,
+    fetchSedes, crearSede, actualizarSede, eliminarSede,
+    agregarCancha, actualizarCancha, eliminarCancha, obtenerPorId,
   }
 })

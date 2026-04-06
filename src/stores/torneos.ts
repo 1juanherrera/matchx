@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { torneosService } from '@/services/torneos.service'
 
-export type EstadoTorneo = 'programado' | 'en_curso' | 'finalizado' | 'cancelado'
+export type EstadoTorneo = 'programado' | 'inscripciones_abiertas' | 'en_curso' | 'finalizado' | 'cancelado'
 
 export interface Torneo {
   id: number
@@ -22,17 +23,15 @@ export interface Torneo {
 export const useTorneosStore = defineStore('torneos', () => {
   const torneos = ref<Torneo[]>([])
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  const error   = ref<string | null>(null)
 
   const fetchTorneos = async () => {
     loading.value = true
-    error.value = null
+    error.value   = null
     try {
-      const data = await import('@/data/mocks/torneos.json')
-      torneos.value = data.default
-    } catch (err) {
-      error.value = 'Error cargando torneos'
-      console.error(err)
+      torneos.value = (await torneosService.getAll()) as Torneo[]
+    } catch (err: any) {
+      error.value = err.response?.data?.message ?? 'Error cargando torneos'
     } finally {
       loading.value = false
     }
@@ -44,39 +43,29 @@ export const useTorneosStore = defineStore('torneos', () => {
 
   const obtenerPorId = (id: number) => torneos.value.find(t => t.id === id)
 
-  const crearTorneo = (torneo: Omit<Torneo, 'id' | 'creado_en'>) => {
-    const nuevo: Torneo = {
-      ...torneo,
-      id: Math.max(...torneos.value.map(t => t.id), 0) + 1,
-      creado_en: new Date().toISOString(),
-    }
+  const crearTorneo = async (torneo: Omit<Torneo, 'id' | 'creado_en'>) => {
+    const res = await torneosService.create(torneo)
+    const nuevo = res.data.data ?? res.data
     torneos.value.push(nuevo)
     return nuevo
   }
 
-  const actualizarTorneo = (id: number, datos: Partial<Torneo>) => {
+  const actualizarTorneo = async (id: number, datos: Partial<Torneo>) => {
+    await torneosService.update(id, datos)
     const idx = torneos.value.findIndex(t => t.id === id)
-    if (idx === -1) return false
-    torneos.value[idx] = { ...torneos.value[idx], ...datos }
-    return true
+    if (idx !== -1) torneos.value[idx] = { ...torneos.value[idx], ...datos }
   }
 
-  const eliminarTorneo = (id: number) => {
+  const eliminarTorneo = async (id: number) => {
+    // El backend no tiene DELETE torneo en la colección; usamos cambiarEstado a cancelado
+    await torneosService.cambiarEstado(id, 'cancelado')
     const idx = torneos.value.findIndex(t => t.id === id)
-    if (idx === -1) return false
-    torneos.value.splice(idx, 1)
-    return true
+    if (idx !== -1) torneos.value.splice(idx, 1)
   }
 
   return {
-    torneos,
-    loading,
-    error,
+    torneos, loading, error,
     torneosActivos,
-    fetchTorneos,
-    obtenerPorId,
-    crearTorneo,
-    actualizarTorneo,
-    eliminarTorneo,
+    fetchTorneos, obtenerPorId, crearTorneo, actualizarTorneo, eliminarTorneo,
   }
 })

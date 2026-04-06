@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { authService } from '@/services/auth.service'
 
 export type UserRole = 'superadmin' | 'admin_torneo' | 'admin_sede' | 'delegado' | 'arbitro' | 'capitan' | 'publico'
 
@@ -12,94 +13,81 @@ export interface AuthUser {
   avatar?: string
 }
 
+// Mapeo de roles del backend a roles internos del frontend
+const rolMap: Record<string, UserRole> = {
+  administrador: 'superadmin',
+  admin_torneo:  'admin_torneo',
+  admin_sede:    'admin_sede',
+  delegado:      'delegado',
+  arbitro:       'arbitro',
+  capitan:       'capitan',
+  publico:       'publico',
+}
+
+// Normaliza el usuario que devuelve el backend al shape interno
+function normalizeUser(raw: any, token: string): AuthUser {
+  const backendRol = raw.rol ?? raw.role ?? 'publico'
+  return {
+    usuario_id: raw.id_users ?? raw.uid ?? raw.id ?? raw.usuario_id ?? 0,
+    nombre:     raw.username ?? raw.nombre ?? raw.name ?? '',
+    correo:     raw.email    ?? raw.correo ?? '',
+    rol:        rolMap[backendRol] ?? (backendRol as UserRole),
+    token,
+    avatar:     raw.url_avatar ?? raw.avatar ?? undefined,
+  }
+}
+
 const STORAGE_KEY = 'matchx_session'
 
 export const useAuthStore = defineStore('auth', () => {
-  // State
-  const user = ref<AuthUser | null>(null)
+  const user      = ref<AuthUser | null>(null)
   const isLoading = ref(false)
 
-  // Load from localStorage on init
   const initSession = () => {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
         user.value = JSON.parse(stored)
-      } catch (e) {
-        console.error('Failed to load session:', e)
+      } catch {
         logout()
       }
     }
   }
 
-  // Computed
   const isAuthenticated = computed(() => !!user.value)
-  const userRole = computed(() => user.value?.rol || null)
-  const userName = computed(() => user.value?.nombre || 'Usuario')
+  const userRole        = computed(() => user.value?.rol ?? null)
+  const userName        = computed(() => user.value?.nombre ?? 'Usuario')
 
-  // Methods
-  const login = async (usuario_id: number, rol: UserRole) => {
+  const login = async (username: string, password: string) => {
     isLoading.value = true
     try {
-      // Mock login delay
-      await new Promise(resolve => setTimeout(resolve, 800))
+      // POST /api/login → { status, token, user: { rol, username, permisos, ... } }
+      const loginRes = await authService.login(username, password)
+      const { token, user: rawUser } = loginRes.data
 
-      // Get user data from mock
-      const users = await import('@/data/mocks/usuarios.json')
-      const mockUser = users.default.find((u: any) => u.id === usuario_id && u.rol === rol)
+      if (!token) throw new Error('El servidor no devolvió un token')
 
-      if (!mockUser) {
-        throw new Error('Usuario no encontrado')
-      }
-
-      user.value = {
-        usuario_id: mockUser.id,
-        nombre: mockUser.nombre,
-        correo: mockUser.correo,
-        rol: mockUser.rol,
-        token: `mock-token-${usuario_id}-${Date.now()}`,
-        avatar: mockUser.url_avatar,
-      }
-
-      // Persist to localStorage
+      user.value = normalizeUser(rawUser ?? {}, token)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
-    } catch (error) {
-      console.error('Login error:', error)
-      throw error
     } finally {
       isLoading.value = false
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    try { await authService.logout() } catch { /* ignorar errores de red al logout */ }
     user.value = null
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  const hasRole = (requiredRoles: UserRole[]): boolean => {
-    if (!user.value) return false
-    return requiredRoles.includes(user.value.rol)
-  }
+  const hasRole    = (requiredRoles: UserRole[]): boolean =>
+    !!user.value && requiredRoles.includes(user.value.rol)
 
-  const canAccess = (allowedRoles: UserRole[]): boolean => {
-    return hasRole(allowedRoles)
-  }
+  const canAccess  = (allowedRoles: UserRole[]): boolean => hasRole(allowedRoles)
 
   return {
-    // State
-    user,
-    isLoading,
-
-    // Computed
-    isAuthenticated,
-    userRole,
-    userName,
-
-    // Methods
-    initSession,
-    login,
-    logout,
-    hasRole,
-    canAccess,
+    user, isLoading,
+    isAuthenticated, userRole, userName,
+    initSession, login, logout, hasRole, canAccess,
   }
 })

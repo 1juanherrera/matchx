@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Partido } from './partidos'
+import { eventosService } from '@/services/eventos.service'
+import type { TipoEventoAPI } from '@/services/eventos.service'
+import { useAuthStore } from '@/stores/auth'
 
 export type TipoEvento =
   | 'gol_local'
@@ -169,13 +172,40 @@ export const useDelegadoStore = defineStore('delegado', () => {
 
   // ── Offline sync ─────────────────────────────────────────────────────────────
 
+  // Mapeo de tipos internos (frontend) → tipos del backend
+  const tipoEventoMap: Record<TipoEvento, TipoEventoAPI> = {
+    gol_local:       'gol',
+    gol_visitante:   'gol',
+    amarilla_local:  'tarjeta_amarilla',
+    amarilla_visitante: 'tarjeta_amarilla',
+    roja_local:      'tarjeta_roja',
+    roja_visitante:  'tarjeta_roja',
+    lesion:          'observacion',
+    inicio:          'observacion',
+    fin_primera:     'observacion',
+    fin_partido:     'observacion',
+  }
+
   const sincronizarCola = async () => {
     if (!online.value || !db || colaOffline.value.length === 0) return
+    const authStore = useAuthStore()
     const pendientes = [...colaOffline.value]
     for (const ev of pendientes) {
-      // En producción: POST al backend aquí
-      await dbDelete(db, ev.id).catch(() => {})
-      colaOffline.value = colaOffline.value.filter(e => e.id !== ev.id)
+      try {
+        await eventosService.registrar({
+          partido_id:    ev.partido_id,
+          tipo_evento:   tipoEventoMap[ev.tipo],
+          minuto:        ev.minuto,
+          equipo_id:     ev.equipo_id,
+          jugador_id:    ev.jugador_id,
+          registrado_por: authStore.user?.usuario_id,
+        })
+        if (db) await dbDelete(db, ev.id).catch(() => {})
+        colaOffline.value = colaOffline.value.filter(e => e.id !== ev.id)
+      } catch {
+        // Si falla un evento, detener la sincronización y reintentar en el siguiente ciclo
+        break
+      }
     }
   }
 

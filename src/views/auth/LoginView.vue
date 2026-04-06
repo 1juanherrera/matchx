@@ -22,24 +22,26 @@ const features = [
   { icon: Activity, text: 'Mesa de control en tiempo real' },
 ]
 
-const handleSubmit = async ({ userId, role }: { userId: number; role: UserRole }) => {
-  error.value    = ''
+const roleDestinations: Record<string, string> = {
+  superadmin:   '/admin/dashboard',
+  admin_torneo: '/torneo/dashboard',
+  admin_sede:   '/sede/dashboard',
+  delegado:     '/delegado/partidos',
+  arbitro:      '/arbitro/dashboard',
+  capitan:      '/capitan/dashboard',
+  publico:      '/publico/torneos',
+}
+
+const handleSubmit = async ({ username, password }: { username: string; password: string; role: UserRole }) => {
+  error.value     = ''
   isLoading.value = true
   try {
-    await auth.login(userId, role)
-    const roleDestinations: Record<string, string> = {
-      superadmin:   '/admin/dashboard',
-      admin_torneo: '/torneo/dashboard',
-      admin_sede:   '/sede/dashboard',
-      delegado:     '/delegado/partidos',
-      arbitro:      '/arbitro/dashboard',
-      capitan:      '/capitan/dashboard',
-      publico:      '/admin/dashboard',
-    }
+    await auth.login(username, password)
+    const role = auth.userRole ?? 'publico'
     const dest = (route.query.redirect as string) || roleDestinations[role] || '/admin/dashboard'
     router.push(dest)
   } catch {
-    error.value = 'Error al iniciar sesión. Intenta de nuevo.'
+    error.value = 'Credenciales incorrectas. Verifica tu usuario y contraseña.'
   } finally {
     isLoading.value = false
   }
@@ -144,7 +146,7 @@ const handleSubmit = async ({ userId, role }: { userId: number; role: UserRole }
 
         <!-- Footer -->
         <p class="text-center text-xs text-matchx-text-muted">
-          Prototipo demo — datos simulados con mocks JSON
+          Conectado a API REST · 35.243.241.205:8082
         </p>
       </div>
     </main>

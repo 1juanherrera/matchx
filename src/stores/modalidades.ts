@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { modalidadesService } from '@/services/modalidades.service'
 
 export interface Modalidad {
   id: number
@@ -22,18 +23,16 @@ export interface Modalidad {
 
 export const useModalidadesStore = defineStore('modalidades', () => {
   const modalidades = ref<Modalidad[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  const loading     = ref(false)
+  const error       = ref<string | null>(null)
 
   const fetchModalidades = async () => {
     loading.value = true
-    error.value = null
+    error.value   = null
     try {
-      const data = await import('@/data/mocks/modalidades.json')
-      modalidades.value = data.default
-    } catch (err) {
-      error.value = 'Error cargando modalidades'
-      console.error(err)
+      modalidades.value = (await modalidadesService.getAll()) as Modalidad[]
+    } catch (err: any) {
+      error.value = err.response?.data?.message ?? 'Error cargando modalidades'
     } finally {
       loading.value = false
     }
@@ -41,30 +40,23 @@ export const useModalidadesStore = defineStore('modalidades', () => {
 
   const modalidadesActivas = computed(() => modalidades.value.filter(m => m.activo === 1))
 
-  const actualizarReglas = (id: number, reglas: Modalidad['reglas']) => {
+  const actualizarReglas = async (id: number, reglas: Modalidad['reglas']) => {
+    await modalidadesService.update(id, { reglas } as any)
     const idx = modalidades.value.findIndex(m => m.id === id)
-    if (idx === -1) return false
-    modalidades.value[idx].reglas = reglas
-    return true
+    if (idx !== -1) modalidades.value[idx].reglas = reglas
   }
 
-  const toggleActivo = (id: number) => {
+  const toggleActivo = async (id: number) => {
+    await modalidadesService.toggle(id)
     const idx = modalidades.value.findIndex(m => m.id === id)
-    if (idx === -1) return false
-    modalidades.value[idx].activo = modalidades.value[idx].activo === 1 ? 0 : 1
-    return true
+    if (idx !== -1) modalidades.value[idx].activo = modalidades.value[idx].activo === 1 ? 0 : 1
   }
 
   const obtenerPorId = (id: number) => modalidades.value.find(m => m.id === id)
 
   return {
-    modalidades,
-    loading,
-    error,
+    modalidades, loading, error,
     modalidadesActivas,
-    fetchModalidades,
-    actualizarReglas,
-    toggleActivo,
-    obtenerPorId,
+    fetchModalidades, actualizarReglas, toggleActivo, obtenerPorId,
   }
 })

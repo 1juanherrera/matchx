@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { partidosService } from '@/services/partidos.service'
 
-export type EstadoPartido = 'programado' | 'en_curso' | 'finalizado' | 'suspendido'
+export type EstadoPartido = 'programado' | 'en_curso' | 'finalizado' | 'suspendido' | 'aplazado'
 
 export interface Partido {
   id: number
@@ -21,18 +22,17 @@ export interface Partido {
 
 export const usePartidosStore = defineStore('partidos', () => {
   const partidos = ref<Partido[]>([])
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  const loading  = ref(false)
+  const error    = ref<string | null>(null)
 
   const fetchPartidos = async () => {
     loading.value = true
-    error.value = null
+    error.value   = null
     try {
-      const data = await import('@/data/mocks/partidos.json')
-      partidos.value = data.default as Partido[]
-    } catch (err) {
-      error.value = 'Error cargando partidos'
-      console.error(err)
+      // Carga los próximos partidos; para un torneo específico usar torneosService.getPartidos(id)
+      partidos.value = (await partidosService.getProximos(50)) as Partido[]
+    } catch (err: any) {
+      error.value = err.response?.data?.message ?? 'Error cargando partidos'
     } finally {
       loading.value = false
     }
@@ -51,39 +51,28 @@ export const usePartidosStore = defineStore('partidos', () => {
 
   const obtenerPorId = (id: number) => partidos.value.find(p => p.id === id)
 
-  const crearPartido = (partido: Omit<Partido, 'id'>) => {
-    const nuevo: Partido = {
-      ...partido,
-      id: Math.max(...partidos.value.map(p => p.id), 0) + 1,
-    }
+  const crearPartido = async (partido: Omit<Partido, 'id'>) => {
+    const res = await partidosService.create(partido)
+    const nuevo = res.data.data ?? res.data
     partidos.value.push(nuevo)
     return nuevo
   }
 
-  const actualizarPartido = (id: number, datos: Partial<Partido>) => {
+  const actualizarPartido = async (id: number, datos: Partial<Partido>) => {
+    await partidosService.update(id, datos)
     const idx = partidos.value.findIndex(p => p.id === id)
-    if (idx === -1) return false
-    partidos.value[idx] = { ...partidos.value[idx], ...datos }
-    return true
+    if (idx !== -1) partidos.value[idx] = { ...partidos.value[idx], ...datos }
   }
 
-  const eliminarPartido = (id: number) => {
+  const eliminarPartido = async (id: number) => {
+    await partidosService.cambiarEstado(id, 'suspendido')
     const idx = partidos.value.findIndex(p => p.id === id)
-    if (idx === -1) return false
-    partidos.value.splice(idx, 1)
-    return true
+    if (idx !== -1) partidos.value.splice(idx, 1)
   }
 
   return {
-    partidos,
-    loading,
-    error,
-    partidosPorTorneo,
-    proximosPartidos,
-    fetchPartidos,
-    obtenerPorId,
-    crearPartido,
-    actualizarPartido,
-    eliminarPartido,
+    partidos, loading, error,
+    partidosPorTorneo, proximosPartidos,
+    fetchPartidos, obtenerPorId, crearPartido, actualizarPartido, eliminarPartido,
   }
 })

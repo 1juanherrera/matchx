@@ -11,19 +11,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  submit: [credentials: { userId: number; role: UserRole }]
+  submit: [credentials: { username: string; password: string; role: UserRole }]
 }>()
-
-// Mock user IDs per role
-const userIdByRole: Record<UserRole, number> = {
-  superadmin: 1,
-  admin_torneo: 2,
-  admin_sede: 3,
-  delegado: 4,
-  arbitro: 5,
-  capitan: 6,
-  publico: 7,
-}
 
 const email = ref('')
 const password = ref('')
@@ -31,8 +20,10 @@ const showPassword = ref(false)
 
 const isPublic = computed(() => props.role === 'publico')
 
-const placeholderEmail: Record<UserRole, string> = {
-  superadmin:   'carlos@matchx.com',
+
+// Usernames de prueba por rol (para el placeholder del campo email)
+const usernameByRole: Record<UserRole, string> = {
+  superadmin:   'superadmin',
   admin_torneo: 'ana@matchx.com',
   admin_sede:   'juan@matchx.com',
   delegado:     'miguel@matchx.com',
@@ -43,8 +34,7 @@ const placeholderEmail: Record<UserRole, string> = {
 
 const handleSubmit = () => {
   if (!props.role) return
-  const userId = userIdByRole[props.role]
-  emit('submit', { userId, role: props.role })
+  emit('submit', { username: email.value, password: password.value, role: props.role })
 }
 </script>
 
@@ -99,7 +89,7 @@ const handleSubmit = () => {
           v-model="email"
           type="email"
           autocomplete="email"
-          :placeholder="placeholderEmail[role]"
+          :placeholder="usernameByRole[role]"
           class="w-full rounded-lg border border-matchx-border-base bg-matchx-bg-base px-3 py-2.5 text-base text-matchx-text-primary placeholder-matchx-text-muted transition-colors duration-150 ease-out focus:border-matchx-accent-green focus:outline-none focus:ring-2 focus:ring-matchx-accent-green/20"
         />
       </div>
@@ -155,7 +145,7 @@ const handleSubmit = () => {
       </AppButton>
 
       <p class="text-center text-xs text-matchx-text-muted">
-        Modo demo — cualquier contraseña funciona
+        Ej: jalbertoariza / jandy0512
       </p>
     </form>
   </Transition>
