@@ -5,13 +5,16 @@ import { equiposService } from '@/services/equipos.service'
 export interface Equipo {
   id: number
   nombre: string
+  nombre_corto: string
   torneo_id: number
-  ciudad: string
-  colores: string
+  color_principal: string
+  color_secundario: string
+  color_terciario: string
+  color_cuaternario: string
   escudo_url: string
+  capitan_nombre: string
   activo: number
   creado_en: string
-  capitan_id?: number
 }
 
 export const useEquiposStore = defineStore('equipos', () => {
@@ -39,7 +42,22 @@ export const useEquiposStore = defineStore('equipos', () => {
 
   const crearEquipo = async (equipo: Omit<Equipo, 'id' | 'creado_en'>) => {
     const res = await equiposService.create(equipo)
-    const nuevo = res.data.data ?? res.data
+    const raw = res.data.data ?? res.data
+    // El backend no devuelve torneo_id — lo tomamos del payload enviado
+    const nuevo: Equipo = {
+      id:               raw.id_equipos  ?? raw.id ?? 0,
+      nombre:           raw.nombre      ?? equipo.nombre,
+      nombre_corto:     raw.nombre_corto ?? equipo.nombre_corto,
+      torneo_id:        equipo.torneo_id,
+      color_principal:   raw.color_principal   ?? equipo.color_principal,
+      color_secundario:  raw.color_secundario  ?? equipo.color_secundario,
+      color_terciario:   raw.color_terciario   ?? equipo.color_terciario,
+      color_cuaternario: raw.color_cuaternario ?? equipo.color_cuaternario,
+      escudo_url:       raw.url_escudo  ?? raw.escudo_url ?? equipo.escudo_url,
+      capitan_nombre:   raw.capitan_nombre ?? '',
+      activo:           raw.activo ?? 1,
+      creado_en:        raw.creado_en ?? '',
+    }
     equipos.value.push(nuevo)
     return nuevo
   }

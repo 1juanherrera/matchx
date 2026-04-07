@@ -65,6 +65,7 @@ const navigationItems = computed(() => {
     return [
       ...baseItems,
       { label: 'Torneos',       icon: Trophy,        route: '/torneo/torneos' },
+      { label: 'Equipos',       icon: Users,         route: '/torneo/equipos' },
       { label: 'Inscripciones', icon: ClipboardList, route: '/torneo/inscripciones' },
       { label: 'Plantilla',     icon: UserCheck,     route: '/torneo/plantilla' },
       { label: 'Partidos',      icon: CircleDot,     route: '/torneo/partidos' },

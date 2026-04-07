@@ -25,7 +25,12 @@ function normalize(raw: any): Modalidad {
     descanso_minutos:     raw.descanso_minutos ?? 0,
     cambios_permitidos:   raw.max_cambios ?? raw.cambios_permitidos ?? 0,
     activo:               raw.activo ?? raw.activated ?? 1,
-    reglas:               raw.reglas,
+    reglas:               raw.reglas ?? {
+      fuera_de_juego: false,
+      arquero_puede_recibir_pase: false,
+      limite_pases_atras: false,
+      tarjeta_roja_automatica: false,
+    },
     creado_en:            raw.creado_en ?? raw.created_at ?? '',
   }
 }

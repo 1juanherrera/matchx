@@ -5,10 +5,10 @@ import { sedesService } from '@/services/sedes.service'
 export interface Cancha {
   id: number
   nombre: string
-  tipo: 'pasto_natural' | 'pasto_sintetico' | 'cemento'
+  tipo: 'sintetica' | 'natural' | 'cemento' | 'otro'
   largo_metros: number
   ancho_metros: number
-  capacidad: number
+  capacidad: string
   disponible: boolean
 }
 

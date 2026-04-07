@@ -155,6 +155,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Torneos', requiereRol: ['admin_torneo'] },
       },
       {
+        path: 'equipos',
+        name: 'TorneoEquipos',
+        component: () => import('@/views/admin-torneo/EquiposView.vue'),
+        meta: { title: 'Equipos', requiereRol: ['admin_torneo'] },
+      },
+      {
         path: 'inscripciones',
         name: 'TorneoInscripciones',
         component: () => import('@/views/admin-torneo/InscripcionesView.vue'),

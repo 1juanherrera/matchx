@@ -19,6 +19,8 @@ export interface AuthUser {
   rol: UserRole
   token: string
   avatar?: string
+  torneo_id?: number   // solo admin_torneo: torneo que administra
+  sede_id?: number     // solo admin_sede: sede que administra
 }
 
 export interface AuthProfile {
@@ -39,15 +41,22 @@ const rolMap: Record<string, UserRole> = {
   publico:       'publico',
 }
 
+function decodeJwtPayload(token: string): any {
+  try { return JSON.parse(atob(token.split('.')[1])) } catch { return {} }
+}
+
 function normalizeUser(raw: any, token: string): AuthUser {
+  const jwt = decodeJwtPayload(token)
   const backendRol = raw.rol ?? raw.role ?? 'publico'
   return {
-    usuario_id: raw.id_users ?? raw.uid ?? raw.id ?? raw.usuario_id ?? 0,
+    usuario_id: raw.id_users ?? raw.uid ?? raw.id ?? raw.usuario_id ?? jwt.uid ?? jwt.id ?? jwt.sub ?? 0,
     nombre:     raw.username ?? raw.nombre ?? raw.name ?? '',
     correo:     raw.email    ?? raw.correo ?? '',
     rol:        rolMap[backendRol] ?? (backendRol as UserRole),
     token,
     avatar:     raw.url_avatar ?? raw.avatar ?? undefined,
+    torneo_id:  raw.torneo_id ?? raw.id_torneos ?? undefined,
+    sede_id:    raw.sede_id   ?? raw.id_sedes   ?? undefined,
   }
 }
 

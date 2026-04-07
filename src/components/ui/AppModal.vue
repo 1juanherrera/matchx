@@ -1,5 +1,5 @@
 <script setup lang="ts">
-type ModalSize = 'sm' | 'md' | 'lg'
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
 interface Props {
   open: boolean
@@ -34,10 +34,11 @@ const closeModal = () => emit('update:open', false)
       >
         <div
           :class="[
-            'bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-2xl w-full mx-4 animate-in fade-in zoom-in-95 duration-200',
+            'bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-2xl w-full mx-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col',
             size === 'sm' && 'max-w-sm',
             size === 'md' && 'max-w-md',
             size === 'lg' && 'max-w-2xl',
+            size === 'xl' && 'max-w-4xl',
           ]"
           @click.stop
         >
@@ -61,7 +62,7 @@ const closeModal = () => emit('update:open', false)
           </div>
 
           <!-- Content -->
-          <div class="p-6">
+          <div class="p-6 overflow-y-auto flex-1">
             <slot />
           </div>
 

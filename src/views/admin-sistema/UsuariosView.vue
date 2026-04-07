@@ -19,12 +19,12 @@ const searchTerm = ref('')
 
 const rolesOptions = [
   { value: '', label: 'Todos los roles' },
-  { value: 'superadmin', label: 'Superadministrador' },
+  { value: 'administrador', label: 'Administrador' },
   { value: 'admin_torneo', label: 'Admin Torneo' },
   { value: 'admin_sede', label: 'Admin Sede' },
   { value: 'delegado', label: 'Delegado' },
   { value: 'arbitro', label: 'Árbitro' },
-  { value: 'capitan', label: 'Capitán' },
+  { value: 'jugador', label: 'Jugador' },
   { value: 'publico', label: 'Público' },
 ]
 
@@ -139,6 +139,10 @@ const deleteUsuario = (id: number) => {
     store.eliminarUsuario(id)
   }
 }
+
+function removeGuiones(texto: string): string {
+  return texto.replace(/_/g, ' ');
+}
 </script>
 
 <template>
@@ -186,7 +190,7 @@ const deleteUsuario = (id: number) => {
       >
         <template #cell-rol="{ value }">
           <AppBadge :variant="rolBadgeVariant(value)">
-            {{ value }}
+            {{ removeGuiones(value) }}
           </AppBadge>
         </template>
 
@@ -221,9 +225,10 @@ const deleteUsuario = (id: number) => {
     <AppModal
       :open="showModal"
       :title="`${isEditing ? 'Editar' : 'Crear'} Usuario`"
+      size="lg"
       @update:open="showModal = $event"
     >
-      <div class="space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AppInput
           v-model="formData.nombre"
           label="Nombre Completo"

@@ -1,29 +1,142 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useSedesStore } from '@/stores/sedes'
-import { usePartidosStore } from '@/stores/partidos'
+import { usePartidosStore, type EstadoPartido } from '@/stores/partidos'
 import { useEquiposStore } from '@/stores/equipos'
+import { useTorneosStore } from '@/stores/torneos'
+import { useAuthStore } from '@/stores/auth'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppModal from '@/components/ui/AppModal.vue'
+import AppInput from '@/components/ui/AppInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
-import { CalendarClock, Clock, MapPin, Swords } from 'lucide-vue-next'
+import { CalendarClock, CalendarPlus, Clock, MapPin, Swords } from 'lucide-vue-next'
 
 const sedesStore = useSedesStore()
 const partidosStore = usePartidosStore()
 const equiposStore = useEquiposStore()
+const torneosStore = useTorneosStore()
+const authStore = useAuthStore()
 
 const selectedSedeId = ref<number | null>(null)
 const selectedCanchaId = ref<number | null>(null)
+
+// Sede propia del admin_sede (desde sesión o primera de la lista)
+const miSedeId = computed(() => authStore.user?.sede_id ?? sedesStore.sedesActivas[0]?.id ?? null)
+
+// ─── Modal programar partido ──────────────────────────────────
+const showModal = ref(false)
+const saveError = ref('')
+
+const formData = ref({
+  torneo_id: null as number | null,
+  equipo_local_id: 0,
+  equipo_visitante_id: 0,
+  sede_id: 0,
+  cancha_id: 0,
+  jornada: 1,
+  fecha_hora: '',
+  estado: 'programado' as EstadoPartido,
+  goles_local: 0,
+  goles_visitante: 0,
+  delegado_id: 0,
+  arbitro_id: 0,
+})
+
+// Solo torneos que tienen al menos un partido en la sede del admin
+const torneosEnMiSede = computed(() => {
+  const sedeId = miSedeId.value
+  if (!sedeId) return torneosStore.torneos
+  const torneoIds = new Set(
+    partidosStore.partidos
+      .filter(p => p.sede_id === sedeId)
+      .map(p => p.torneo_id),
+  )
+  return torneosStore.torneos.filter(t => torneoIds.has(t.id))
+})
+
+const torneoOptions = computed(() => [
+  { value: null, label: 'Sin torneo' },
+  ...torneosEnMiSede.value.map(t => ({ value: t.id, label: t.nombre })),
+])
+
+const equipoOptions = computed(() => {
+  const lista = formData.value.torneo_id
+    ? equiposStore.equiposPorTorneo(formData.value.torneo_id)
+    : equiposStore.equipos
+  return lista.map(e => ({ value: e.id, label: e.nombre }))
+})
+
+const sedesOptions = computed(() =>
+  sedesStore.sedesActivas.map(s => ({ value: s.id, label: s.nombre })),
+)
+
+const canchaDisponible = (canchaId: number): boolean => {
+  if (!formData.value.fecha_hora) return true
+  const t = new Date(formData.value.fecha_hora).getTime()
+  return !partidosStore.partidos.some(p =>
+    p.cancha_id === canchaId &&
+    Math.abs(new Date(p.fecha_hora).getTime() - t) < 2 * 60 * 60 * 1000,
+  )
+}
+
+const canchasOptions = computed(() => {
+  const sede = sedesStore.obtenerPorId(formData.value.sede_id)
+  if (!sede) return []
+  return sede.canchas.map(c => ({
+    value: c.id,
+    label: canchaDisponible(c.id) ? c.nombre : `${c.nombre} — Ocupada`,
+  }))
+})
+
+const sameTeamError = computed(() =>
+  formData.value.equipo_local_id !== 0 &&
+  formData.value.equipo_visitante_id !== 0 &&
+  formData.value.equipo_local_id === formData.value.equipo_visitante_id,
+)
+
+const openNew = () => {
+  saveError.value = ''
+  formData.value = {
+    torneo_id: null,
+    equipo_local_id: 0,
+    equipo_visitante_id: 0,
+    sede_id: miSedeId.value ?? 0,
+    cancha_id: 0,
+    jornada: 1,
+    fecha_hora: '',
+    estado: 'programado',
+    goles_local: 0,
+    goles_visitante: 0,
+    delegado_id: 0,
+    arbitro_id: 0,
+  }
+  showModal.value = true
+}
+
+const savePartido = async () => {
+  if (!formData.value.fecha_hora) return
+  if (formData.value.torneo_id && (!formData.value.equipo_local_id || !formData.value.equipo_visitante_id)) return
+  if (sameTeamError.value) return
+  saveError.value = ''
+  try {
+    await partidosStore.crearPartido({ ...formData.value })
+    showModal.value = false
+  } catch (err: any) {
+    saveError.value = err.message ?? 'Error al programar el partido'
+  }
+}
 
 onMounted(async () => {
   await Promise.all([
     sedesStore.fetchSedes(),
     partidosStore.fetchPartidos(),
     equiposStore.fetchEquipos(),
+    torneosStore.fetchTorneos(),
   ])
-  if (sedesStore.sedesActivas.length > 0) {
-    selectedSedeId.value = sedesStore.sedesActivas[0].id
-  }
+  // Fijar a la propia sede
+  selectedSedeId.value = miSedeId.value
 })
 
 const sedeOptions = computed(() =>
@@ -91,9 +204,15 @@ const esHoy = (iso: string) => fechaKey(iso) === fechaKey(new Date().toISOString
 
 <template>
   <div class="space-y-6">
-    <div>
-      <h1 class="text-3xl font-bold text-matchx-text-primary">Calendario</h1>
-      <p class="text-matchx-text-muted mt-1">Partidos programados en la sede</p>
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-matchx-text-primary">Calendario</h1>
+        <p class="text-matchx-text-muted mt-1">Partidos programados en la sede</p>
+      </div>
+      <AppButton variant="primary" @click="openNew">
+        <CalendarPlus class="w-4 h-4 mr-1.5" :stroke-width="2" />
+        Programar Partido
+      </AppButton>
     </div>
 
     <!-- Filtros -->
@@ -215,5 +334,40 @@ const esHoy = (iso: string) => fechaKey(iso) === fechaKey(new Date().toISOString
         </div>
       </div>
     </div>
+    <!-- Modal programar partido -->
+    <AppModal
+      :open="showModal"
+      title="Programar Partido"
+      size="lg"
+      @update:open="showModal = $event"
+    >
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <AppSelect v-model="formData.torneo_id" :options="torneoOptions" label="Torneo (opcional)" />
+        </div>
+        <AppSelect v-model="formData.equipo_local_id" :options="equipoOptions" label="Equipo Local" required :disabled="!formData.torneo_id" />
+        <div class="space-y-1">
+          <AppSelect v-model="formData.equipo_visitante_id" :options="equipoOptions" label="Equipo Visitante" required :disabled="!formData.torneo_id" />
+          <p v-if="sameTeamError" class="text-xs text-matchx-accent-orange">Local y visitante no pueden ser el mismo equipo</p>
+        </div>
+        <AppInput v-model="formData.fecha_hora" label="Fecha y Hora" type="datetime-local" required />
+        <AppInput v-model="formData.jornada" label="Jornada" type="number" />
+        <AppSelect v-model="formData.sede_id" :options="sedesOptions" label="Sede" :disabled="!!miSedeId" />
+        <AppSelect
+          v-model="formData.cancha_id"
+          :options="canchasOptions"
+          label="Cancha"
+          :disabled="!formData.sede_id || canchasOptions.length === 0"
+        />
+      </div>
+      <p v-if="saveError" class="mt-3 text-sm text-matchx-accent-orange">{{ saveError }}</p>
+
+      <template #footer>
+        <div class="flex gap-3 justify-end">
+          <AppButton variant="secondary" @click="showModal = false">Cancelar</AppButton>
+          <AppButton variant="primary" @click="savePartido">Programar</AppButton>
+        </div>
+      </template>
+    </AppModal>
   </div>
 </template>

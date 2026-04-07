@@ -50,84 +50,84 @@ const toggleActivo = (id: number) => {
     </div>
 
     <!-- Modalidades Grid -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       <AppCard v-for="modalidad in store.modalidades" :key="modalidad.id">
         <!-- Header -->
-        <div class="flex items-start justify-between mb-4 pb-4 border-b border-matchx-border-base">
-          <div>
-            <h2 class="text-xl font-semibold text-matchx-text-primary">{{ modalidad.nombre }}</h2>
-            <p class="text-sm text-matchx-text-muted">{{ modalidad.codigo }} - {{ modalidad.descripcion }}</p>
+        <div class="flex items-center justify-between mb-3 pb-3 border-b border-matchx-border-base">
+          <div class="min-w-0">
+            <h2 class="text-base font-semibold text-matchx-text-primary truncate">{{ modalidad.nombre }}</h2>
+            <p class="text-xs text-matchx-text-muted truncate">{{ modalidad.codigo }} · {{ modalidad.descripcion }}</p>
           </div>
-          <AppBadge :variant="modalidad.activo === 1 ? 'green' : 'gray'">
+          <AppBadge :variant="modalidad.activo === 1 ? 'green' : 'gray'" class="ml-2 shrink-0">
             {{ modalidad.activo === 1 ? 'Activo' : 'Inactivo' }}
           </AppBadge>
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-matchx-border-base">
-          <div class="text-center">
-            <div class="text-2xl font-bold text-matchx-accent-green">{{ modalidad.jugadores_por_equipo }}</div>
-            <div class="text-xs text-matchx-text-muted">Jugadores por equipo</div>
+        <div class="grid grid-cols-4 gap-1 mb-3 pb-3 border-b border-matchx-border-base text-center">
+          <div>
+            <div class="text-lg font-bold text-matchx-accent-green">{{ modalidad.jugadores_por_equipo }}</div>
+            <div class="text-[10px] text-matchx-text-muted leading-tight">Jugadores</div>
           </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-matchx-accent-green">{{ modalidad.duracion_minutos }}'</div>
-            <div class="text-xs text-matchx-text-muted">Duración</div>
+          <div>
+            <div class="text-lg font-bold text-matchx-accent-green">{{ modalidad.duracion_minutos }}'</div>
+            <div class="text-[10px] text-matchx-text-muted leading-tight">Duración</div>
           </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-matchx-accent-orange">{{ modalidad.cambios_permitidos }}</div>
-            <div class="text-xs text-matchx-text-muted">Cambios</div>
+          <div>
+            <div class="text-lg font-bold text-matchx-accent-orange">{{ modalidad.cambios_permitidos }}</div>
+            <div class="text-[10px] text-matchx-text-muted leading-tight">Cambios</div>
           </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-matchx-accent-orange">{{ modalidad.descanso_minutos }}'</div>
-            <div class="text-xs text-matchx-text-muted">Descanso</div>
+          <div>
+            <div class="text-lg font-bold text-matchx-accent-orange">{{ modalidad.descanso_minutos }}'</div>
+            <div class="text-[10px] text-matchx-text-muted leading-tight">Descanso</div>
           </div>
         </div>
 
         <!-- Rules -->
-        <div class="space-y-2 mb-4">
-          <h3 class="text-sm font-semibold text-matchx-text-secondary">Reglas</h3>
-          <div class="space-y-2">
-            <label class="flex items-center gap-3 cursor-pointer group">
+        <div class="mb-3">
+          <h3 class="text-xs font-semibold text-matchx-text-muted uppercase tracking-wider mb-2">Reglas</h3>
+          <div class="grid grid-cols-2 gap-1">
+            <label class="flex items-center gap-1.5 cursor-pointer group">
               <input
                 type="checkbox"
                 :checked="modalidad.reglas.fuera_de_juego"
                 @change="toggleRule(modalidad.id, 'fuera_de_juego')"
-                class="w-4 h-4 rounded accent-matchx-accent-green"
+                class="w-3.5 h-3.5 rounded accent-matchx-accent-green shrink-0"
               />
-              <span class="text-sm text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
+              <span class="text-xs text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
                 Fuera de juego
               </span>
             </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
+            <label class="flex items-center gap-1.5 cursor-pointer group">
               <input
                 type="checkbox"
                 :checked="modalidad.reglas.arquero_puede_recibir_pase"
                 @change="toggleRule(modalidad.id, 'arquero_puede_recibir_pase')"
-                class="w-4 h-4 rounded accent-matchx-accent-green"
+                class="w-3.5 h-3.5 rounded accent-matchx-accent-green shrink-0"
               />
-              <span class="text-sm text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
+              <span class="text-xs text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
                 Arquero recibe pase
               </span>
             </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
+            <label class="flex items-center gap-1.5 cursor-pointer group">
               <input
                 type="checkbox"
                 :checked="modalidad.reglas.limite_pases_atras"
                 @change="toggleRule(modalidad.id, 'limite_pases_atras')"
-                class="w-4 h-4 rounded accent-matchx-accent-green"
+                class="w-3.5 h-3.5 rounded accent-matchx-accent-green shrink-0"
               />
-              <span class="text-sm text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
+              <span class="text-xs text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
                 Límite pases atrás
               </span>
             </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
+            <label class="flex items-center gap-1.5 cursor-pointer group">
               <input
                 type="checkbox"
                 :checked="modalidad.reglas.tarjeta_roja_automatica"
                 @change="toggleRule(modalidad.id, 'tarjeta_roja_automatica')"
-                class="w-4 h-4 rounded accent-matchx-accent-green"
+                class="w-3.5 h-3.5 rounded accent-matchx-accent-green shrink-0"
               />
-              <span class="text-sm text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
+              <span class="text-xs text-matchx-text-primary group-hover:text-matchx-accent-green transition-colors">
                 Roja automática
               </span>
             </label>
@@ -137,6 +137,7 @@ const toggleActivo = (id: number) => {
         <!-- Action Button -->
         <AppButton
           :variant="modalidad.activo === 1 ? 'danger' : 'primary'"
+          size="sm"
           class="w-full"
           @click="toggleActivo(modalidad.id)"
         >

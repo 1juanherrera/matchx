@@ -82,11 +82,11 @@ const formatHora = (iso: string) =>
   new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
 
 const tipoLabel = (tipo: string) => ({
-  pasto_natural: 'Natural', pasto_sintetico: 'Sintético', cemento: 'Cemento',
+  sintetica: 'Sintética', natural: 'Natural', cemento: 'Cemento', otro: 'Otro',
 }[tipo] ?? tipo)
 
 const tipoBadge = (tipo: string): 'green' | 'blue' | 'orange' => ({
-  pasto_natural: 'green' as const, pasto_sintetico: 'blue' as const, cemento: 'orange' as const,
+  sintetica: 'blue' as const, natural: 'green' as const, cemento: 'orange' as const, otro: 'gray' as const,
 }[tipo] ?? 'gray' as any)
 </script>
 

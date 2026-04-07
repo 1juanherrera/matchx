@@ -32,7 +32,7 @@
 html.light {
   color-scheme: light;
 
-  --matchx-bg-base:       248 250 252;
+  --matchx-bg-base:       240 240 243;
   --matchx-bg-surface:    255 255 255;
   --matchx-bg-elevated:   241 245 249;
 

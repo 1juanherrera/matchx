@@ -16,7 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const badgeClass = computed(() => {
-  const base = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium'
+  const base = 'inline-flex items-center gap-1.5 px-2.5 capitalize py-1 rounded-full text-xs font-medium'
 
   const variants = {
     green: 'bg-matchx-accent-green/10 text-matchx-accent-green',

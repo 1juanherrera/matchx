@@ -6,7 +6,7 @@ export type EstadoPartido = 'programado' | 'en_curso' | 'finalizado' | 'suspendi
 
 export interface Partido {
   id: number
-  torneo_id: number
+  torneo_id: number | null
   equipo_local_id: number
   equipo_visitante_id: number
   sede_id: number

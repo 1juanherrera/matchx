@@ -18,17 +18,18 @@ const editingCanchaId = ref<number | null>(null)
 
 const formData = ref({
   nombre: '',
-  tipo: 'pasto_sintetico' as Cancha['tipo'],
+  tipo: 'sintetica' as Cancha['tipo'],
   largo_metros: 105,
   ancho_metros: 68,
-  capacidad: 500,
+  capacidad: '',
   disponible: true,
 })
 
 const tipoOptions = [
-  { value: 'pasto_natural',   label: 'Pasto Natural' },
-  { value: 'pasto_sintetico', label: 'Pasto Sintético' },
-  { value: 'cemento',         label: 'Cemento' },
+  { value: 'sintetica', label: 'Sintética' },
+  { value: 'natural',   label: 'Natural' },
+  { value: 'cemento',   label: 'Cemento' },
+  { value: 'otro',      label: 'Otro' },
 ]
 
 onMounted(async () => {
@@ -47,19 +48,19 @@ const sedeActual = computed(() =>
 )
 
 const tipoLabel = (tipo: Cancha['tipo']) => ({
-  pasto_natural: 'Pasto Natural', pasto_sintetico: 'Pasto Sintético', cemento: 'Cemento',
+  sintetica: 'Sintética', natural: 'Natural', cemento: 'Cemento', otro: 'Otro',
 }[tipo])
 
 const tipoBadge = (tipo: Cancha['tipo']): 'green' | 'blue' | 'orange' => ({
-  pasto_natural: 'green' as const, pasto_sintetico: 'blue' as const, cemento: 'orange' as const,
+  sintetica: 'blue' as const, natural: 'green' as const, cemento: 'orange' as const, otro: 'gray' as const,
 }[tipo])
 
 const openNew = () => {
   isEditing.value = false
   editingCanchaId.value = null
   formData.value = {
-    nombre: '', tipo: 'pasto_sintetico',
-    largo_metros: 105, ancho_metros: 68, capacidad: 500, disponible: true,
+    nombre: '', tipo: 'sintetica',
+    largo_metros: 105, ancho_metros: 68, capacidad: '', disponible: true,
   }
   showModal.value = true
 }
@@ -177,7 +178,7 @@ const deleteCancha = (canchaId: number) => {
             <div>
               <div class="text-xs text-matchx-text-muted">Capacidad</div>
               <div class="text-sm font-medium text-matchx-text-primary">
-                {{ cancha.capacidad.toLocaleString() }}
+                {{ cancha.capacidad || '—' }}
               </div>
             </div>
           </div>
@@ -209,7 +210,7 @@ const deleteCancha = (canchaId: number) => {
           <AppInput v-model="formData.largo_metros" label="Largo (m)" type="number" />
           <AppInput v-model="formData.ancho_metros" label="Ancho (m)" type="number" />
         </div>
-        <AppInput v-model="formData.capacidad" label="Capacidad (espectadores)" type="number" />
+        <AppInput v-model="formData.capacidad" label="Capacidad" placeholder="ej: 6x6" />
         <div class="flex items-center gap-3">
           <label class="text-sm font-medium text-matchx-text-secondary">Disponible</label>
           <button

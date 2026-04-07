@@ -13,10 +13,10 @@ const toggleSede = (id: number) => {
 }
 
 const tipoCancha: Record<string, string> = {
-  pasto_natural:   'Pasto Natural',
-  pasto_sintetico: 'Pasto Sintético',
-  cemento:         'Cemento',
-  parquet:         'Parquet',
+  sintetica: 'Sintética',
+  natural:   'Natural',
+  cemento:   'Cemento',
+  otro:      'Otro',
 }
 </script>
 

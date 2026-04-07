@@ -11,7 +11,14 @@ import AppSelect from '@/components/ui/AppSelect.vue'
 const store = useSedesStore()
 
 // ─── UI state ────────────────────────────────────────────────
-const expandedSede = ref<number | null>(null)
+const expandedSedes = ref<Set<number>>(new Set())
+const toggleExpanded = (id: number) => {
+  const next = new Set(expandedSedes.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  expandedSedes.value = next
+}
+const isExpanded = (id: number) => expandedSedes.value.has(id)
 const showInactivas = ref(false)
 const showSedeModal = ref(false)
 const showCanchasModal = ref(false)
@@ -41,17 +48,18 @@ const sedeFormErrors = ref({
 // ─── Cancha form ─────────────────────────────────────────────
 const canchaForm = ref({
   nombre: '',
-  tipo: 'pasto_sintetico' as Cancha['tipo'],
+  tipo: 'sintetica' as Cancha['tipo'],
   largo_metros: 100,
   ancho_metros: 64,
-  capacidad: 1000,
+  capacidad: '6x6',
   disponible: true,
 })
 
 const tipoCanchaOptions = [
-  { value: 'pasto_natural', label: 'Pasto Natural' },
-  { value: 'pasto_sintetico', label: 'Pasto Sintético' },
-  { value: 'cemento', label: 'Cemento' },
+  { value: 'sintetica', label: 'Sintética' },
+  { value: 'natural',   label: 'Natural' },
+  { value: 'cemento',   label: 'Cemento' },
+  { value: 'otro',      label: 'Otro' },
 ]
 
 // ─── Computed ────────────────────────────────────────────────
@@ -156,10 +164,10 @@ const openCanchasModal = (sede: Sede) => {
   selectedSedeId.value = sede.id
   canchaForm.value = {
     nombre: '',
-    tipo: 'pasto_sintetico',
+    tipo: 'sintetica',
     largo_metros: 100,
     ancho_metros: 64,
-    capacidad: 1000,
+    capacidad: '6x6',
     disponible: true,
   }
   showCanchasModal.value = true
@@ -170,10 +178,10 @@ const addCancha = () => {
   store.agregarCancha(selectedSedeId.value, { ...canchaForm.value })
   canchaForm.value = {
     nombre: '',
-    tipo: 'pasto_sintetico',
+    tipo: 'sintetica',
     largo_metros: 100,
     ancho_metros: 64,
-    capacidad: 1000,
+    capacidad: '6x6',
     disponible: true,
   }
 }
@@ -192,9 +200,10 @@ const toggleDisponible = (sedeId: number, cancha: Cancha) => {
 
 const tipoCanchaLabel = (tipo: Cancha['tipo']) => {
   const labels = {
-    pasto_natural: 'Natural',
-    pasto_sintetico: 'Sintético',
-    cemento: 'Cemento',
+    sintetica: 'Sintética',
+    natural:   'Natural',
+    cemento:   'Cemento',
+    otro:      'Otro',
   }
   return labels[tipo]
 }
@@ -260,21 +269,21 @@ onMounted(() => {
     </AppCard>
 
     <!-- Sedes Grid -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <AppCard
         v-for="sede in sedesVisibles"
         :key="sede.id"
         :class="sede.activo === 0 && 'opacity-60'"
       >
         <!-- Header -->
-        <div class="flex items-start justify-between mb-4 pb-4 border-b border-matchx-border-base">
+        <div class="flex items-start justify-between mb-3 pb-3 border-b border-matchx-border-base">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <h2 class="text-lg font-semibold text-matchx-text-primary truncate">{{ sede.nombre }}</h2>
+            <div class="flex items-center gap-2 mb-0.5">
+              <h2 class="text-base font-semibold text-matchx-text-primary truncate">{{ sede.nombre }}</h2>
               <AppBadge v-if="sede.activo === 0" variant="gray" :pulse="false">Inactiva</AppBadge>
             </div>
-            <p class="text-sm text-matchx-text-muted mt-0.5">{{ sede.ciudad }}, {{ sede.departamento }}</p>
-            <p class="text-xs text-matchx-text-muted mt-0.5">{{ sede.direccion }}</p>
+            <p class="text-sm text-matchx-text-muted truncate">{{ sede.ciudad }}, {{ sede.departamento }}</p>
+            <p class="text-xs text-matchx-text-muted truncate">{{ sede.direccion }}</p>
           </div>
           <AppBadge variant="green" class="ml-3 shrink-0">
             {{ sede.canchas.length }} canchas
@@ -282,37 +291,39 @@ onMounted(() => {
         </div>
 
         <!-- Info -->
-        <div class="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-matchx-border-base text-sm">
+        <div class="grid grid-cols-3 gap-3 mb-3 pb-3 border-b border-matchx-border-base">
           <div>
-            <div class="text-xs text-matchx-text-muted mb-0.5">Capacidad</div>
-            <div class="font-semibold text-matchx-accent-green">{{ sede.capacidad.toLocaleString() }}</div>
+            <div class="text-xs text-matchx-text-muted mb-0.5">Disponibles</div>
+            <div class="text-sm font-semibold text-matchx-accent-green">
+              {{ sede.canchas.filter(c => c.disponible).length }}/{{ sede.canchas.length }}
+            </div>
           </div>
           <div>
             <div class="text-xs text-matchx-text-muted mb-0.5">Teléfono</div>
-            <div class="text-matchx-text-primary">{{ sede.telefono || '—' }}</div>
+            <div class="text-sm text-matchx-text-primary truncate">{{ sede.telefono || '—' }}</div>
           </div>
-          <div class="col-span-2">
+          <div>
             <div class="text-xs text-matchx-text-muted mb-0.5">Correo</div>
-            <div class="text-matchx-text-primary truncate">{{ sede.email || '—' }}</div>
+            <div class="text-sm text-matchx-text-primary truncate">{{ sede.email || '—' }}</div>
           </div>
         </div>
 
         <!-- Canchas expandibles -->
-        <div class="mb-4">
+        <div class="mb-3">
           <button
             class="flex items-center justify-between w-full text-sm font-medium text-matchx-text-secondary hover:text-matchx-accent-green transition-colors duration-150 cursor-pointer"
-            @click="expandedSede = expandedSede === sede.id ? null : sede.id"
+            @click="toggleExpanded(sede.id)"
           >
             <span>Canchas ({{ sede.canchas.length }})</span>
             <svg
-              :class="['w-4 h-4 transition-transform duration-150', expandedSede === sede.id && 'rotate-180']"
+              :class="['w-4 h-4 transition-transform duration-150', isExpanded(sede.id) && 'rotate-180']"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
 
-          <div v-if="expandedSede === sede.id" class="mt-2 space-y-2">
+          <div v-if="isExpanded(sede.id)" class="mt-2 space-y-2">
             <div
               v-if="sede.canchas.length === 0"
               class="text-center py-3 text-xs text-matchx-text-muted bg-matchx-bg-base/30 rounded-lg"
@@ -322,11 +333,11 @@ onMounted(() => {
             <div
               v-for="cancha in sede.canchas"
               :key="cancha.id"
-              class="p-3 rounded-lg bg-matchx-bg-base/30 border border-matchx-border-base/30 flex items-center justify-between gap-2"
+              class="px-3 py-2 rounded-lg bg-matchx-bg-base/30 border border-matchx-border-base/30 flex items-center justify-between gap-2"
             >
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-matchx-text-primary text-sm truncate">{{ cancha.nombre }}</div>
-                <div class="text-xs text-matchx-text-muted mt-0.5">
+                <div class="text-xs text-matchx-text-muted">
                   {{ tipoCanchaLabel(cancha.tipo) }} · {{ cancha.largo_metros || 0 }}×{{ cancha.ancho_metros || 0 }}m
                 </div>
               </div>
@@ -339,10 +350,10 @@ onMounted(() => {
 
         <!-- Actions -->
         <div class="flex gap-2">
-          <AppButton variant="secondary" class="flex-1" @click="openEditSedeModal(sede)">
+          <AppButton variant="secondary" size="sm" class="flex-1" @click="openEditSedeModal(sede)">
             Editar
           </AppButton>
-          <AppButton variant="secondary" class="flex-1" @click="openCanchasModal(sede)">
+          <AppButton variant="secondary" size="sm" class="flex-1" @click="openCanchasModal(sede)">
             Canchas
           </AppButton>
           <AppButton
@@ -363,8 +374,8 @@ onMounted(() => {
       size="lg"
       @update:open="showSedeModal = $event"
     >
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="sm:col-span-2">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="col-span-2 sm:col-span-4">
           <AppInput
             v-model="sedeForm.nombre"
             label="Nombre de la sede"
@@ -373,21 +384,25 @@ onMounted(() => {
             :error="sedeFormErrors.nombre"
           />
         </div>
-        <AppInput
-          v-model="sedeForm.ciudad"
-          label="Ciudad"
-          placeholder="ej: Bogotá"
-          required
-          :error="sedeFormErrors.ciudad"
-        />
-        <AppInput
-          v-model="sedeForm.departamento"
-          label="Departamento"
-          placeholder="ej: Cundinamarca"
-          required
-          :error="sedeFormErrors.departamento"
-        />
-        <div class="sm:col-span-2">
+        <div class="col-span-2">
+          <AppInput
+            v-model="sedeForm.ciudad"
+            label="Ciudad"
+            placeholder="ej: Barranquilla"
+            required
+            :error="sedeFormErrors.ciudad"
+          />
+        </div>
+        <div class="col-span-2">
+          <AppInput
+            v-model="sedeForm.departamento"
+            label="Departamento"
+            placeholder="ej: Atlántico"
+            required
+            :error="sedeFormErrors.departamento"
+          />
+        </div>
+        <div class="col-span-2 sm:col-span-4">
           <AppInput
             v-model="sedeForm.direccion"
             label="Dirección"
@@ -397,18 +412,12 @@ onMounted(() => {
           />
         </div>
         <AppInput
-          v-model="sedeForm.capacidad"
-          label="Capacidad"
-          type="number"
-          placeholder="ej: 5000"
-        />
-        <AppInput
           v-model="sedeForm.telefono"
           label="Teléfono"
           type="tel"
           placeholder="ej: +573001234567"
         />
-        <div class="sm:col-span-2">
+        <div class="col-span-3">
           <AppInput
             v-model="sedeForm.email"
             label="Correo electrónico"
@@ -483,42 +492,46 @@ onMounted(() => {
         </div>
 
         <!-- Formulario agregar cancha -->
-        <div class="border-t border-matchx-border-base pt-4 space-y-3">
-          <h3 class="text-sm font-semibold text-matchx-text-secondary">Agregar cancha</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="sm:col-span-2">
+        <div class="border-t border-matchx-border-base pt-3">
+          <h3 class="text-xs font-semibold text-matchx-text-muted uppercase tracking-wider mb-2">Agregar cancha</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+            <div class="col-span-2">
               <AppInput
                 v-model="canchaForm.nombre"
                 label="Nombre"
                 placeholder="ej: Cancha Principal"
               />
             </div>
-            <AppSelect
-              v-model="canchaForm.tipo"
-              :options="tipoCanchaOptions"
-              label="Tipo de superficie"
-            />
-            <AppInput
-              v-model="canchaForm.capacidad"
-              label="Capacidad (espectadores)"
-              type="number"
-              placeholder="ej: 1000"
-            />
+            <div class="col-span-2">
+              <AppSelect
+                v-model="canchaForm.tipo"
+                :options="tipoCanchaOptions"
+                label="Superficie"
+              />
+            </div>
             <AppInput
               v-model="canchaForm.largo_metros"
-              label="Largo (metros)"
+              label="Largo (m)"
               type="number"
-              placeholder="ej: 100"
+              placeholder="100"
             />
             <AppInput
               v-model="canchaForm.ancho_metros"
-              label="Ancho (metros)"
+              label="Ancho (m)"
               type="number"
-              placeholder="ej: 64"
+              placeholder="64"
             />
+            <div class="col-span-2">
+              <AppInput
+                v-model="canchaForm.capacidad"
+                label="Capacidad máxima"
+                placeholder="ej: 6x6"
+              />
+            </div>
           </div>
           <AppButton
             variant="primary"
+            size="sm"
             :disabled="!canchaForm.nombre.trim()"
             @click="addCancha"
           >

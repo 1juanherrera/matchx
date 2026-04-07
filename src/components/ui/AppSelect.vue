@@ -84,7 +84,7 @@ const selectOption = (value: string | number) => {
       >
         <div
           v-if="isOpen"
-          class="absolute top-full left-0 right-0 mt-1 z-10 bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-lg overflow-hidden"
+          class="absolute top-full left-0 right-0 mt-1 z-[200] bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-lg overflow-y-auto max-h-52"
         >
           <button
             v-for="option in options"

@@ -4,6 +4,7 @@ import { usePartidosStore, type Partido, type EstadoPartido } from '@/stores/par
 import { useTorneosStore } from '@/stores/torneos'
 import { useEquiposStore } from '@/stores/equipos'
 import { useSedesStore } from '@/stores/sedes'
+import { useAuthStore } from '@/stores/auth'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -16,6 +17,10 @@ const partidosStore = usePartidosStore()
 const torneosStore = useTorneosStore()
 const equiposStore = useEquiposStore()
 const sedesStore = useSedesStore()
+const authStore = useAuthStore()
+
+// admin_torneo solo gestiona su propio torneo
+const miTorneoId = computed(() => authStore.user?.torneo_id ?? null)
 
 const selectedTorneoId = ref<number | null>(null)
 const showModal = ref(false)
@@ -23,7 +28,7 @@ const isEditing = ref(false)
 const editingId = ref<number | null>(null)
 
 const formData = ref({
-  torneo_id: 0,
+  torneo_id: null as number | null,
   equipo_local_id: 0,
   equipo_visitante_id: 0,
   sede_id: 0,
@@ -44,28 +49,57 @@ onMounted(async () => {
     equiposStore.fetchEquipos(),
     sedesStore.fetchSedes(),
   ])
-  if (torneosStore.torneos.length > 0) {
+  // Fijar al propio torneo si es admin_torneo
+  if (miTorneoId.value) {
+    selectedTorneoId.value = miTorneoId.value
+  } else if (torneosStore.torneos.length > 0) {
     selectedTorneoId.value = torneosStore.torneos[0].id
   }
 })
 
-const torneoOptions = computed(() =>
-  torneosStore.torneos.map(t => ({ value: t.id, label: t.nombre })),
-)
+// Selector de torneo en la lista (para filtrar partidos por jornada)
+const torneoOptions = computed(() => {
+  const lista = miTorneoId.value
+    ? torneosStore.torneos.filter(t => t.id === miTorneoId.value)
+    : torneosStore.torneos
+  return lista.map(t => ({ value: t.id, label: t.nombre }))
+})
 
-const equipoOptions = computed(() =>
-  selectedTorneoId.value !== null
-    ? equiposStore.equiposPorTorneo(selectedTorneoId.value).map(e => ({ value: e.id, label: e.nombre }))
-    : [],
-)
+// Selector de torneo en el modal (incluye opción "Sin torneo")
+const torneoModalOptions = computed(() => [
+  { value: null, label: 'Sin torneo' },
+  ...torneoOptions.value,
+])
+
+// Si hay torneo en form, filtra equipos de ese torneo; si no, todos los equipos
+const equipoOptions = computed(() => {
+  const lista = formData.value.torneo_id
+    ? equiposStore.equiposPorTorneo(formData.value.torneo_id)
+    : equiposStore.equipos
+  return lista.map(e => ({ value: e.id, label: e.nombre }))
+})
 
 const sedesOptions = computed(() =>
   sedesStore.sedesActivas.map(s => ({ value: s.id, label: s.nombre })),
 )
 
+const canchaDisponible = (canchaId: number): boolean => {
+  if (!formData.value.fecha_hora) return true
+  const t = new Date(formData.value.fecha_hora).getTime()
+  return !partidosStore.partidos.some(p =>
+    p.cancha_id === canchaId &&
+    p.id !== editingId.value &&
+    Math.abs(new Date(p.fecha_hora).getTime() - t) < 2 * 60 * 60 * 1000,
+  )
+}
+
 const canchasOptions = computed(() => {
   const sede = sedesStore.obtenerPorId(formData.value.sede_id)
-  return sede?.canchas.map(c => ({ value: c.id, label: c.nombre })) ?? []
+  if (!sede) return []
+  return sede.canchas.map(c => ({
+    value: c.id,
+    label: canchaDisponible(c.id) ? c.nombre : `${c.nombre} — Ocupada`,
+  }))
 })
 
 const estadoOptions = [
@@ -105,9 +139,9 @@ const openNew = () => {
   isEditing.value = false
   editingId.value = null
   formData.value = {
-    torneo_id: selectedTorneoId.value ?? 0,
-    equipo_local_id: equipoOptions.value[0]?.value ?? 0,
-    equipo_visitante_id: equipoOptions.value[1]?.value ?? 0,
+    torneo_id: miTorneoId.value ?? selectedTorneoId.value ?? null,
+    equipo_local_id: 0,
+    equipo_visitante_id: 0,
     sede_id: sedesStore.sedesActivas[0]?.id ?? 0,
     cancha_id: 0,
     jornada: 1,
@@ -135,8 +169,8 @@ const sameTeamError = computed(() =>
 )
 
 const savePartido = () => {
-  if (!formData.value.fecha_hora || !formData.value.equipo_local_id) return
-  if (!formData.value.equipo_visitante_id || !formData.value.sede_id) return
+  if (!formData.value.fecha_hora) return
+  if (formData.value.torneo_id && (!formData.value.equipo_local_id || !formData.value.equipo_visitante_id)) return
   if (sameTeamError.value) return
 
   if (isEditing.value && editingId.value !== null) {
@@ -301,6 +335,9 @@ const deletePartido = (id: number) => {
       @update:open="showModal = $event"
     >
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <AppSelect v-model="formData.torneo_id" :options="torneoModalOptions" label="Torneo (opcional)" />
+        </div>
         <AppSelect v-model="formData.equipo_local_id" :options="equipoOptions" label="Equipo Local" required />
         <div class="space-y-1">
           <AppSelect v-model="formData.equipo_visitante_id" :options="equipoOptions" label="Equipo Visitante" required />

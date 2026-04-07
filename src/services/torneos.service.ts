@@ -1,38 +1,72 @@
 import api from './api'
 
-export type EstadoTorneo = 'programado' | 'inscripciones_abiertas' | 'en_curso' | 'finalizado' | 'cancelado'
+export type EstadoTorneo = 'borrador' | 'inscripciones_abiertas' | 'en_curso' | 'finalizado' | 'cancelado'
 
 export interface Torneo {
   id: number
   nombre: string
+  edicion: string
+  categoria: string
   descripcion: string
+  reglamento: string
   modalidad_id: number
   modalidad_codigo: string
-  sede_id: number
+  modalidad: string
+  admin_id: number
+  administrador: string
+  equipos_inscritos: number
   estado: EstadoTorneo
   fecha_inicio: string
   fecha_fin: string
+  fecha_limite_inscripcion: string
+  inscripcion_publica: number
+  marcador_publico: number
+  valor_matricula: number
+  valor_tarjeta_amarilla: number
+  valor_tarjeta_roja: number
+  multa_inasistencia: number
+  valor_jugador_tardio: number
+  amarillas_para_suspension: number
+  partidos_suspension_roja: number
+  min_jugadores: number
+  max_jugadores: number
   max_equipos: number
-  premio: string
-  imagen_url: string
+  url_banner: string
   creado_en: string
 }
 
 function normalize(raw: any): Torneo {
   return {
-    id:               raw.id_torneos    ?? raw.id,
-    nombre:           raw.nombre        ?? raw.name ?? '',
-    descripcion:      raw.descripcion   ?? '',
-    modalidad_id:     raw.modalidad_id  ?? raw.id_modalidades ?? 0,
-    modalidad_codigo: raw.modalidad_codigo ?? raw.modalidad?.codigo ?? '',
-    sede_id:          raw.sede_id       ?? raw.id_sedes ?? 0,
-    estado:           raw.estado        ?? 'programado',
-    fecha_inicio:     raw.fecha_inicio  ?? '',
-    fecha_fin:        raw.fecha_fin     ?? '',
-    max_equipos:      raw.max_equipos   ?? raw.max_jugadores ?? 0,
-    premio:           raw.premio        ?? '',
-    imagen_url:       raw.imagen_url    ?? raw.logo_url ?? '',
-    creado_en:        raw.creado_en     ?? raw.created_at ?? '',
+    id:                        raw.id_torneos    ?? raw.id,
+    nombre:                    raw.nombre        ?? '',
+    edicion:                   raw.edicion       ?? '',
+    categoria:                 raw.categoria     ?? '',
+    descripcion:               raw.descripcion   ?? '',
+    reglamento:                raw.reglamento    ?? '',
+    modalidad_id:              Number(raw.modalidad_id  ?? raw.id_modalidades ?? 0),
+    modalidad_codigo:          raw.modalidad_codigo ?? raw.modalidad?.codigo ?? '',
+    modalidad:                 typeof raw.modalidad === 'string' ? raw.modalidad : (raw.modalidad?.nombre ?? ''),
+    admin_id:                  raw.admin_id      ?? 0,
+    administrador:             raw.administrador ?? '',
+    equipos_inscritos:         raw.equipos_inscritos ?? 0,
+    estado:                    raw.estado        ?? 'borrador',
+    fecha_inicio:              raw.fecha_inicio  ?? '',
+    fecha_fin:                 raw.fecha_fin     ?? '',
+    fecha_limite_inscripcion:  raw.fecha_limite_inscripcion ?? '',
+    inscripcion_publica:       raw.inscripcion_publica ?? 0,
+    marcador_publico:          raw.marcador_publico    ?? 0,
+    valor_matricula:           Number(raw.valor_matricula           ?? 0),
+    valor_tarjeta_amarilla:    Number(raw.valor_tarjeta_amarilla    ?? 0),
+    valor_tarjeta_roja:        Number(raw.valor_tarjeta_roja        ?? 0),
+    multa_inasistencia:        Number(raw.multa_inasistencia        ?? 0),
+    valor_jugador_tardio:      Number(raw.valor_jugador_tardio      ?? 0),
+    amarillas_para_suspension: raw.amarillas_para_suspension ?? 3,
+    partidos_suspension_roja:  raw.partidos_suspension_roja  ?? 1,
+    min_jugadores:             raw.min_jugadores ?? 1,
+    max_jugadores:             raw.max_jugadores ?? 25,
+    max_equipos:               raw.max_equipos   ?? 0,
+    url_banner:                raw.url_banner    ?? '',
+    creado_en:                 raw.creado_en     ?? raw.created_at ?? '',
   }
 }
 
@@ -47,18 +81,7 @@ export const torneosService = {
     return normalize(data.data ?? data)
   },
 
-  create: (payload: Partial<Torneo> & {
-    edicion?: string
-    categoria?: string
-    fecha_limite_inscripcion?: string
-    admin_id?: number
-    inscripcion_publica?: number
-    marcador_publico?: number
-    valor_matricula?: number
-    amarillas_para_suspension?: number
-    partidos_suspension_roja?: number
-    min_jugadores?: number
-  }) => api.post('/api/torneos/torneos', payload),
+  create: (payload: Partial<Torneo>) => api.post('/api/torneos/torneos', payload),
 
   update: (id: number, payload: Partial<Torneo>) =>
     api.put(`/api/torneos/torneos/${id}`, payload),
