@@ -29,8 +29,7 @@ export const usePartidosStore = defineStore('partidos', () => {
     loading.value = true
     error.value   = null
     try {
-      // Carga los próximos partidos; para un torneo específico usar torneosService.getPartidos(id)
-      partidos.value = (await partidosService.getProximos(50)) as Partido[]
+      partidos.value = await partidosService.getAll()
     } catch (err: any) {
       error.value = err.response?.data?.message ?? 'Error cargando partidos'
     } finally {

@@ -68,7 +68,16 @@ export const useTorneosStore = defineStore('torneos', () => {
   }
 
   const actualizarTorneo = async (id: number, datos: Partial<Torneo>) => {
-    await torneosService.update(id, datos)
+    const { estado, ...restoData } = datos
+
+    if (Object.keys(restoData).length > 0) {
+      await torneosService.update(id, restoData)
+    }
+
+    if (estado !== undefined) {
+      await torneosService.cambiarEstado(id, estado)
+    }
+
     const idx = torneos.value.findIndex(t => t.id === id)
     if (idx !== -1) torneos.value[idx] = { ...torneos.value[idx], ...datos }
   }

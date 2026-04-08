@@ -1,0 +1,98 @@
+[
+  {
+    "id_inscripciones": 1,
+    "torneo_id": 1,
+    "equipo_id": 1,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2026-02-15T00:00:00Z",
+    "aprobado_por": 2,
+    "fecha_aprobacion": "2026-02-16T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 2,
+    "torneo_id": 1,
+    "equipo_id": 2,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2026-02-15T00:00:00Z",
+    "aprobado_por": 2,
+    "fecha_aprobacion": "2026-02-16T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 3,
+    "torneo_id": 1,
+    "equipo_id": 3,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2026-02-16T00:00:00Z",
+    "aprobado_por": 2,
+    "fecha_aprobacion": "2026-02-17T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 4,
+    "torneo_id": 1,
+    "equipo_id": 4,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2026-02-16T00:00:00Z",
+    "aprobado_por": 2,
+    "fecha_aprobacion": "2026-02-17T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 5,
+    "torneo_id": 2,
+    "equipo_id": 5,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2026-01-10T00:00:00Z",
+    "aprobado_por": 2,
+    "fecha_aprobacion": "2026-01-11T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 6,
+    "torneo_id": 2,
+    "equipo_id": 6,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2026-01-10T00:00:00Z",
+    "aprobado_por": 2,
+    "fecha_aprobacion": "2026-01-11T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 7,
+    "torneo_id": 3,
+    "equipo_id": 7,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2025-12-20T00:00:00Z",
+    "aprobado_por": 1,
+    "fecha_aprobacion": "2025-12-21T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  },
+  {
+    "id_inscripciones": 8,
+    "torneo_id": 3,
+    "equipo_id": 8,
+    "grupo_id": null,
+    "estado": "aprobada",
+    "fecha_inscripcion": "2025-12-20T00:00:00Z",
+    "aprobado_por": 1,
+    "fecha_aprobacion": "2025-12-21T00:00:00Z",
+    "motivo_rechazo": null,
+    "observaciones": null
+  }
+]

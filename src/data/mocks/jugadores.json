@@ -45,5 +45,24 @@
   { "id": 37, "nombre": "Radamel",  "apellido": "Falcao",   "numero_camiseta": 9,  "posicion": "delantero", "equipo_id": 8, "activo": 1 },
   { "id": 38, "nombre": "James",    "apellido": "Rodríguez","numero_camiseta": 10, "posicion": "mediocampo","equipo_id": 8, "activo": 1 },
   { "id": 39, "nombre": "Juan",     "apellido": "Cuadrado", "numero_camiseta": 11, "posicion": "delantero", "equipo_id": 8, "activo": 1 },
-  { "id": 40, "nombre": "Óscar",    "apellido": "Córdoba",  "numero_camiseta": 1,  "posicion": "portero",   "equipo_id": 8, "activo": 1 }
+  { "id": 40, "nombre": "Óscar",    "apellido": "Córdoba",  "numero_camiseta": 1,  "posicion": "portero",   "equipo_id": 8, "activo": 1 },
+
+  {
+    "id": 41,
+    "usuario_id": 6,
+    "nombre": "Luis",
+    "apellido": "Capitán",
+    "tipo_documento": "CC",
+    "numero_documento": "1020304050",
+    "fecha_nacimiento": "1995-06-15",
+    "telefono": "+573002224444",
+    "correo": "luis@matchx.com",
+    "url_foto": "https://api.dicebear.com/7.x/avataaars/svg?seed=luis",
+    "numero_camiseta": 10,
+    "posicion": "mediocampo",
+    "equipo_id": 1,
+    "es_capitan": 1,
+    "activo": 1,
+    "creado_en": "2026-01-25T00:00:00Z"
+  }
 ]

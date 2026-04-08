@@ -169,7 +169,7 @@ const retirar = async (insc: Inscripcion) => {
     </div>
 
     <!-- Selector torneo + progreso -->
-    <AppCard :hover="false">
+    <AppCard :hover="false" class="relative z-20">
       <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
         <div class="flex-1 w-full">
           <AppSelect v-model="selectedTorneoId" :options="torneoOptions" label="Selecciona un torneo" />

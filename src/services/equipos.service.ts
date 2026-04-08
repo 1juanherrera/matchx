@@ -11,6 +11,7 @@ export interface Equipo {
   color_cuaternario: string
   escudo_url: string
   capitan_nombre: string
+  capitan_id: number | null
   activo: number
   creado_en: string
 }
@@ -27,6 +28,7 @@ function normalize(raw: any): Equipo {
     color_cuaternario: raw.color_cuaternario ?? '',
     escudo_url:       raw.url_escudo     ?? raw.escudo_url ?? raw.logo_url ?? '',
     capitan_nombre:   raw.capitan_nombre ?? '',
+    capitan_id:       raw.capitan_id     ?? null,
     activo:           raw.activo         ?? 1,
     creado_en:        raw.creado_en      ?? raw.created_at ?? '',
   }

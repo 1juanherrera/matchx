@@ -158,7 +158,7 @@ const deleteJugador = (id: number) => {
     </div>
 
     <!-- Filtros -->
-    <AppCard :hover="false">
+    <AppCard :hover="false" class="relative z-20">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <AppSelect
           v-model="selectedTorneoId"
@@ -255,7 +255,7 @@ const deleteJugador = (id: number) => {
               <div class="text-xs text-matchx-text-muted">#{{ jugador.numero_camiseta }}</div>
             </div>
 
-            <AppBadge :variant="posicionBadge(jugador.posicion)" :dot="false">
+            <AppBadge :variant="posicionBadge(jugador.posicion)" :dot="false" class="w-[90px] justify-center shrink-0">
               {{ jugador.posicion }}
             </AppBadge>
 

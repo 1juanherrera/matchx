@@ -1,0 +1,2722 @@
+{
+  "info": {
+    "name": "matchX API",
+    "description": "Contrato de API generado desde los mocks del frontend.\nTodos los endpoints están documentados con los campos exactos que el frontend espera.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "token",
+      "value": "",
+      "description": "JWT obtenido del login"
+    },
+    {
+      "key": "base_url",
+      "value": "http://35.243.241.205:8082"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Autenticación — login, logout, usuario actual",
+      "item": [
+        {
+          "name": "Login directo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/login",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Retorna { token, user } o { status: \"select_profile\", profiles: [] }",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"carlos@matchx.com\",\n  \"password\": \"12345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login con perfil",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/login",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Paso 2 del flujo select_profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"carlos@matchx.com\",\n  \"password\": \"12345678\",\n  \"selectedRole\": \"superadmin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Usuario actual",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/user",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            },
+            "description": "Requiere token JWT"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/logout",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "logout"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Torneos",
+      "description": "CRUD torneos + cambio de estado + sedes asignadas",
+      "item": [
+        {
+          "name": "Listar torneos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos"
+              ]
+            },
+            "description": "Query: ?estado=borrador|inscripciones_abiertas|en_curso|finalizado|cancelado\nCampos requeridos: id_torneos, nombre, edicion, categoria, modalidad_id, modalidad_codigo, modalidad, admin_id, administrador, equipos_inscritos, estado, fecha_inicio, fecha_fin, fecha_limite_inscripcion, inscripcion_publica, marcador_publico, valor_matricula, valor_tarjeta_amarilla, valor_tarjeta_roja, multa_inasistencia, valor_jugador_tardio, amarillas_para_suspension, partidos_suspension_roja, min_jugadores, max_jugadores, max_equipos, url_banner, creado_en"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Crear torneo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Copa Bogotá F5 2026\",\n  \"edicion\": \"2026\",\n  \"categoria\": \"Abierta\",\n  \"modalidad_id\": 1,\n  \"fecha_inicio\": \"2026-03-01\",\n  \"fecha_fin\": \"2026-06-30\",\n  \"fecha_limite_inscripcion\": \"2026-02-28\",\n  \"max_equipos\": 8,\n  \"min_jugadores\": 5,\n  \"max_jugadores\": 15,\n  \"admin_id\": 1,\n  \"descripcion\": \"Descripción del torneo\",\n  \"reglamento\": \"\",\n  \"valor_matricula\": 500000,\n  \"valor_tarjeta_amarilla\": 50000,\n  \"valor_tarjeta_roja\": 100000,\n  \"inscripcion_publica\": 1,\n  \"marcador_publico\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar torneo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Copa Bogotá F5 2026 - Actualizado\",\n  \"max_equipos\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado torneo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/estado",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "estado"
+              ]
+            },
+            "description": "estados: borrador | inscripciones_abiertas | en_curso | finalizado | cancelado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"inscripciones_abiertas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Asignar sede a torneo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/sedes",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "sedes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sede_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quitar sede de torneo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/sedes/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "sedes",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Partidos del torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/partidos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "partidos"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Inscripciones del torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/inscripciones",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "inscripciones"
+              ]
+            },
+            "description": "Ver carpeta Inscripciones para estructura de respuesta"
+          },
+          "response": []
+        },
+        {
+          "name": "Goleadores del torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/goleadores?limite=10",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "goleadores?limite=10"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Fairplay del torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/fairplay",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "fairplay"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Posiciones por fase",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/fases/1/posiciones",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "fases",
+                "1",
+                "posiciones"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Equipos",
+      "description": "CRUD equipos — sin torneo_id directo, usar inscripciones",
+      "item": [
+        {
+          "name": "Listar equipos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/equipos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "equipos"
+              ]
+            },
+            "description": "Campos: id_equipos, nombre, nombre_corto, url_escudo, color_principal, color_secundario, color_terciario, color_cuaternario, capitan_id, capitan_nombre (JOIN), torneo_id (contexto), activo, creado_en\nNOTA: equipos NO tiene torneo_id en BD — viene de inscripciones"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener equipo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/equipos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "equipos",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Plantilla en torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/equipos/1/plantilla/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "equipos",
+                "1",
+                "plantilla",
+                "1"
+              ]
+            },
+            "description": "JOIN: jugadores + plantilla + inscripciones\nCampos por jugador: id_jugadores, nombre, apellido, url_foto, activo, equipo_id, numero_dorsal (de plantilla), posicion (de plantilla), es_capitan, estado"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear equipo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/equipos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "equipos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo FC\",\n  \"nombre_corto\": \"NFC\",\n  \"color_principal\": \"#1a56db\",\n  \"color_secundario\": \"#ffffff\",\n  \"color_terciario\": \"\",\n  \"color_cuaternario\": \"\",\n  \"url_escudo\": \"https://...\",\n  \"capitan_id\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar equipo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/equipos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "equipos",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Actualizado FC\",\n  \"nombre_corto\": \"AFC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle activo/inactivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/equipos/1/toggle",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "equipos",
+                "1",
+                "toggle"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Jugadores",
+      "description": "CRUD jugadores — perfil global, numero_dorsal/posicion van en plantilla",
+      "item": [
+        {
+          "name": "Listar jugadores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores"
+              ]
+            },
+            "description": "Query: ?nombre= (búsqueda)\nCampos: id_jugadores, nombre, apellido, tipo_documento, numero_documento, fecha_nacimiento, telefono, correo, url_foto, activo, creado_en\nNOTA: numero_dorsal y posicion están en tabla PLANTILLA, no en jugadores"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar por nombre",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores?nombre=carlos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores?nombre=carlos"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener jugador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Torneos del jugador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores/1/torneos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores",
+                "1",
+                "torneos"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Estadísticas en torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores/1/estadisticas/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores",
+                "1",
+                "estadisticas",
+                "1"
+              ]
+            },
+            "description": "Campos: jugador_id, torneo_id, partidos_jugados, goles, asistencias, tarjetas_amarillas, tarjetas_rojas, minutos_jugados"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear jugador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"García\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1234567890\",\n  \"fecha_nacimiento\": \"1995-05-15\",\n  \"telefono\": \"+573001234567\",\n  \"correo\": \"juan@email.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar jugador",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"+573009999999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle activo/inactivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/jugadores/1/toggle",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "jugadores",
+                "1",
+                "toggle"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Partidos",
+      "description": "CRUD partidos — control de estado y marcador en tiempo real",
+      "item": [
+        {
+          "name": "Próximos partidos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/proximos?limite=5",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "proximos?limite=5"
+              ]
+            },
+            "description": "Campos: id_partidos, torneo_id, fase_id, grupo_id, numero_jornada, equipo_local_id, equipo_visitante_id, sede_id, cancha_id, fecha_hora_programada, estado, goles_local, goles_visitante, delegado_id, arbitro_id\nNOTA: el frontend mapea numero_jornada→jornada y fecha_hora_programada→fecha_hora en su normalize()"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener partido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Crear partido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"torneo_id\": 1,\n  \"fase_id\": 1,\n  \"grupo_id\": null,\n  \"numero_jornada\": 1,\n  \"equipo_local_id\": 1,\n  \"equipo_visitante_id\": 2,\n  \"sede_id\": 1,\n  \"cancha_id\": 101,\n  \"fecha_hora_programada\": \"2026-05-10T15:00:00Z\",\n  \"delegado_id\": 4,\n  \"arbitro_id\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar partido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha_hora_programada\": \"2026-05-10T16:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar partido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/iniciar",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "iniciar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Finalizar partido",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/finalizar",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "finalizar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goles_local\": 2,\n  \"goles_visitante\": 1,\n  \"minutos_adicionales\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/estado",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "estado"
+              ]
+            },
+            "description": "estados: programado | en_curso | finalizado | aplazado | cancelado | walkover",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aplazado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar marcador",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/marcador",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "marcador"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goles_local\": 1,\n  \"goles_visitante\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Convocatoria del partido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/convocatoria",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "convocatoria"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar a convocatoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/convocatoria",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "convocatoria"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugador_id\": 1,\n  \"equipo_id\": 1,\n  \"numero_dorsal\": 9,\n  \"posicion\": \"delantero\",\n  \"es_titular\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remover de convocatoria",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/convocatoria/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "convocatoria",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sedes & Canchas",
+      "description": "CRUD sedes (BD separada) + canchas",
+      "item": [
+        {
+          "name": "Listar sedes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/sedes",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "sedes"
+              ]
+            },
+            "description": "BD separada. Campos: id_sedes, name (NO nombre), nombre_comercial, email, web, estado (0|1), ciudad, departamento, direccion, capacidad, telefono, creado_en, canchas: []\nNOTA: el frontend mapea name→nombre y estado→activo"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener sede (con canchas)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/sedes/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "sedes",
+                "1"
+              ]
+            },
+            "description": "El GET por ID debe incluir el array \"canchas\" con todas las canchas de la sede"
+          },
+          "response": []
+        },
+        {
+          "name": "Canchas de la sede",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/sedes/1/canchas",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "sedes",
+                "1",
+                "canchas"
+              ]
+            },
+            "description": "Campos cancha: id_canchas, sede_id, nombre, tipo_superficie (sintetica|natural|cemento|otro), largo_metros, ancho_metros, capacidad, activo (0|1)\nNOTA: NO hay campo \"disponible\" en BD, solo \"activo\". El frontend lee activo===1 como disponible."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear sede",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/sedes",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "sedes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Estadio Norte\",\n  \"nombre_comercial\": \"Estadio Norte\",\n  \"descripcion\": \"\",\n  \"email\": \"norte@ejemplo.com\",\n  \"web\": \"\",\n  \"direccion\": \"Calle 1 Norte\",\n  \"barrio\": \"Norte\",\n  \"ciudad\": \"Bogotá\",\n  \"departamento\": \"Cundinamarca\",\n  \"telefono\": \"+5712345678\",\n  \"celular\": \"\",\n  \"estado\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar sede",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/sedes/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "sedes",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Estadio Norte Actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle sede activo/inactivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/sedes/1/toggle",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "sedes",
+                "1",
+                "toggle"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear cancha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/canchas",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "canchas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sede_id\": 1,\n  \"nombre\": \"Cancha 3\",\n  \"tipo_superficie\": \"sintetica\",\n  \"largo_metros\": 40,\n  \"ancho_metros\": 20,\n  \"capacidad\": 500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar cancha",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/canchas/101",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "canchas",
+                "101"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cancha Principal Remodelada\",\n  \"tipo_superficie\": \"natural\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle cancha activo/inactivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/canchas/101/toggle",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "canchas",
+                "101",
+                "toggle"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar cancha",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/canchas/101",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "canchas",
+                "101"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Modalidades",
+      "description": "CRUD modalidades — agregar campos codigo y descripcion a la tabla",
+      "item": [
+        {
+          "name": "Listar modalidades",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/modalidades",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "modalidades"
+              ]
+            },
+            "description": "Campos: id_modalidades, nombre, codigo*, descripcion*, jugadores_por_equipo, duracion_tiempo_minutos, numero_tiempos, max_cambios, activo, creado_en\n* IMPORTANTE: los campos \"codigo\" y \"descripcion\" NO existen aún en la tabla. Se recomienda agregarlos:\n  ALTER TABLE modalidades ADD codigo varchar(10) NOT NULL;\n  ALTER TABLE modalidades ADD descripcion text;"
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener modalidad",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/modalidades/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "modalidades",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Crear modalidad",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/modalidades",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "modalidades"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fútbol 8\",\n  \"codigo\": \"F8\",\n  \"descripcion\": \"Fútbol con 8 jugadores por equipo\",\n  \"jugadores_por_equipo\": 8,\n  \"duracion_tiempo_minutos\": 40,\n  \"numero_tiempos\": 2,\n  \"max_cambios\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar modalidad",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/modalidades/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "modalidades",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"max_cambios\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle activo/inactivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/modalidades/1/toggle",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "modalidades",
+                "1",
+                "toggle"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar modalidad",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/modalidades/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "modalidades",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "description": "CRUD usuarios del sistema",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios"
+              ]
+            },
+            "description": "Query: ?rol=superadmin|admin_torneo|admin_sede|delegado|arbitro|capitan|publico\nCampos: id_users, username, email, telefono, url_avatar, rol, activated (0|1), ultimo_acceso, creado_en"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar delegados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios/delegados",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios",
+                "delegados"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Árbitros disponibles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios/arbitros-disponibles",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios",
+                "arbitros-disponibles"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo Usuario\",\n  \"correo\": \"nuevo@matchx.com\",\n  \"contrasena\": \"password123\",\n  \"rol\": \"arbitro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"+573001111111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios/1/password",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios",
+                "1",
+                "password"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nueva_contrasena\": \"nuevaPassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle activo/inactivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/usuarios/1/toggle",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "usuarios",
+                "1",
+                "toggle"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Eventos de Partido",
+      "description": "Eventos en tiempo real — goles, tarjetas, cambios",
+      "item": [
+        {
+          "name": "Eventos de un partido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/partidos/1/eventos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "partidos",
+                "1",
+                "eventos"
+              ]
+            },
+            "description": "Campos: id_eventos_partido, partido_id, tipo_evento, minuto, minuto_adicional, equipo_id, jugador_id, jugador_sale_id, jugador_entra_id, es_autogol, observaciones, registrado_por, creado_en"
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar evento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/eventos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "eventos"
+              ]
+            },
+            "description": "tipos: gol | tarjeta_amarilla | tarjeta_roja | doble_amarilla | cambio | lesion | penal_convertido | penal_fallado | var | observacion\nIMPORTANTE: al registrar un gol, el backend debe actualizar goles_local o goles_visitante en la tabla partidos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partido_id\": 1,\n  \"tipo_evento\": \"gol\",\n  \"minuto\": 35,\n  \"equipo_id\": 1,\n  \"jugador_id\": 3,\n  \"es_autogol\": 0,\n  \"registrado_por\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar cambio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/eventos",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "eventos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partido_id\": 1,\n  \"tipo_evento\": \"cambio\",\n  \"minuto\": 60,\n  \"equipo_id\": 1,\n  \"jugador_sale_id\": 2,\n  \"jugador_entra_id\": 10,\n  \"registrado_por\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar evento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/eventos/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "eventos",
+                "1"
+              ]
+            },
+            "description": "Al eliminar un gol, revertir el marcador en la tabla partidos"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inscripciones",
+      "description": "Inscripción de equipos a torneos con flujo de aprobación",
+      "item": [
+        {
+          "name": "Inscripciones de torneo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/torneos/1/inscripciones",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "torneos",
+                "1",
+                "inscripciones"
+              ]
+            },
+            "description": "JOIN con equipos. Campos: id_inscripciones, torneo_id, equipo_id, grupo_id, estado, fecha_inscripcion, aprobado_por (nombre), fecha_aprobacion, motivo_rechazo, observaciones\nObjeto equipo anidado: { nombre, nombre_corto, color_principal, color_secundario, url_escudo }"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear inscripción",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/inscripciones",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "inscripciones"
+              ]
+            },
+            "description": "UNIQUE KEY: un equipo solo puede inscribirse una vez por torneo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"torneo_id\": 1,\n  \"equipo_id\": 3,\n  \"observaciones\": \"Inscripción equipo visitante\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Aprobar inscripción",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/inscripciones/1/aprobar",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "inscripciones",
+                "1",
+                "aprobar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admin_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rechazar inscripción",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/inscripciones/1/rechazar",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "inscripciones",
+                "1",
+                "rechazar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo_rechazo\": \"Documentación incompleta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar inscripción",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "JWT del login"
+              }
+            ],
+            "url": {
+              "raw": "http://35.243.241.205:8082/api/torneos/inscripciones/1",
+              "host": [
+                "http://35.243.241.205:8082"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "inscripciones",
+                "1"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

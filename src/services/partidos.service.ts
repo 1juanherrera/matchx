@@ -37,6 +37,11 @@ function normalize(raw: any): Partido {
 }
 
 export const partidosService = {
+  getAll: async (params?: { arbitro_id?: number; delegado_id?: number; torneo_id?: number; estado?: string }): Promise<Partido[]> => {
+    const { data } = await api.get('/api/torneos/partidos', { params })
+    return (data.data ?? data).map(normalize)
+  },
+
   getProximos: async (limite = 10): Promise<Partido[]> => {
     const { data } = await api.get('/api/torneos/partidos/proximos', { params: { limite } })
     return (data.data ?? data).map(normalize)

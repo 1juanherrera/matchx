@@ -31,7 +31,10 @@ onMounted(async () => {
 })
 
 const miEquipo = computed(() =>
-  equiposStore.equipos.find(e => e.capitan_id === auth.user?.usuario_id) ?? null,
+  equiposStore.equipos.find(e =>
+    e.capitan_id === auth.user?.usuario_id ||
+    (import.meta.env.VITE_MOCK_API === 'true' && e.id === 1) // Bypass MOCK para asegurar vista con datos
+  ) ?? null,
 )
 
 const jugadores = computed(() =>

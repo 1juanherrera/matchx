@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends string | number">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 interface SelectOption {
   value: string | number
@@ -28,6 +28,7 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
+const selectRef = ref<HTMLElement | null>(null)
 
 const selectedLabel = computed(() => {
   const option = props.options.find(opt => opt.value === props.modelValue)
@@ -38,10 +39,19 @@ const selectOption = (value: string | number) => {
   emit('update:modelValue', value as T)
   isOpen.value = false
 }
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (isOpen.value && selectRef.value && !selectRef.value.contains(event.target as Node)) {
+    isOpen.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <div class="flex flex-col gap-1.5">
+  <div ref="selectRef" class="flex flex-col gap-1.5" :class="{ 'relative z-50': isOpen }">
     <label v-if="label" class="text-sm font-medium text-matchx-text-secondary">
       {{ label }}
       <span v-if="required" class="text-matchx-accent-orange">*</span>

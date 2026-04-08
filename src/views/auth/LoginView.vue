@@ -29,7 +29,8 @@ const roleDestinations: Record<string, string> = {
   admin_sede:   '/sede/dashboard',
   delegado:     '/delegado/partidos',
   arbitro:      '/arbitro/dashboard',
-  jugador:      '/jugador/dashboard',
+  capitan:      '/capitan/dashboard',
+  jugador:      '/capitan/dashboard',
   publico:      '/publico/torneos',
 }
 
