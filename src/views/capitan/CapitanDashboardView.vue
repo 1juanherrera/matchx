@@ -6,7 +6,6 @@ import { useJugadoresStore } from '@/stores/jugadores'
 import { usePartidosStore } from '@/stores/partidos'
 import { useTorneosStore } from '@/stores/torneos'
 import AppCard from '@/components/ui/AppCard.vue'
-import AppBadge from '@/components/ui/AppBadge.vue'
 import { Users, Swords, Trophy, CalendarClock, Calendar, Clock } from 'lucide-vue-next'
 
 const auth = useAuthStore()
@@ -32,8 +31,8 @@ onMounted(async () => {
 
 const miEquipo = computed(() =>
   equiposStore.equipos.find(e =>
-    e.capitan_id === auth.user?.usuario_id ||
-    (import.meta.env.VITE_MOCK_API === 'true' && e.id === 1) // Bypass MOCK para asegurar vista con datos
+    (auth.user?.equipo_id != null && e.id === auth.user.equipo_id) ||
+    (import.meta.env.VITE_MOCK_API === 'true' && e.id === 1)
   ) ?? null,
 )
 
@@ -127,10 +126,10 @@ const formatHora = (iso: string) =>
           </div>
           <div class="flex gap-2">
             <div
-              v-for="(color, i) in miEquipo.colores.split(',')"
+              v-for="(color, i) in [miEquipo.color_principal, miEquipo.color_secundario, miEquipo.color_terciario].filter(Boolean)"
               :key="i"
               class="w-6 h-6 rounded-full border border-matchx-border-base"
-              :style="{ backgroundColor: color.trim() }"
+              :style="{ backgroundColor: color }"
             />
           </div>
         </div>
@@ -210,7 +209,7 @@ const formatHora = (iso: string) =>
                   {{ nombreEquipo(p.equipo_visitante_id) }}
                 </span>
               </div>
-              <div class="flex items-center gap-3 text-xs text-matchx-text-muted">
+              <div class="flex items-center justify-center gap-3 text-xs text-matchx-text-muted">
                 <span class="flex items-center gap-1">
                   <Calendar class="w-3 h-3" :stroke-width="1.75" />
                   {{ formatFecha(p.fecha_hora) }}

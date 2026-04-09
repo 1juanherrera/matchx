@@ -11,6 +11,7 @@ export interface Jugador {
   numero_camiseta: number
   posicion: Posicion
   equipo_id: number
+  es_capitan: number
   activo: number
 }
 

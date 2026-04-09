@@ -141,6 +141,7 @@ src/
 | Miguel Delegado | miguel@matchx.com | delegado | /delegado/partidos |
 | Pedro Árbitro | pedro@matchx.com | arbitro | /arbitro/dashboard |
 | Luis Capitán | luis@matchx.com | capitan | /capitan/dashboard |
+| Felipe Jugador | jugador@matchx.com | jugador | /capitan/dashboard |
 | Usuario Público | publico@matchx.com | publico | /publico/torneos |
 
 ---

@@ -13,6 +13,7 @@ import { modalidadesHandlers }   from './modalidades.handlers'
 import { usuariosHandlers }      from './usuarios.handlers'
 import { eventosHandlers }       from './eventos.handlers'
 import { inscripcionesHandlers } from './inscripciones.handlers'
+import { solicitudesHandlers }   from './solicitudes.handlers'
 
 export const handlers = [
   ...authHandlers,
@@ -25,4 +26,5 @@ export const handlers = [
   ...usuariosHandlers,
   ...eventosHandlers,
   ...inscripcionesHandlers,
+  ...solicitudesHandlers,
 ]

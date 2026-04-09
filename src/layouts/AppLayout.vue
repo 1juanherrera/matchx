@@ -6,14 +6,15 @@ import { useTheme } from '@/composables/useTheme'
 import {
   LayoutDashboard, Users, Layers, Building2, Settings,
   Trophy, ClipboardList, UserCheck, CircleDot, BarChart3,
-  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X,
+  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox,
 } from 'lucide-vue-next'
 
-const router   = useRouter()
+const router    = useRouter()
 const authStore = useAuthStore()
 const { isDark, toggle: toggleTheme } = useTheme()
 
-const sidebarOpen = ref(false)
+const sidebarOpen  = ref(false)
+const isLoggingOut = ref(false)
 
 const rolColors: Record<string, string> = {
   superadmin:   'bg-matchx-accent-green/20 text-matchx-accent-green',
@@ -21,8 +22,7 @@ const rolColors: Record<string, string> = {
   admin_sede:   'bg-purple-500/20 text-purple-400',
   delegado:     'bg-matchx-accent-orange/20 text-matchx-accent-orange',
   arbitro:      'bg-yellow-500/20 text-yellow-400',
-  capitan:      'bg-cyan-500/20 text-cyan-400',
-  jugador:      'bg-pink-500/20 text-pink-400',
+  jugador:      'bg-cyan-500/20 text-cyan-400',
   publico:      'bg-matchx-text-muted/20 text-matchx-text-muted',
 }
 const rolColor = computed(() =>
@@ -33,8 +33,15 @@ const iniciales = computed(() =>
 )
 
 const handleLogout = async () => {
-  await authStore.logout()
-  router.push('/login')
+  if (isLoggingOut.value) return
+  isLoggingOut.value = true
+  try {
+    await authStore.logout()
+    // La navegación a /login la maneja el watcher en App.vue
+    // cuando isAuthenticated cambia a false.
+  } finally {
+    isLoggingOut.value = false
+  }
 }
 
 const navigationItems = computed(() => {
@@ -70,6 +77,7 @@ const navigationItems = computed(() => {
       { label: 'Plantilla',     icon: UserCheck,     route: '/torneo/plantilla' },
       { label: 'Partidos',      icon: CircleDot,     route: '/torneo/partidos' },
       { label: 'Posiciones',    icon: BarChart3,     route: '/torneo/posiciones' },
+      { label: 'Solicitudes',   icon: Inbox,         route: '/torneo/solicitudes' },
     ]
   }
 
@@ -92,12 +100,14 @@ const navigationItems = computed(() => {
     ]
   }
 
-  if (role === 'capitan' || role === 'jugador') {
-    return [
+  if (role === 'jugador') {
+    const items = [
       ...baseItems,
-      { label: 'Mi Equipo', icon: Users,         route: '/capitan/equipo' },
-      { label: 'Fixture',   icon: CalendarRange, route: '/capitan/fixture' },
+      { label: 'Mi Equipo',  icon: Users,         route: '/capitan/equipo' },
+      { label: 'Fixture',    icon: CalendarRange, route: '/capitan/fixture' },
+      { label: 'Posiciones', icon: BarChart3,     route: '/capitan/posiciones' },
     ]
+    return items
   }
 
   return baseItems
@@ -180,7 +190,8 @@ const navigationItems = computed(() => {
 
         <button
           @click="handleLogout"
-          class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-matchx-accent-orange/10 text-matchx-accent-orange hover:bg-matchx-accent-orange/20 transition-colors text-sm font-medium cursor-pointer"
+          :disabled="isLoggingOut"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-matchx-accent-orange/10 text-matchx-accent-orange hover:bg-matchx-accent-orange/20 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <LogOut class="w-4 h-4" :stroke-width="1.75" />
           Cerrar sesión

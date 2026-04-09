@@ -51,6 +51,8 @@ export const authHandlers = [
       )
     }
 
+    const jugadorRecord = (db.jugadores as any[]).find(j => j.usuario_id === usuario.id)
+
     return HttpResponse.json({
       token: FAKE_TOKEN,
       user: {
@@ -59,6 +61,8 @@ export const authHandlers = [
         email:      usuario.correo,
         rol:        usuario.rol,
         url_avatar: usuario.url_avatar ?? null,
+        equipo_id:  jugadorRecord?.equipo_id ?? undefined,
+        es_capitan: jugadorRecord?.es_capitan ?? 0,
       },
     })
   }),

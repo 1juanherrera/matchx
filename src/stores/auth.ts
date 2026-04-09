@@ -8,7 +8,6 @@ export type UserRole =
   | 'admin_sede'
   | 'delegado'
   | 'arbitro'
-  | 'capitan'
   | 'jugador'
   | 'publico'
 
@@ -21,6 +20,8 @@ export interface AuthUser {
   avatar?: string
   torneo_id?: number   // solo admin_torneo: torneo que administra
   sede_id?: number     // solo admin_sede: sede que administra
+  equipo_id?: number   // jugador: equipo al que pertenece
+  es_capitan?: number  // jugador: 1 si es capitán de su equipo
 }
 
 export interface AuthProfile {
@@ -36,7 +37,7 @@ const rolMap: Record<string, UserRole> = {
   admin_sede:    'admin_sede',
   delegado:      'delegado',
   arbitro:       'arbitro',
-  capitan:       'capitan',
+  capitan:       'jugador',  // el backend puede seguir enviando 'capitan', lo normalizamos a 'jugador'
   jugador:       'jugador',
   publico:       'publico',
 }
@@ -57,6 +58,8 @@ function normalizeUser(raw: any, token: string): AuthUser {
     avatar:     raw.url_avatar ?? raw.avatar ?? undefined,
     torneo_id:  raw.torneo_id ?? raw.id_torneos ?? undefined,
     sede_id:    raw.sede_id   ?? raw.id_sedes   ?? undefined,
+    equipo_id:  raw.equipo_id ?? raw.id_equipos ?? undefined,
+    es_capitan: raw.es_capitan ?? 0,
   }
 }
 
@@ -86,6 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
   const userRole        = computed(() => user.value?.rol ?? null)
   const userName        = computed(() => user.value?.nombre ?? 'Usuario')
+  const isCapitan       = computed(() => user.value?.rol === 'jugador' && user.value?.es_capitan === 1)
 
   /**
    * Paso 1: envía credenciales.
@@ -165,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user, isLoading,
     pendingProfiles, pendingUser, requiresProfile,
-    isAuthenticated, userRole, userName,
+    isAuthenticated, userRole, userName, isCapitan,
     initSession, login, selectProfile, clearPending, logout, hasRole, canAccess,
   }
 })

@@ -395,72 +395,103 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
 
         <!-- ── LINEUP TAB ── -->
         <div v-if="activeTab === 'lineup'" class="p-4">
-          <div class="grid grid-cols-2 gap-6">
 
-            <!-- Local column -->
-            <div>
-              <div class="flex items-center gap-2 mb-4 pb-2 border-b border-matchx-border-base">
-                <span class="w-3 h-3 rounded-full shrink-0 border border-white/20" :style="{ backgroundColor: colorLocal }" />
-                <span class="text-xs font-black text-matchx-text-primary uppercase tracking-wider truncate">
-                  {{ equipoLocal?.nombre }}
-                </span>
-              </div>
-
-              <div v-for="group in lineupLocal" :key="group.pos" class="mb-4">
-                <p class="text-[10px] font-bold text-matchx-text-muted uppercase tracking-widest mb-2">
-                  {{ group.label }}
-                </p>
-                <div class="space-y-2">
-                  <div
-                    v-for="j in group.players"
-                    :key="j.id"
-                    class="flex items-center gap-2"
-                  >
-                    <div
-                      class="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-[11px] shrink-0"
-                      :style="{ backgroundColor: colorLocal, boxShadow: `0 0 0 2px rgba(255,255,255,0.1)` }"
-                    >{{ j.numero_camiseta }}</div>
-                    <div class="min-w-0 flex-1">
-                      <p class="text-xs font-bold text-matchx-text-primary leading-tight truncate">{{ j.apellido }}</p>
-                      <p class="text-[10px] text-matchx-text-muted leading-none">{{ j.nombre }}</p>
-                    </div>
-                  </div>
-                </div>
+          <!-- Headers de equipo -->
+          <div class="grid grid-cols-2 gap-3 mb-5">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-matchx-bg-elevated border border-matchx-border-base">
+              <img :src="equipoLocal?.escudo_url" :alt="equipoLocal?.nombre"
+                class="w-7 h-7 rounded-md object-contain shrink-0" />
+              <div class="min-w-0">
+                <p class="text-xs font-black text-matchx-text-primary truncate leading-tight">{{ equipoLocal?.nombre }}</p>
+                <p class="text-[10px] text-matchx-text-muted leading-none mt-0.5">Local</p>
               </div>
             </div>
-
-            <!-- Visitante column -->
-            <div>
-              <div class="flex items-center gap-2 mb-4 pb-2 border-b border-matchx-border-base">
-                <span class="w-3 h-3 rounded-full shrink-0 border border-white/20" :style="{ backgroundColor: colorVisit }" />
-                <span class="text-xs font-black text-matchx-text-primary uppercase tracking-wider truncate">
-                  {{ equipoVisit?.nombre }}
-                </span>
-              </div>
-
-              <div v-for="group in lineupVisit" :key="group.pos" class="mb-4">
-                <p class="text-[10px] font-bold text-matchx-text-muted uppercase tracking-widest mb-2">
-                  {{ group.label }}
-                </p>
-                <div class="space-y-2">
-                  <div
-                    v-for="j in group.players"
-                    :key="j.id"
-                    class="flex items-center gap-2"
-                  >
-                    <div
-                      class="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-[11px] shrink-0"
-                      :style="{ backgroundColor: colorVisit, boxShadow: `0 0 0 2px rgba(255,255,255,0.1)` }"
-                    >{{ j.numero_camiseta }}</div>
-                    <div class="min-w-0 flex-1">
-                      <p class="text-xs font-bold text-matchx-text-primary leading-tight truncate">{{ j.apellido }}</p>
-                      <p class="text-[10px] text-matchx-text-muted leading-none">{{ j.nombre }}</p>
-                    </div>
-                  </div>
-                </div>
+            <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-matchx-bg-elevated border border-matchx-border-base">
+              <img :src="equipoVisit?.escudo_url" :alt="equipoVisit?.nombre"
+                class="w-7 h-7 rounded-md object-contain shrink-0" />
+              <div class="min-w-0">
+                <p class="text-xs font-black text-matchx-text-primary truncate leading-tight">{{ equipoVisit?.nombre }}</p>
+                <p class="text-[10px] text-matchx-text-muted leading-none mt-0.5">Visitante</p>
               </div>
             </div>
           </div>
+
+          <!-- Posiciones alineadas -->
+          <div class="space-y-5">
+            <template v-for="pos in posOrder" :key="pos">
+              <div v-if="lineupLocal.find(g => g.pos === pos) || lineupVisit.find(g => g.pos === pos)">
+
+                <!-- Separador de posición -->
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="h-px flex-1 bg-matchx-border-base/50" />
+                  <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-matchx-text-muted">
+                    {{ POS_LABEL[pos] }}
+                  </span>
+                  <div class="h-px flex-1 bg-matchx-border-base/50" />
+                </div>
+
+                <!-- Filas por posición: local izq / visitante der -->
+                <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
+
+                  <!-- Local: jugadores de esta posición -->
+                  <div class="space-y-1.5">
+                    <div
+                      v-for="j in (lineupLocal.find(g => g.pos === pos)?.players ?? [])"
+                      :key="j.id"
+                      class="flex items-center gap-2 group"
+                    >
+                      <!-- Número + badge capitán -->
+                      <div class="relative shrink-0 transition-transform duration-150 group-hover:scale-110">
+                        <div
+                          class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-xs"
+                          :style="{ backgroundColor: colorLocal }"
+                        >{{ j.numero_camiseta }}</div>
+                        <span v-if="j.es_capitan"
+                          class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center
+                                 text-[9px] font-black leading-none
+                                 bg-gradient-to-b from-yellow-300 to-yellow-500 text-yellow-950
+                                 ring-2 ring-matchx-bg-surface shadow-sm">C</span>
+                      </div>
+                      <!-- Nombre -->
+                      <div class="min-w-0 flex-1">
+                        <p class="text-xs font-semibold text-matchx-text-primary truncate leading-snug">{{ j.apellido }}</p>
+                        <p class="text-[10px] text-matchx-text-muted truncate leading-none">{{ j.nombre }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Visitante: jugadores de esta posición -->
+                  <div class="space-y-1.5">
+                    <div
+                      v-for="j in (lineupVisit.find(g => g.pos === pos)?.players ?? [])"
+                      :key="j.id"
+                      class="flex items-center gap-2 flex-row-reverse group"
+                    >
+                      <!-- Número + badge capitán -->
+                      <div class="relative shrink-0 transition-transform duration-150 group-hover:scale-110">
+                        <div
+                          class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-xs"
+                          :style="{ backgroundColor: colorVisit }"
+                        >{{ j.numero_camiseta }}</div>
+                        <span v-if="j.es_capitan"
+                          class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center
+                                 text-[9px] font-black leading-none
+                                 bg-gradient-to-b from-yellow-300 to-yellow-500 text-yellow-950
+                                 ring-2 ring-matchx-bg-surface shadow-sm">C</span>
+                      </div>
+                      <!-- Nombre (alineado a la derecha) -->
+                      <div class="min-w-0 flex-1 text-right">
+                        <p class="text-xs font-semibold text-matchx-text-primary truncate leading-snug">{{ j.apellido }}</p>
+                        <p class="text-[10px] text-matchx-text-muted truncate leading-none">{{ j.nombre }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </template>
+          </div>
+
         </div>
 
         <!-- ── STATS TAB ── -->

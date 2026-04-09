@@ -34,7 +34,7 @@ const routes: RouteRecordRaw[] = [
       if (role === 'delegado') return '/delegado/partidos'
       if (role === 'admin_sede') return '/sede/dashboard'
       if (role === 'arbitro') return '/arbitro/dashboard'
-      if (role === 'capitan' || role === 'jugador') return '/capitan/dashboard'
+      if (role === 'jugador') return '/capitan/dashboard'
       return '/admin/dashboard'
     },
   },
@@ -184,6 +184,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin-torneo/PosicionesView.vue'),
         meta: { title: 'Tabla de Posiciones', requiereRol: ['admin_torneo'] },
       },
+      {
+        path: 'solicitudes',
+        name: 'TorneoSolicitudes',
+        component: () => import('@/views/admin-torneo/SolicitudesView.vue'),
+        meta: { title: 'Solicitudes', requiereRol: ['admin_torneo'] },
+      },
     ],
   },
   {
@@ -236,25 +242,37 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/capitan',
     component: () => import('@/layouts/AppLayout.vue'),
-    meta: { layout: 'AppLayout', requiereRol: ['capitan', 'jugador'] },
+    meta: { layout: 'AppLayout', requiereRol: ['jugador'] },
     children: [
       {
         path: 'dashboard',
-        name: 'CapitanDashboard',
+        name: 'JugadorDashboard',
         component: () => import('@/views/capitan/CapitanDashboardView.vue'),
-        meta: { title: 'Dashboard', requiereRol: ['capitan', 'jugador'] },
+        meta: { title: 'Dashboard', requiereRol: ['jugador'] },
       },
       {
         path: 'equipo',
-        name: 'CapitanEquipo',
+        name: 'JugadorEquipo',
         component: () => import('@/views/capitan/MiEquipoView.vue'),
-        meta: { title: 'Mi Equipo', requiereRol: ['capitan', 'jugador'] },
+        meta: { title: 'Mi Equipo', requiereRol: ['jugador'] },
       },
       {
         path: 'fixture',
-        name: 'CapitanFixture',
+        name: 'JugadorFixture',
         component: () => import('@/views/capitan/FixtureView.vue'),
-        meta: { title: 'Fixture', requiereRol: ['capitan', 'jugador'] },
+        meta: { title: 'Fixture', requiereRol: ['jugador'] },
+      },
+      {
+        path: 'posiciones',
+        name: 'JugadorPosiciones',
+        component: () => import('@/views/capitan/PosicionesView.vue'),
+        meta: { title: 'Tabla de Posiciones', requiereRol: ['jugador'] },
+      },
+      {
+        path: 'partidos/:id',
+        name: 'JugadorPartidoDetalle',
+        component: () => import('@/views/publico/PartidoDetallePublicoView.vue'),
+        meta: { title: 'Detalle del Partido', requiereRol: ['jugador'] },
       },
     ],
   },
@@ -312,16 +330,20 @@ const router = createRouter({
 router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) => {
   const authStore = useAuthStore()
 
-  // Initialize session from localStorage
-  if (!authStore.isAuthenticated) {
-    authStore.initSession()
-  }
-
   const isPublicRoute =
     to.path === '/login' ||
     to.path === '/no-autorizado' ||
     to.path.startsWith('/publico') ||
     to.meta.requiresAuth === false
+
+  // Solo restaurar sesión desde localStorage cuando se navega a rutas protegidas.
+  // En rutas públicas (especialmente /login tras logout) NO se debe llamar
+  // initSession(), ya que podría restaurar una sesión aún no limpiada y causar
+  // una redirección involuntaria de vuelta al dashboard.
+  if (!authStore.isAuthenticated && !isPublicRoute) {
+    authStore.initSession()
+  }
+
   const isAuthenticated = authStore.isAuthenticated
 
   // Redirect to login if not authenticated and trying to access protected route
@@ -336,7 +358,7 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized) 
     if (role === 'delegado') return { path: '/delegado/partidos' }
     if (role === 'admin_sede') return { path: '/sede/dashboard' }
     if (role === 'arbitro') return { path: '/arbitro/dashboard' }
-    if (role === 'capitan' || role === 'jugador') return { path: '/capitan/dashboard' }
+    if (role === 'jugador') return { path: '/capitan/dashboard' }
     return { path: '/admin/dashboard' }
   }
 

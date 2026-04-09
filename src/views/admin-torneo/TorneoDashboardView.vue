@@ -187,9 +187,9 @@ const partidosPendientes = computed(() =>
                 {{ nombreEquipo(partido.equipo_visitante_id) }}
               </span>
             </div>
-            <div class="flex items-center gap-1.5 text-xs text-matchx-text-muted">
+            <div class="flex items-center justify-center gap-1.5 text-xs text-matchx-text-muted">
               <Calendar class="w-3 h-3" :stroke-width="1.75" />
-              <span>J{{ partido.jornada }} · {{ formatFecha(partido.fecha_hora) }}</span>
+              <span>{{ formatFecha(partido.fecha_hora) }}</span>
               <Clock class="w-3 h-3 ml-1" :stroke-width="1.75" />
               <span>{{ formatHora(partido.fecha_hora) }}</span>
             </div>

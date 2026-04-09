@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends string | number">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
 interface SelectOption {
   value: string | number
@@ -27,13 +27,36 @@ const emit = defineEmits<{
   'update:modelValue': [value: T]
 }>()
 
-const isOpen = ref(false)
+const isOpen    = ref(false)
 const selectRef = ref<HTMLElement | null>(null)
+const buttonRef = ref<HTMLButtonElement | null>(null)
+
+// Posición del dropdown en coordenadas fijas (para Teleport)
+const dropdownStyle = ref({ top: '0px', left: '0px', width: '0px' })
 
 const selectedLabel = computed(() => {
   const option = props.options.find(opt => opt.value === props.modelValue)
   return option?.label || props.placeholder
 })
+
+const updateDropdownPosition = () => {
+  if (!buttonRef.value) return
+  const rect = buttonRef.value.getBoundingClientRect()
+  dropdownStyle.value = {
+    top:   `${rect.bottom + 4}px`,
+    left:  `${rect.left}px`,
+    width: `${rect.width}px`,
+  }
+}
+
+const openDropdown = async () => {
+  if (props.disabled) return
+  isOpen.value = !isOpen.value
+  if (isOpen.value) {
+    await nextTick()
+    updateDropdownPosition()
+  }
+}
 
 const selectOption = (value: string | number) => {
   emit('update:modelValue', value as T)
@@ -41,17 +64,33 @@ const selectOption = (value: string | number) => {
 }
 
 const handleClickOutside = (event: MouseEvent) => {
-  if (isOpen.value && selectRef.value && !selectRef.value.contains(event.target as Node)) {
+  if (!isOpen.value) return
+  const target = event.target as Node
+  // Cerrar si el click no fue en el botón ni en el dropdown (que está en body vía Teleport)
+  if (selectRef.value && !selectRef.value.contains(target)) {
     isOpen.value = false
   }
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside))
-onUnmounted(() => document.removeEventListener('click', handleClickOutside))
+const handleScrollOrResize = () => {
+  if (isOpen.value) updateDropdownPosition()
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  window.addEventListener('scroll', handleScrollOrResize, true)
+  window.addEventListener('resize', handleScrollOrResize)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('scroll', handleScrollOrResize, true)
+  window.removeEventListener('resize', handleScrollOrResize)
+})
 </script>
 
 <template>
-  <div ref="selectRef" class="flex flex-col gap-1.5" :class="{ 'relative z-50': isOpen }">
+  <div ref="selectRef" class="flex flex-col gap-1.5">
     <label v-if="label" class="text-sm font-medium text-matchx-text-secondary">
       {{ label }}
       <span v-if="required" class="text-matchx-accent-orange">*</span>
@@ -59,6 +98,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 
     <div class="relative">
       <button
+        ref="buttonRef"
         :class="[
           'w-full px-3 py-2 rounded-lg font-body text-left text-matchx-text-primary transition-colors duration-150',
           'bg-matchx-bg-base border rounded-lg',
@@ -68,7 +108,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
           disabled && 'opacity-50 cursor-not-allowed',
         ]"
         :disabled="disabled"
-        @click="isOpen = !isOpen"
+        @click="openDropdown"
       >
         <div class="flex items-center justify-between">
           <span>{{ selectedLabel }}</span>
@@ -83,32 +123,35 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
         </div>
       </button>
 
-      <!-- Dropdown -->
-      <Transition
-        enter-active-class="transition duration-100 ease-out"
-        enter-from-class="transform opacity-0 scale-95"
-        enter-to-class="transform opacity-100 scale-100"
-        leave-active-class="transition duration-75 ease-in"
-        leave-from-class="transform opacity-100 scale-100"
-        leave-to-class="transform opacity-0 scale-95"
-      >
-        <div
-          v-if="isOpen"
-          class="absolute top-full left-0 right-0 mt-1 z-[200] bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-lg overflow-y-auto max-h-52"
+      <!-- Dropdown renderizado en body para escapar cualquier overflow -->
+      <Teleport to="body">
+        <Transition
+          enter-active-class="transition duration-100 ease-out"
+          enter-from-class="transform opacity-0 scale-95"
+          enter-to-class="transform opacity-100 scale-100"
+          leave-active-class="transition duration-75 ease-in"
+          leave-from-class="transform opacity-100 scale-100"
+          leave-to-class="transform opacity-0 scale-95"
         >
-          <button
-            v-for="option in options"
-            :key="option.value"
-            :class="[
-              'w-full px-3 py-2 text-left text-matchx-text-primary hover:bg-matchx-bg-surface transition-colors duration-150',
-              modelValue === option.value && 'bg-matchx-accent-green/10 text-matchx-accent-green font-medium',
-            ]"
-            @click="selectOption(option.value)"
+          <div
+            v-if="isOpen"
+            :style="{ position: 'fixed', top: dropdownStyle.top, left: dropdownStyle.left, width: dropdownStyle.width }"
+            class="z-[9999] bg-matchx-bg-elevated border border-matchx-border-base rounded-lg shadow-lg overflow-y-auto max-h-52"
           >
-            {{ option.label }}
-          </button>
-        </div>
-      </Transition>
+            <button
+              v-for="option in options"
+              :key="option.value"
+              :class="[
+                'w-full px-3 py-2 text-left text-matchx-text-primary hover:bg-matchx-bg-surface transition-colors duration-150',
+                modelValue === option.value && 'bg-matchx-accent-green/10 text-matchx-accent-green font-medium',
+              ]"
+              @click="selectOption(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </Transition>
+      </Teleport>
     </div>
 
     <p v-if="error" class="text-xs text-matchx-accent-orange">

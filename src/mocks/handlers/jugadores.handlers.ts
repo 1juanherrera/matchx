@@ -50,6 +50,7 @@ function withDbFields(raw: any) {
     numero_dorsal:   raw.numero_camiseta ?? raw.numero_dorsal ?? null,
     posicion:        raw.posicion        ?? null,
     equipo_id:       raw.equipo_id       ?? null,
+    es_capitan:      raw.es_capitan      ?? 0,
   }
 }
 

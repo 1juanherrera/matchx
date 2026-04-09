@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useEquiposStore } from '@/stores/equipos'
 import { usePartidosStore } from '@/stores/partidos'
@@ -7,8 +8,9 @@ import { useSedesStore } from '@/stores/sedes'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
-import { CalendarRange, Calendar, Clock, MapPin, Swords } from 'lucide-vue-next'
+import { CalendarRange, Calendar, Clock, MapPin, Swords, ChevronRight } from 'lucide-vue-next'
 
+const router = useRouter()
 const auth = useAuthStore()
 const equiposStore = useEquiposStore()
 const partidosStore = usePartidosStore()
@@ -32,7 +34,7 @@ onMounted(async () => {
 
 const miEquipo = computed(() =>
   equiposStore.equipos.find(e =>
-    e.capitan_id === auth.user?.usuario_id ||
+    (auth.user?.equipo_id != null && e.id === auth.user.equipo_id) ||
     (import.meta.env.VITE_MOCK_API === 'true' && e.id === 1)
   ) ?? null,
 )
@@ -66,8 +68,20 @@ const formatHora = (iso: string) =>
   new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
 
 const estadoBadge = (estado: string): 'green' | 'orange' | 'gray' | 'blue' => ({
-  en_curso: 'green', programado: 'blue', finalizado: 'gray', suspendido: 'orange',
+  en_curso: 'green', programado: 'blue', suspendido: 'orange',
 }[estado] ?? 'gray' as any)
+
+// Para partidos finalizados: calcula resultado relativo al equipo del jugador
+const resultadoPartido = (partido: any): { label: string; variant: 'green' | 'orange' | 'gray' } => {
+  if (partido.estado !== 'finalizado') return { label: partido.estado, variant: estadoBadge(partido.estado) as any }
+  const miId = miEquipo.value?.id
+  const esLocal = partido.equipo_local_id === miId
+  const gF = esLocal ? partido.goles_local     : partido.goles_visitante
+  const gC = esLocal ? partido.goles_visitante  : partido.goles_local
+  if (gF > gC) return { label: 'Ganado',  variant: 'green' }
+  if (gF < gC) return { label: 'Perdido', variant: 'orange' }
+  return       { label: 'Empate',  variant: 'gray' }
+}
 
 // Resaltar si es mi equipo el local o visitante
 const esmiEquipo = (id: number) => miEquipo.value?.id === id
@@ -123,8 +137,9 @@ const esmiEquipo = (id: number) => miEquipo.value?.id === id
           <AppCard
             v-for="partido in partidosFiltrados.filter(p => p.jornada === jornada)"
             :key="partido.id"
-            :hover="false"
-            class="mb-2"
+            :hover="true"
+            class="mb-2 cursor-pointer"
+            @click="router.push({ name: 'JugadorPartidoDetalle', params: { id: partido.id } })"
           >
             <div class="flex items-center gap-4">
               <div class="flex-1 flex items-center gap-3 min-w-0">
@@ -173,18 +188,23 @@ const esmiEquipo = (id: number) => miEquipo.value?.id === id
               </div>
 
               <!-- Meta -->
-              <div class="flex flex-col items-end gap-1.5 shrink-0">
-                <AppBadge :variant="estadoBadge(partido.estado)">{{ partido.estado }}</AppBadge>
-                <div class="flex items-center gap-1 text-xs text-matchx-text-muted">
-                  <Calendar class="w-3 h-3" :stroke-width="1.75" />
-                  {{ formatFecha(partido.fecha_hora) }}
-                  <Clock class="w-3 h-3 ml-1" :stroke-width="1.75" />
-                  {{ formatHora(partido.fecha_hora) }}
+              <div class="flex items-center gap-3 shrink-0">
+                <div class="flex flex-col items-end gap-1.5">
+                  <AppBadge :variant="resultadoPartido(partido).variant" :dot="false">
+                    {{ resultadoPartido(partido).label }}
+                  </AppBadge>
+                  <div class="flex items-center gap-1 text-xs text-matchx-text-secondary">
+                    <Calendar class="w-3 h-3" :stroke-width="1.75" />
+                    {{ formatFecha(partido.fecha_hora) }}
+                    <Clock class="w-3 h-3 ml-1" :stroke-width="1.75" />
+                    {{ formatHora(partido.fecha_hora) }}
+                  </div>
+                  <div class="flex items-center gap-1 text-xs text-matchx-text-secondary">
+                    <MapPin class="w-3 h-3" :stroke-width="1.75" />
+                    {{ nombreSede(partido.sede_id) }}
+                  </div>
                 </div>
-                <div class="flex items-center gap-1 text-xs text-matchx-text-muted">
-                  <MapPin class="w-3 h-3" :stroke-width="1.75" />
-                  {{ nombreSede(partido.sede_id) }}
-                </div>
+                <ChevronRight class="w-4 h-4 text-matchx-text-muted shrink-0" :stroke-width="2" />
               </div>
             </div>
           </AppCard>

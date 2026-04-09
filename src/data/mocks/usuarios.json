@@ -61,12 +61,12 @@
   },
   {
     "id": 6,
-    "nombre": "Luis Capitán",
+    "nombre": "Luis Peñaranda",
     "correo": "luis@matchx.com",
     "contrasena_hash": "hash_mock_6",
     "telefono": "+573002224444",
     "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=luis",
-    "rol": "capitan",
+    "rol": "jugador",
     "activo": 1,
     "ultimo_acceso": "2026-03-29T11:00:00Z",
     "creado_en": "2026-01-25T00:00:00Z"
@@ -82,5 +82,17 @@
     "activo": 1,
     "ultimo_acceso": "2026-03-30T13:15:00Z",
     "creado_en": "2026-02-01T00:00:00Z"
+  },
+  {
+    "id": 8,
+    "nombre": "Felipe Gómez",
+    "correo": "jugador@matchx.com",
+    "contrasena_hash": "hash_mock_8",
+    "telefono": "+573001112222",
+    "url_avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=felipe",
+    "rol": "jugador",
+    "activo": 1,
+    "ultimo_acceso": "2026-04-09T10:00:00Z",
+    "creado_en": "2026-02-15T00:00:00Z"
   }
 ]

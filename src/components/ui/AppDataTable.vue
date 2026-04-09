@@ -14,12 +14,14 @@ interface Props<T> {
   loading?: boolean
   empty?: boolean
   rowKey?: keyof T
+  rowClass?: (row: T) => string
 }
 
 const props = withDefaults(defineProps<Props<any>>(), {
   loading: false,
   empty: false,
   rowKey: 'id',
+  rowClass: undefined,
 })
 
 defineSlots<{
@@ -122,6 +124,7 @@ const toggleSort = (key: string) => {
           :class="[
             'border-b border-matchx-border-base hover:bg-matchx-bg-surface/30 transition-colors duration-150',
             idx % 2 === 0 && 'bg-matchx-bg-base/20',
+            props.rowClass ? props.rowClass(row) : '',
           ]"
         >
           <td

@@ -9,6 +9,7 @@ export interface Jugador {
   numero_camiseta: number
   posicion: Posicion
   equipo_id: number
+  es_capitan: number
   activo: number
 }
 
@@ -20,6 +21,7 @@ function normalize(raw: any): Jugador {
     numero_camiseta: raw.numero_camiseta ?? raw.numero_dorsal ?? 0,
     posicion:        raw.posicion ?? 'defensa',
     equipo_id:       raw.equipo_id ?? raw.id_equipos ?? 0,
+    es_capitan:      raw.es_capitan ?? 0,
     activo:          raw.activo ?? raw.activated ?? 1,
   }
 }

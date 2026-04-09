@@ -6,6 +6,7 @@ import _sedes         from '@/data/mocks/sedes.json'
 import _modalidades   from '@/data/mocks/modalidades.json'
 import _usuarios      from '@/data/mocks/usuarios.json'
 import _inscripciones from '@/data/mocks/inscripciones.json'
+import _solicitudes   from '@/data/mocks/solicitudes.json'
 
 function seed<T>(data: T[]): T[] {
   return JSON.parse(JSON.stringify(data))
@@ -25,6 +26,7 @@ const counters: Record<string, number> = {
   modalidades:   maxId(_modalidades as any[]),
   usuarios:      maxId(_usuarios as any[]),
   inscripciones: maxId(_inscripciones as any[]),
+  solicitudes:   maxId(_solicitudes as any[]),
   eventos:       0,
   convocatorias: 0,
 }
@@ -43,6 +45,7 @@ export const db = {
   modalidades:   seed(_modalidades as any[]),
   usuarios:      seed(_usuarios as any[]),
   inscripciones: seed(_inscripciones as any[]),
+  solicitudes:   seed(_solicitudes as any[]),
   eventos:       [] as any[],
   convocatorias: [] as any[],
 }
