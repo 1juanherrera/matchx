@@ -6,7 +6,7 @@ import { useTheme } from '@/composables/useTheme'
 import {
   LayoutDashboard, Users, Layers, Building2, Settings,
   Trophy, ClipboardList, UserCheck, CircleDot, BarChart3,
-  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox,
+  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox, ShieldOff, Coins,
 } from 'lucide-vue-next'
 
 const router    = useRouter()
@@ -78,6 +78,7 @@ const navigationItems = computed(() => {
       { label: 'Partidos',      icon: CircleDot,     route: '/torneo/partidos' },
       { label: 'Posiciones',    icon: BarChart3,     route: '/torneo/posiciones' },
       { label: 'Solicitudes',   icon: Inbox,         route: '/torneo/solicitudes' },
+      { label: 'Sanciones',     icon: Coins,         route: '/torneo/sanciones' },
     ]
   }
 
@@ -101,12 +102,15 @@ const navigationItems = computed(() => {
   }
 
   if (role === 'jugador') {
-    const items = [
+    const items: { label: string; icon: any; route: string }[] = [
       ...baseItems,
       { label: 'Mi Equipo',  icon: Users,         route: '/capitan/equipo' },
       { label: 'Fixture',    icon: CalendarRange, route: '/capitan/fixture' },
       { label: 'Posiciones', icon: BarChart3,     route: '/capitan/posiciones' },
     ]
+    if (authStore.isCapitan) {
+      items.push({ label: 'Sanciones', icon: ShieldOff, route: '/capitan/sanciones' })
+    }
     return items
   }
 
@@ -139,10 +143,10 @@ const navigationItems = computed(() => {
       ]"
     >
       <!-- Logo + close (mobile) -->
-      <div class="p-6 border-b border-matchx-border-base flex items-center justify-between">
+      <div class="px-5 py-4 border-b border-matchx-border-base flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-matchx-accent-green">matchX</h1>
-          <p class="text-xs text-matchx-text-muted mt-0.5">v0.0.1 · Demo</p>
+          <h1 class="text-xl font-bold text-matchx-accent-green leading-none">matchX</h1>
+          <p class="text-[11px] text-matchx-text-muted mt-0.5">v0.0.1 · Demo</p>
         </div>
         <button
           class="md:hidden p-1.5 rounded-lg text-matchx-text-muted hover:text-matchx-text-primary hover:bg-matchx-bg-elevated transition-colors"
@@ -154,29 +158,48 @@ const navigationItems = computed(() => {
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-1">
         <RouterLink
           v-for="item of navigationItems"
           :key="item.route"
           :to="item.route"
           @click="sidebarOpen = false"
           :class="[
-            'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors cursor-pointer',
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer',
             $route.path.startsWith(item.route)
               ? 'bg-matchx-accent-green/10 text-matchx-accent-green'
               : 'text-matchx-text-secondary hover:bg-matchx-bg-elevated hover:text-matchx-text-primary',
           ]"
         >
-          <component :is="item.icon" class="w-4.5 h-4.5 shrink-0" :stroke-width="1.75" />
+          <component :is="item.icon" class="w-4 h-4 shrink-0" :stroke-width="1.75" />
           <span class="text-sm font-medium">{{ item.label }}</span>
         </RouterLink>
       </nav>
 
       <!-- User section -->
-      <div class="p-4 border-t border-matchx-border-base space-y-3">
-        <div class="flex items-center gap-3 px-1">
-          <div :class="['w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold', rolColor]">
-            {{ iniciales }}
+      <div class="px-3 py-3 border-t border-matchx-border-base space-y-2.5">
+        <component
+          :is="authStore.userRole === 'jugador' ? 'RouterLink' : 'div'"
+          :to="authStore.userRole === 'jugador' ? '/capitan/perfil' : undefined"
+          @click="authStore.userRole === 'jugador' && (sidebarOpen = false)"
+          :class="[
+            'flex items-center gap-2.5 px-1 rounded-lg',
+            authStore.userRole === 'jugador'
+              ? 'cursor-pointer hover:bg-matchx-bg-elevated transition-colors py-1 -mx-1'
+              : '',
+          ]"
+        >
+          <div class="relative shrink-0">
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold', rolColor]">
+              {{ iniciales }}
+            </div>
+            <span v-if="authStore.isCapitan"
+              class="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center
+                     text-[9px] font-black leading-none
+                     bg-gradient-to-b from-yellow-300 to-yellow-500 text-yellow-950
+                     ring-2 ring-matchx-bg-surface shadow-sm">
+              C
+            </span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-medium text-matchx-text-primary truncate">
@@ -186,12 +209,12 @@ const navigationItems = computed(() => {
               {{ authStore.userRole }}
             </div>
           </div>
-        </div>
+        </component>
 
         <button
           @click="handleLogout"
           :disabled="isLoggingOut"
-          class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-matchx-accent-orange/10 text-matchx-accent-orange hover:bg-matchx-accent-orange/20 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-matchx-accent-orange/10 text-matchx-accent-orange hover:bg-matchx-accent-orange/20 transition-colors text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <LogOut class="w-4 h-4" :stroke-width="1.75" />
           Cerrar sesión

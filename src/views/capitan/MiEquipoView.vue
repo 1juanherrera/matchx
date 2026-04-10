@@ -83,6 +83,12 @@ const avatarColor = (id: number) => avatarColors[id % 4]
 const initiales = (nombre: string, apellido: string) =>
   `${nombre[0] ?? ''}${apellido[0] ?? ''}`.toUpperCase()
 
+const esMiPerfil = (jugador: { nombre: string; apellido: string }) => {
+  const nombreAuth    = auth.user?.nombre?.toLowerCase().trim() ?? ''
+  const nombreJugador = `${jugador.nombre} ${jugador.apellido}`.toLowerCase().trim()
+  return nombreAuth !== '' && nombreAuth === nombreJugador
+}
+
 const pendientesCount = computed(() => solicitudes.value.filter(s => s.estado === 'pendiente').length)
 
 const solicitudLabel = (s: Solicitud) => {
@@ -264,28 +270,27 @@ const solicitarEliminarJugador = async () => {
           <div
             v-for="s in solicitudes"
             :key="s.id"
-            class="flex items-start gap-3 p-2.5 rounded-lg bg-matchx-bg-base/40"
+            class="flex items-center gap-3 p-2.5 rounded-lg bg-matchx-bg-base/40"
           >
             <!-- Icono estado -->
-            <div class="mt-0.5 shrink-0">
+            <div class="shrink-0">
               <Clock       v-if="s.estado === 'pendiente'"  class="w-4 h-4 text-matchx-accent-orange" :stroke-width="1.75" />
               <CheckCircle v-else-if="s.estado === 'aprobado'"  class="w-4 h-4 text-matchx-accent-green"  :stroke-width="1.75" />
               <XCircle     v-else                            class="w-4 h-4 text-red-400"               :stroke-width="1.75" />
             </div>
 
             <div class="flex-1 min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="text-sm text-matchx-text-primary truncate">{{ solicitudLabel(s) }}</span>
-                <AppBadge :variant="solicitudBadge(s.estado)" :dot="false" class="text-xs capitalize shrink-0">
-                  {{ s.estado }}
-                </AppBadge>
-              </div>
+              <span class="text-sm text-matchx-text-primary truncate block">{{ solicitudLabel(s) }}</span>
               <p v-if="s.estado === 'rechazado' && s.motivo_rechazo"
                  class="text-xs text-matchx-accent-orange/80 mt-0.5">
                 {{ s.motivo_rechazo }}
               </p>
               <p class="text-xs text-matchx-text-muted mt-0.5">{{ formatFecha(s.created_at) }}</p>
             </div>
+
+            <AppBadge :variant="solicitudBadge(s.estado)" :dot="false" class="text-xs capitalize shrink-0">
+              {{ s.estado }}
+            </AppBadge>
           </div>
         </div>
       </AppCard>
@@ -321,7 +326,12 @@ const solicitarEliminarJugador = async () => {
           <div
             v-for="jugador in jugadoresFiltrados"
             :key="jugador.id"
-            class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-matchx-bg-base/30 transition-colors group"
+            :class="[
+              'flex items-center gap-3 p-2.5 rounded-lg transition-colors group',
+              esMiPerfil(jugador)
+                ? 'bg-matchx-accent-green/5 ring-1 ring-matchx-accent-green/20 hover:bg-matchx-accent-green/8'
+                : 'hover:bg-matchx-bg-base/30',
+            ]"
           >
             <div class="relative shrink-0">
               <div :class="['w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold', avatarColor(jugador.id)]">
@@ -336,8 +346,15 @@ const solicitarEliminarJugador = async () => {
               </span>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="font-medium text-matchx-text-primary text-sm truncate">
-                {{ jugador.nombre }} {{ jugador.apellido }}
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-matchx-text-primary text-sm truncate">
+                  {{ jugador.nombre }} {{ jugador.apellido }}
+                </span>
+                <span v-if="esMiPerfil(jugador)"
+                  class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full
+                         bg-matchx-accent-green/15 text-matchx-accent-green leading-none">
+                  Tú
+                </span>
               </div>
               <div class="text-xs text-matchx-text-muted">#{{ jugador.numero_camiseta }}</div>
             </div>

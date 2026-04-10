@@ -179,6 +179,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Partidos', requiereRol: ['admin_torneo'] },
       },
       {
+        path: 'partidos/:id/acta',
+        name: 'TorneoActaPartido',
+        component: () => import('@/views/admin-torneo/ActaPartidoView.vue'),
+        meta: { title: 'Acta de Partido', requiereRol: ['admin_torneo'] },
+      },
+      {
         path: 'posiciones',
         name: 'TorneoPosiciones',
         component: () => import('@/views/admin-torneo/PosicionesView.vue'),
@@ -189,6 +195,12 @@ const routes: RouteRecordRaw[] = [
         name: 'TorneoSolicitudes',
         component: () => import('@/views/admin-torneo/SolicitudesView.vue'),
         meta: { title: 'Solicitudes', requiereRol: ['admin_torneo'] },
+      },
+      {
+        path: 'sanciones',
+        name: 'TorneoSanciones',
+        component: () => import('@/views/admin-torneo/SancionesView.vue'),
+        meta: { title: 'Sanciones', requiereRol: ['admin_torneo'] },
       },
     ],
   },
@@ -267,6 +279,18 @@ const routes: RouteRecordRaw[] = [
         name: 'JugadorPosiciones',
         component: () => import('@/views/capitan/PosicionesView.vue'),
         meta: { title: 'Tabla de Posiciones', requiereRol: ['jugador'] },
+      },
+      {
+        path: 'sanciones',
+        name: 'CapitanSanciones',
+        component: () => import('@/views/capitan/SancionesView.vue'),
+        meta: { title: 'Sanciones', requiereRol: ['jugador'] },
+      },
+      {
+        path: 'perfil',
+        name: 'CapitanPerfil',
+        component: () => import('@/views/capitan/PerfilView.vue'),
+        meta: { title: 'Mi Perfil', requiereRol: ['jugador'] },
       },
       {
         path: 'partidos/:id',

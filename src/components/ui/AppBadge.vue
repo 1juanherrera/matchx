@@ -22,7 +22,7 @@ const badgeClass = computed(() => {
     green: 'bg-matchx-accent-green/10 text-matchx-accent-green',
     orange: 'bg-matchx-accent-orange/10 text-matchx-accent-orange',
     blue: 'bg-blue-500/10 text-blue-400',
-    gray: 'bg-matchx-text-muted/10 text-matchx-text-muted',
+    gray: 'bg-matchx-bg-elevated text-matchx-text-secondary border border-matchx-border-base',
     red: 'bg-red-500/10 text-red-400',
   }
 
@@ -35,7 +35,7 @@ const dotClass = computed(() => {
     green: 'bg-matchx-accent-green',
     orange: 'bg-matchx-accent-orange',
     blue: 'bg-blue-400',
-    gray: 'bg-matchx-text-muted',
+    gray: 'bg-matchx-text-secondary',
     red: 'bg-red-400',
   }
   const animation = props.pulse ? 'animate-pulse' : ''

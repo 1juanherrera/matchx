@@ -7,12 +7,47 @@ import { useSedesStore } from '@/stores/sedes'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
-import { Flag, Calendar, Clock, MapPin, Swords } from 'lucide-vue-next'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppModal from '@/components/ui/AppModal.vue'
+import { Flag, Calendar, Clock, MapPin, Swords, UserRoundX } from 'lucide-vue-next'
+import api from '@/services/api'
 
 const auth = useAuthStore()
 const partidosStore = usePartidosStore()
 const equiposStore = useEquiposStore()
 const sedesStore = useSedesStore()
+
+// ── Solicitar reasignación de árbitro ─────────────────────────────────────
+const showReasignModal  = ref(false)
+const reasignTarget     = ref<number | null>(null)
+const reasignLoading    = ref(false)
+const reasignError      = ref('')
+const reasignSuccess    = ref(false)
+
+const openReasignModal = (id: number) => {
+  reasignTarget.value  = id
+  reasignError.value   = ''
+  reasignSuccess.value = false
+  showReasignModal.value = true
+}
+
+const confirmarReasignacion = async () => {
+  if (reasignTarget.value === null) return
+  reasignError.value   = ''
+  reasignLoading.value = true
+  try {
+    await api.post('/api/torneos/solicitudes', {
+      tipo:       'reasignacion_arbitro',
+      partido_id: reasignTarget.value,
+      arbitro_id: auth.user?.usuario_id,
+    })
+    reasignSuccess.value = true
+  } catch (err: any) {
+    reasignError.value = err.response?.data?.message ?? 'Error al enviar la solicitud'
+  } finally {
+    reasignLoading.value = false
+  }
+}
 
 const filtroEstado = ref<string>('todos')
 
@@ -157,10 +192,64 @@ const estadoBadge = (estado: string): 'green' | 'orange' | 'gray' | 'blue' => ({
                 <MapPin class="w-3 h-3" :stroke-width="1.75" />
                 {{ nombreSede(partido.sede_id) }}
               </div>
+              <AppButton
+                v-if="partido.estado === 'programado'"
+                variant="secondary"
+                size="sm"
+                class="mt-1"
+                @click="openReasignModal(partido.id)"
+              >
+                <UserRoundX class="w-3.5 h-3.5" :stroke-width="2" />
+                Solicitar reasignación
+              </AppButton>
             </div>
           </div>
         </AppCard>
       </template>
     </div>
   </div>
+
+  <!-- Modal: Solicitar reasignación de árbitro -->
+  <AppModal v-model:open="showReasignModal" size="sm"
+    :title="reasignSuccess ? '' : 'Solicitar reasignación'"
+    :close-button="true">
+
+    <!-- Éxito -->
+    <div v-if="reasignSuccess" class="flex flex-col items-center gap-4 py-4 text-center">
+      <div class="w-14 h-14 rounded-full bg-matchx-accent-green/10 flex items-center justify-center">
+        <UserRoundX class="w-7 h-7 text-matchx-accent-green" :stroke-width="1.75" />
+      </div>
+      <div>
+        <p class="font-semibold text-matchx-text-primary">Solicitud enviada</p>
+        <p class="text-sm text-matchx-text-muted mt-1">
+          El administrador del torneo recibirá la solicitud y asignará un árbitro disponible.
+        </p>
+      </div>
+    </div>
+
+    <!-- Confirmación -->
+    <template v-else>
+      <p class="text-sm text-matchx-text-muted">
+        Estás indicando que <span class="font-semibold text-matchx-text-primary">no puedes presentarte</span> a este partido.
+        El administrador del torneo recibirá la solicitud para asignar otro árbitro disponible.
+      </p>
+      <p v-if="reasignError" class="mt-3 text-sm text-matchx-accent-orange">{{ reasignError }}</p>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <AppButton variant="secondary" @click="showReasignModal = false">
+          {{ reasignSuccess ? 'Cerrar' : 'Cancelar' }}
+        </AppButton>
+        <AppButton
+          v-if="!reasignSuccess"
+          :loading="reasignLoading"
+          @click="confirmarReasignacion"
+        >
+          <UserRoundX class="w-4 h-4" :stroke-width="2" />
+          Enviar solicitud
+        </AppButton>
+      </div>
+    </template>
+  </AppModal>
 </template>

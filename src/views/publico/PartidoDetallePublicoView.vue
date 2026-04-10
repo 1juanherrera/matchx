@@ -42,12 +42,25 @@ const colorLocal = computed(() => equipoLocal.value?.colores?.split(',')[0] ?? '
 const colorVisit = computed(() => equipoVisit.value?.colores?.split(',')[0] ?? '#ff6b35')
 
 // ─── Formation templates (fixed per modality) ─────────────────────────────────
-// Coordinates: x = 0-100% of field width, y = 0-100% of full field height (top=0)
-// Local occupies y: 50-100%, Visitante y: 0-50% (mirrored)
-
 type ModalidadCode = 'F5' | 'F7' | 'F11'
 
 interface Slot { x: number; y: number; pos: 'portero' | 'defensa' | 'mediocampo' | 'delantero' }
+
+// ─── FIFA card data ────────────────────────────────────────────────────────────
+const POS_CODE: Record<string, string> = {
+  portero: 'POR', defensa: 'DEF', mediocampo: 'MED', delantero: 'DEL',
+}
+
+function jugStats(jugId: number, pos: string) {
+  const s = (seed: number) => Math.min(95, Math.max(55, ((jugId * 7 + seed * 11) % 30) + 62))
+  const r = { PAC: s(1), TIR: s(2), PAS: s(3), REG: s(4), DEF: s(5), FIS: s(6) }
+  if (pos === 'portero')    { r.TIR = Math.max(36, r.TIR - 22); r.DEF = Math.min(95, r.DEF + 10) }
+  if (pos === 'defensa')    { r.TIR = Math.max(44, r.TIR - 12); r.DEF = Math.min(95, r.DEF + 8); r.FIS = Math.min(95, r.FIS + 5) }
+  if (pos === 'mediocampo') { r.PAS = Math.min(95, r.PAS + 6);  r.REG = Math.min(95, r.REG + 4) }
+  if (pos === 'delantero')  { r.TIR = Math.min(95, r.TIR + 8);  r.PAC = Math.min(95, r.PAC + 6); r.DEF = Math.max(34, r.DEF - 14) }
+  const rating = Math.round(Object.values(r).reduce((a, b) => a + b, 0) / 6)
+  return { rating, stats: Object.entries(r).map(([key, val]) => ({ key, val })) }
+}
 
 // Visitante = espejo vertical exacto (y → 100 - y)
 // Local ocupa y: 55–90%, Visitante y: 10–45%
@@ -93,13 +106,17 @@ const sortByPos = (jugs: typeof jugLocal.value) =>
   [...jugs].sort((a, b) => posOrder.indexOf(a.posicion) - posOrder.indexOf(b.posicion))
 
 interface TokenData {
-  numero: number
+  numero:   number
   apellido: string
-  nombre: string
-  pos: string
-  x: number
-  y: number
-  color: string
+  nombre:   string
+  pos:      string
+  posCode:  string
+  initials: string
+  rating:   number
+  stats:    { key: string; val: number }[]
+  x:        number
+  y:        number
+  color:    string
 }
 
 function buildTokens(
@@ -109,14 +126,20 @@ function buildTokens(
 ): TokenData[] {
   const sorted = sortByPos(jugs)
   return slots.map((slot, i) => {
-    const j = sorted[i]
+    const j   = sorted[i]
+    const jId = j?.id ?? (i + 1) * 37
+    const { rating, stats } = jugStats(jId, slot.pos)
     return {
       numero:   j?.numero_camiseta ?? (i + 1),
       apellido: j?.apellido ?? '—',
-      nombre:   j?.nombre ?? '',
+      nombre:   j?.nombre   ?? '',
       pos:      slot.pos,
-      x:        slot.x,
-      y:        slot.y,
+      posCode:  POS_CODE[slot.pos] ?? slot.pos,
+      initials: `${(j?.nombre?.[0]   ?? '').toUpperCase()}${(j?.apellido?.[0] ?? '').toUpperCase()}`,
+      rating,
+      stats,
+      x:     slot.x,
+      y:     slot.y,
       color,
     }
   })
@@ -338,24 +361,72 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
             {{ equipoLocal?.nombre }}
           </span>
 
-          <!-- CAPA 5: Tokens de jugadores — v-for original mantenido -->
+          <!-- CAPA 5: Tokens de jugadores -->
           <div
             v-for="token in allTokens"
             :key="`${token.color}-${token.x}-${token.y}`"
             class="player-token absolute z-20 flex flex-col items-center"
             :style="{ left: `${token.x}%`, top: `${token.y}%` }"
           >
-            <!-- Círculo con glossy gradient + anillo de equipo -->
-            <div
-              class="jersey-circle"
-              :style="{
-                backgroundColor: token.color,
-                backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.06) 48%, rgba(0,0,0,0.28) 100%)'
-              }"
-            >{{ token.numero }}</div>
-
-            <!-- Apellido en pill oscuro — sin necesidad de text-shadow -->
+            <div class="jersey-circle" :style="{ backgroundColor: token.color }">{{ token.numero }}</div>
             <span class="player-name">{{ token.apellido }}</span>
+
+            <!-- ── Carta FIFA ── -->
+            <div
+              class="fifa-card"
+              :class="[
+                token.y > 55 ? 'card-up' : 'card-down',
+                token.x < 22 ? 'card-left' : token.x > 78 ? 'card-right' : 'card-center',
+              ]"
+            >
+              <!-- Barra de color del equipo -->
+              <div class="h-1 w-full shrink-0" :style="{ backgroundColor: token.color }" />
+
+              <!-- Cabecera: rating + posición + dorsal -->
+              <div class="flex items-start justify-between px-2.5 pt-2">
+                <div>
+                  <div class="text-2xl font-black leading-none text-white"
+                       style="font-family:'Fira Code',monospace">{{ token.rating }}</div>
+                  <div class="text-[9px] font-bold tracking-widest uppercase mt-0.5"
+                       :style="{ color: token.color }">{{ token.posCode }}</div>
+                </div>
+                <div class="text-[10px] font-bold text-white/35 mt-0.5"
+                     style="font-family:'Fira Code',monospace">#{{ token.numero }}</div>
+              </div>
+
+              <!-- Avatar con iniciales -->
+              <div class="flex justify-center py-2">
+                <div
+                  class="w-11 h-11 rounded-full flex items-center justify-center
+                         text-[13px] font-black text-white border-2"
+                  :style="{
+                    backgroundColor: token.color + '28',
+                    borderColor:     token.color + '70',
+                  }"
+                >{{ token.initials || '?' }}</div>
+              </div>
+
+              <!-- Nombre -->
+              <div class="px-2.5 pb-1 text-center">
+                <p class="text-[11px] font-black text-white uppercase tracking-wide truncate leading-tight">
+                  {{ token.apellido }}
+                </p>
+                <p class="text-[9px] text-white/45 truncate mt-0.5 leading-none">{{ token.nombre }}</p>
+              </div>
+
+              <!-- Separador -->
+              <div class="mx-2.5 mb-2" :style="{ height: '1px', backgroundColor: token.color + '35' }" />
+
+              <!-- Stats 3×2 -->
+              <div class="grid grid-cols-3 px-2 pb-2.5 gap-y-1.5">
+                <div v-for="s in token.stats" :key="s.key" class="flex flex-col items-center gap-0.5">
+                  <span class="text-[12px] font-black text-white leading-none"
+                        style="font-family:'Fira Code',monospace">{{ s.val }}</span>
+                  <span class="text-[7px] font-bold tracking-wider uppercase leading-none"
+                        :style="{ color: token.color + 'bb' }">{{ s.key }}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -565,6 +636,8 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
 .pitch-container {
   aspect-ratio: 2 / 3;
   max-height:   600px;
+  /* overflow visible para que las cartas FIFA salgan fuera del pitch */
+  overflow:     visible !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -574,6 +647,8 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
    Las dos capas se combinan en un solo background-image multicapa.
 ────────────────────────────────────────────────────────────────────── */
 .pitch-surface {
+  /* Re-clip el verde al borde redondeado ahora que el container es overflow:visible */
+  border-radius: 8px;
   /* Capa 1 (superior): dot matrix */
   /* Capa 2 (inferior): franjas de corte */
   background-color: #163518;
@@ -618,58 +693,115 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   TOKEN DE JUGADOR — más grande y más bonito
+   TOKEN DE JUGADOR — flat tactical board
 ═══════════════════════════════════════════════════════════════════════ */
 .player-token {
-  transform: translate(-50%, -50%);
-  gap:       clamp(2px, 0.65vw, 5px);
-  filter:
-    drop-shadow(0px 6px 18px rgba(0, 0, 0, 0.85))
-    drop-shadow(0px 2px  5px rgba(0, 0, 0, 0.65));
-  transition: filter 0.15s ease;
+  transform:  translate(-50%, -50%);
+  gap:        clamp(2px, 0.6vw, 4px);
+  transition: transform 0.15s ease;
+  /* z-index base; hover lo sube para que la carta quede encima de otros tokens */
 }
 .player-token:hover {
-  filter:
-    drop-shadow(0px 8px 22px rgba(0, 0, 0, 0.90))
-    drop-shadow(0px 3px  7px rgba(0, 0, 0, 0.70));
+  transform: translate(-50%, -50%) scale(1.08);
+  z-index: 60 !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────────
-   Círculo de camiseta — glossy, grande
-   30–48 px (era 22–33 px, +45%)
+   Círculo de camiseta — flat + double ring
+   Sin gradiente, sin sombra acumulada.
+   Ring exterior: outline blanco tenue con gap = aspecto "seleccionado".
 ────────────────────────────────────────────────────────────────────── */
 .jersey-circle {
-  width:           clamp(30px, 6.5vw, 48px);
-  height:          clamp(30px, 6.5vw, 48px);
+  width:           clamp(28px, 6vw, 44px);
+  height:          clamp(28px, 6vw, 44px);
   border-radius:   50%;
   display:         flex;
   align-items:     center;
   justify-content: center;
   font-weight:     900;
   color:           #fff;
-  font-size:       clamp(11px, 2.3vw, 17px);
+  font-size:       clamp(10px, 2.1vw, 16px);
   line-height:     1;
-  border:          2px solid rgba(255, 255, 255, 0.50);
+  /* Inner ring */
+  border:          2px solid rgba(255, 255, 255, 0.55);
+  /* Outer ring separado por 2 px de gap */
+  outline:         1.5px solid rgba(255, 255, 255, 0.18);
+  outline-offset:  2px;
 }
 
 /* ──────────────────────────────────────────────────────────────────────
-   Chip de nombre — fondo oscuro semitransparente
-   Reemplaza text-shadow; da contraste real sobre cualquier verde.
+   Nombre — texto directo, sin pill oscuro
 ────────────────────────────────────────────────────────────────────── */
 .player-name {
   display:        block;
-  color:          #fff;
-  font-size:      clamp(7px, 1.4vw, 10px);
+  color:          rgba(255, 255, 255, 0.92);
+  font-size:      clamp(6px, 1.3vw, 9px);
   font-weight:    700;
   text-align:     center;
   white-space:    nowrap;
   overflow:       hidden;
   text-overflow:  ellipsis;
-  max-width:      clamp(36px, 6.5vw, 54px);
+  max-width:      clamp(34px, 6vw, 52px);
   line-height:    1;
-  letter-spacing: 0.03em;
-  background:     rgba(0, 0, 0, 0.60);
-  border-radius:  3px;
-  padding:        2px 5px;
+  letter-spacing: 0.04em;
+  text-shadow:    0 1px 3px rgba(0, 0, 0, 0.80);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CARTA FIFA — aparece en hover sobre el token
+═══════════════════════════════════════════════════════════════════════ */
+.fifa-card {
+  position:       absolute;
+  width:          clamp(108px, 17vw, 136px);
+  opacity:        0;
+  pointer-events: none;
+  transition:     opacity 0.18s ease, transform 0.18s ease;
+  z-index:        80;
+
+  display:        flex;
+  flex-direction: column;
+
+  background:     linear-gradient(155deg, #1c2a3e 0%, #0d1420 55%, #141e2d 100%);
+  border:         1px solid rgba(255, 255, 255, 0.09);
+  border-radius:  10px;
+  overflow:       hidden;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.80),
+    0  4px 12px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.player-token:hover .fifa-card { opacity: 1; }
+
+/* ── Posición vertical ── */
+.card-up   { bottom: calc(100% + 10px); }
+.card-down { top:    calc(100% + 10px); }
+
+/* ── Alineación horizontal ── */
+.card-up.card-center, .card-down.card-center {
+  left:      50%;
+  transform: translateX(-50%) translateY(6px);
+}
+.card-up.card-left, .card-down.card-left {
+  left:      0;
+  transform: translateY(6px);
+}
+.card-up.card-right, .card-down.card-right {
+  right:     0;
+  left:      auto;
+  transform: translateY(6px);
+}
+
+/* Cartas que bajan corrigen el translateY */
+.card-down.card-center { transform: translateX(-50%) translateY(-6px); }
+.card-down.card-left   { transform: translateY(-6px); }
+.card-down.card-right  { transform: translateY(-6px); }
+
+/* ── Animación entrada ── */
+.player-token:hover .card-up.card-center,
+.player-token:hover .card-down.card-center { transform: translateX(-50%) translateY(0); }
+.player-token:hover .card-up.card-left,
+.player-token:hover .card-down.card-left   { transform: translateY(0); }
+.player-token:hover .card-up.card-right,
+.player-token:hover .card-down.card-right  { transform: translateY(0); }
 </style>

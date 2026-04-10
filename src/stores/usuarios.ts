@@ -20,11 +20,21 @@ export const useUsuariosStore = defineStore('usuarios', () => {
   const loading  = ref(false)
   const error    = ref<string | null>(null)
 
+  // Mock árbitro adicional para dev — remover cuando el backend tenga este usuario real
+  const MOCK_ARBITRO: Usuario = {
+    id: 9997, nombre: 'Roberto Méndez', correo: 'roberto@matchx.com',
+    telefono: '3001234567', url_avatar: '', rol: 'arbitro',
+    activo: 1, ultimo_acceso: '', creado_en: '',
+  }
+
   const fetchUsuarios = async () => {
     loading.value = true
     error.value   = null
     try {
-      usuarios.value = (await usuariosService.getAll()) as Usuario[]
+      const result = (await usuariosService.getAll()) as Usuario[]
+      // Inyectar mock si el backend aún no lo tiene
+      const yaTiene = result.some(u => u.correo === MOCK_ARBITRO.correo)
+      usuarios.value = yaTiene ? result : [...result, MOCK_ARBITRO]
     } catch (err: any) {
       error.value = err.response?.data?.message ?? 'Error cargando usuarios'
     } finally {

@@ -69,9 +69,21 @@ export const usePartidosStore = defineStore('partidos', () => {
     if (idx !== -1) partidos.value.splice(idx, 1)
   }
 
+  const cancelarPartido = async (id: number) => {
+    await partidosService.cambiarEstado(id, 'suspendido')
+    const idx = partidos.value.findIndex(p => p.id === id)
+    if (idx !== -1) partidos.value[idx] = { ...partidos.value[idx], estado: 'suspendido' }
+  }
+
+  const aplazarPartido = async (id: number) => {
+    await partidosService.cambiarEstado(id, 'aplazado')
+    const idx = partidos.value.findIndex(p => p.id === id)
+    if (idx !== -1) partidos.value[idx] = { ...partidos.value[idx], estado: 'aplazado' }
+  }
+
   return {
     partidos, loading, error,
     partidosPorTorneo, proximosPartidos,
-    fetchPartidos, obtenerPorId, crearPartido, actualizarPartido, eliminarPartido,
+    fetchPartidos, obtenerPorId, crearPartido, actualizarPartido, eliminarPartido, cancelarPartido, aplazarPartido,
   }
 })

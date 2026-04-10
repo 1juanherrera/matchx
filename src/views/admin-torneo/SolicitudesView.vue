@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useUsuariosStore } from '@/stores/usuarios'
+import { usePartidosStore } from '@/stores/partidos'
+import { useArbitrosDisponibilidad } from '@/composables/useArbitrosDisponibilidad'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppModal from '@/components/ui/AppModal.vue'
-import { Inbox, UserPlus, UserMinus, CheckCircle, XCircle, Clock, Users, ChevronRight } from 'lucide-vue-next'
+import { Inbox, UserPlus, UserMinus, CheckCircle, XCircle, Clock, Users, ChevronRight, UserRoundCog, Flag } from 'lucide-vue-next'
 import api from '@/services/api'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
@@ -19,9 +22,13 @@ interface DatoAlta {
 
 interface Solicitud {
   id: number
-  tipo: 'alta_jugador' | 'baja_jugador'
+  tipo: 'alta_jugador' | 'baja_jugador' | 'reasignacion_arbitro'
   equipo_id: number
   equipo_nombre: string
+  partido_id?: number | null
+  partido_descripcion?: string | null
+  arbitro_id?: number | null
+  arbitro_nombre?: string | null
   jugador_id: number | null
   jugador_nombre: string | null
   datos: DatoAlta | null
@@ -30,6 +37,9 @@ interface Solicitud {
   motivo_rechazo: string | null
   created_at: string
 }
+
+const usuariosStore = useUsuariosStore()
+const partidosStore = usePartidosStore()
 
 // ── Estado ─────────────────────────────────────────────────────────────────
 const solicitudes  = ref<Solicitud[]>([])
@@ -44,11 +54,21 @@ const filtros = [
 ] as const
 
 // ── Modal aprobar ──────────────────────────────────────────────────────────
-const showAprobar  = ref(false)
-const targetAprobar = ref<Solicitud | null>(null)
-const aprobarLoading = ref(false)
-const aprobarError   = ref('')
-const aprobarDone    = ref(false)
+const showAprobar     = ref(false)
+const targetAprobar   = ref<Solicitud | null>(null)
+const aprobarLoading  = ref(false)
+const aprobarError    = ref('')
+const aprobarDone     = ref(false)
+const nuevoArbitroId  = ref<number>(0)
+
+const { arbitrosConDisponibilidad } = useArbitrosDisponibilidad(
+  () => {
+    if (!targetAprobar.value?.partido_id) return null
+    return partidosStore.obtenerPorId(targetAprobar.value.partido_id)?.fecha_hora ?? null
+  },
+  () => targetAprobar.value?.partido_id ?? null,
+  () => targetAprobar.value?.arbitro_id ?? null,  // excluir al árbitro que solicita reemplazo
+)
 
 // ── Modal rechazar ─────────────────────────────────────────────────────────
 const showRechazar   = ref(false)
@@ -58,18 +78,43 @@ const rechazarLoading = ref(false)
 const rechazarError   = ref('')
 const rechazarDone    = ref(false)
 
+// ── Solicitud ficticia (dev) — remover cuando el backend soporte reasignacion_arbitro
+const MOCK_REASIGNACION: Solicitud = {
+  id: 9999,
+  tipo: 'reasignacion_arbitro',
+  equipo_id: 0,
+  equipo_nombre: '',
+  partido_id: 1,
+  partido_descripcion: 'Jornada 1 — Atletico FC vs Real Bogotá',
+  arbitro_id: 5,
+  arbitro_nombre: 'Pedro Árbitro',
+  jugador_id: null,
+  jugador_nombre: null,
+  datos: null,
+  estado: 'pendiente',
+  solicitado_por_nombre: 'Pedro Árbitro',
+  motivo_rechazo: null,
+  created_at: new Date().toISOString(),
+}
+
 // ── Fetch ──────────────────────────────────────────────────────────────────
 const fetchSolicitudes = async () => {
   loading.value = true
   try {
     const { data } = await api.get('/api/torneos/solicitudes')
-    solicitudes.value = (data.data ?? data) as Solicitud[]
+    solicitudes.value = [MOCK_REASIGNACION, ...(data.data ?? data) as Solicitud[]]
   } finally {
     loading.value = false
   }
 }
 
-onMounted(fetchSolicitudes)
+onMounted(async () => {
+  await Promise.all([
+    fetchSolicitudes(),
+    usuariosStore.fetchUsuarios(),
+    partidosStore.fetchPartidos(),
+  ])
+})
 
 // ── Computed ───────────────────────────────────────────────────────────────
 const lista = computed(() => {
@@ -100,10 +145,11 @@ const formatFecha = (iso: string) => {
 
 // ── Acciones ───────────────────────────────────────────────────────────────
 const openAprobar = (s: Solicitud) => {
-  targetAprobar.value = s
-  aprobarError.value = ''
-  aprobarDone.value  = false
-  showAprobar.value  = true
+  targetAprobar.value  = s
+  aprobarError.value   = ''
+  aprobarDone.value    = false
+  nuevoArbitroId.value = 0
+  showAprobar.value    = true
 }
 
 const confirmarAprobar = async () => {
@@ -111,8 +157,25 @@ const confirmarAprobar = async () => {
   aprobarLoading.value = true
   aprobarError.value   = ''
   try {
-    await api.put(`/api/torneos/solicitudes/${targetAprobar.value.id}/aprobar`, {})
-    // Actualizar estado local sin recargar todo
+    if (targetAprobar.value.tipo === 'reasignacion_arbitro') {
+      if (!nuevoArbitroId.value) {
+        aprobarError.value   = 'Selecciona el nuevo árbitro'
+        aprobarLoading.value = false
+        return
+      }
+      // Actualizar el partido con el nuevo árbitro
+      if (targetAprobar.value.partido_id) {
+        await partidosStore.actualizarPartido(targetAprobar.value.partido_id, {
+          arbitro_id: nuevoArbitroId.value,
+        })
+      }
+      // Marcar solicitud como aprobada (si el backend lo soporta; si no, solo actualizamos local)
+      try {
+        await api.put(`/api/torneos/solicitudes/${targetAprobar.value.id}/aprobar`, {})
+      } catch { /* mock — ignorar si el backend no conoce este id */ }
+    } else {
+      await api.put(`/api/torneos/solicitudes/${targetAprobar.value.id}/aprobar`, {})
+    }
     const idx = solicitudes.value.findIndex(s => s.id === targetAprobar.value!.id)
     if (idx !== -1) solicitudes.value[idx] = { ...solicitudes.value[idx], estado: 'aprobado' }
     aprobarDone.value = true
@@ -212,34 +275,51 @@ const confirmarRechazar = async () => {
           <!-- Icono tipo -->
           <div :class="[
             'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
-            s.tipo === 'alta_jugador'
-              ? 'bg-matchx-accent-green/10 text-matchx-accent-green'
-              : 'bg-matchx-accent-orange/10 text-matchx-accent-orange',
+            s.tipo === 'alta_jugador'       ? 'bg-matchx-accent-green/10 text-matchx-accent-green'
+            : s.tipo === 'reasignacion_arbitro' ? 'bg-blue-500/10 text-blue-400'
+            : 'bg-matchx-accent-orange/10 text-matchx-accent-orange',
           ]">
-            <UserPlus  v-if="s.tipo === 'alta_jugador'"  class="w-5 h-5" :stroke-width="1.75" />
-            <UserMinus v-else                             class="w-5 h-5" :stroke-width="1.75" />
+            <UserPlus      v-if="s.tipo === 'alta_jugador'"          class="w-5 h-5" :stroke-width="1.75" />
+            <UserRoundCog  v-else-if="s.tipo === 'reasignacion_arbitro'" class="w-5 h-5" :stroke-width="1.75" />
+            <UserMinus     v-else                                     class="w-5 h-5" :stroke-width="1.75" />
           </div>
 
           <!-- Contenido -->
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2 mb-1">
               <span class="font-semibold text-matchx-text-primary text-sm">
-                {{ s.tipo === 'alta_jugador' ? 'Alta de jugador' : 'Baja de jugador' }}
+                {{ s.tipo === 'alta_jugador' ? 'Alta de jugador'
+                   : s.tipo === 'reasignacion_arbitro' ? 'Reasignación de árbitro'
+                   : 'Baja de jugador' }}
               </span>
               <AppBadge :variant="estadoBadge(s.estado)" :dot="false" class="text-xs capitalize">
                 {{ s.estado }}
               </AppBadge>
             </div>
 
-            <!-- Equipo -->
-            <div class="flex items-center gap-1 text-xs text-matchx-text-muted mb-2">
-              <Users class="w-3 h-3 shrink-0" :stroke-width="2" />
-              <span>{{ s.equipo_nombre }}</span>
-              <ChevronRight class="w-3 h-3 opacity-50" :stroke-width="2" />
-              <span>{{ s.solicitado_por_nombre ?? 'Capitán' }}</span>
-            </div>
+            <!-- Reasignación: partido + árbitro que no puede -->
+            <template v-if="s.tipo === 'reasignacion_arbitro'">
+              <div class="flex items-center gap-1 text-xs text-matchx-text-muted mb-1">
+                <Flag class="w-3 h-3 shrink-0" :stroke-width="2" />
+                <span>{{ s.partido_descripcion ?? `Partido #${s.partido_id}` }}</span>
+              </div>
+              <div class="flex items-center gap-1 text-xs text-matchx-text-muted mb-2">
+                <UserRoundCog class="w-3 h-3 shrink-0" :stroke-width="2" />
+                <span>Solicitado por: <span class="text-matchx-text-secondary">{{ s.arbitro_nombre ?? s.solicitado_por_nombre }}</span></span>
+              </div>
+            </template>
 
-            <!-- Datos del jugador -->
+            <!-- Alta/Baja: equipo -->
+            <template v-else>
+              <div class="flex items-center gap-1 text-xs text-matchx-text-muted mb-2">
+                <Users class="w-3 h-3 shrink-0" :stroke-width="2" />
+                <span>{{ s.equipo_nombre }}</span>
+                <ChevronRight class="w-3 h-3 opacity-50" :stroke-width="2" />
+                <span>{{ s.solicitado_por_nombre ?? 'Capitán' }}</span>
+              </div>
+            </template>
+
+            <!-- Datos del jugador (alta) -->
             <div v-if="s.tipo === 'alta_jugador' && s.datos"
                  class="flex flex-wrap gap-x-4 gap-y-0.5 text-sm">
               <span class="text-matchx-text-primary font-medium">
@@ -305,16 +385,65 @@ const confirmarRechazar = async () => {
       <div>
         <p class="font-semibold text-matchx-text-primary">Solicitud aprobada</p>
         <p class="text-sm text-matchx-text-muted mt-1">
-          {{ targetAprobar?.tipo === 'alta_jugador'
-            ? `${targetAprobar?.datos?.nombre} ${targetAprobar?.datos?.apellido} ha sido agregado a la plantilla.`
-            : `La baja de ${targetAprobar?.jugador_nombre} ha sido procesada.` }}
+          <template v-if="targetAprobar?.tipo === 'reasignacion_arbitro'">
+            El nuevo árbitro ha sido asignado al partido.
+          </template>
+          <template v-else-if="targetAprobar?.tipo === 'alta_jugador'">
+            {{ targetAprobar?.datos?.nombre }} {{ targetAprobar?.datos?.apellido }} ha sido agregado a la plantilla.
+          </template>
+          <template v-else>
+            La baja de {{ targetAprobar?.jugador_nombre }} ha sido procesada.
+          </template>
         </p>
       </div>
     </div>
 
     <template v-else>
-      <p class="text-sm text-matchx-text-muted">
-        <template v-if="targetAprobar?.tipo === 'alta_jugador'">
+      <!-- Reasignación de árbitro -->
+      <template v-if="targetAprobar?.tipo === 'reasignacion_arbitro'">
+        <div class="rounded-lg bg-matchx-bg-base/50 border border-matchx-border-base p-3 mb-4">
+          <p class="text-xs text-matchx-text-muted mb-0.5">Partido</p>
+          <p class="text-sm font-medium text-matchx-text-primary">
+            {{ targetAprobar?.partido_descripcion ?? `Partido #${targetAprobar?.partido_id}` }}
+          </p>
+          <p class="text-xs text-matchx-text-muted mt-2 mb-0.5">Árbitro que no puede presentarse</p>
+          <p class="text-sm font-medium text-matchx-accent-orange">{{ targetAprobar?.arbitro_nombre }}</p>
+        </div>
+        <!-- Árbitro saliente -->
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-matchx-accent-orange/5 border border-matchx-accent-orange/20 mb-3">
+          <span class="w-2 h-2 rounded-full bg-matchx-accent-orange shrink-0" />
+          <span class="text-xs text-matchx-text-muted">Reemplazando a</span>
+          <span class="text-xs font-semibold text-matchx-accent-orange">{{ targetAprobar?.arbitro_nombre }}</span>
+        </div>
+
+        <p class="text-xs font-medium text-matchx-text-secondary mb-2">Selecciona el nuevo árbitro</p>
+        <div v-if="arbitrosConDisponibilidad.length === 0" class="text-xs text-matchx-accent-orange">
+          No hay otros árbitros activos disponibles.
+        </div>
+        <div v-else class="space-y-2">
+          <button
+            v-for="arbitro in arbitrosConDisponibilidad"
+            :key="arbitro.id"
+            :class="[
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors',
+              nuevoArbitroId === arbitro.id
+                ? 'border-matchx-accent-green bg-matchx-accent-green/5'
+                : 'border-matchx-border-base hover:border-matchx-accent-green/40 bg-matchx-bg-base/40',
+            ]"
+            @click="nuevoArbitroId = arbitro.id"
+          >
+            <span :class="['w-2 h-2 rounded-full shrink-0', arbitro.ocupado ? 'bg-matchx-accent-orange' : 'bg-matchx-accent-green']" />
+            <span class="flex-1 text-sm text-matchx-text-primary">{{ arbitro.nombre }}</span>
+            <span :class="['text-xs font-medium', arbitro.ocupado ? 'text-matchx-accent-orange' : 'text-matchx-accent-green']">
+              {{ arbitro.ocupado ? 'Ocupado' : 'Libre' }}
+            </span>
+          </button>
+        </div>
+      </template>
+
+      <!-- Alta de jugador -->
+      <template v-else-if="targetAprobar?.tipo === 'alta_jugador'">
+        <p class="text-sm text-matchx-text-muted">
           Se agregará a
           <span class="font-semibold text-matchx-text-primary">
             {{ targetAprobar?.datos?.nombre }} {{ targetAprobar?.datos?.apellido }}
@@ -322,14 +451,19 @@ const confirmarRechazar = async () => {
           (#{{ targetAprobar?.datos?.numero_camiseta }} · {{ targetAprobar?.datos?.posicion }})
           a la plantilla de
           <span class="font-semibold text-matchx-text-primary">{{ targetAprobar?.equipo_nombre }}</span>.
-        </template>
-        <template v-else>
+        </p>
+      </template>
+
+      <!-- Baja de jugador -->
+      <template v-else>
+        <p class="text-sm text-matchx-text-muted">
           Se dará de baja a
           <span class="font-semibold text-matchx-text-primary">{{ targetAprobar?.jugador_nombre }}</span>
           del equipo
           <span class="font-semibold text-matchx-text-primary">{{ targetAprobar?.equipo_nombre }}</span>.
-        </template>
-      </p>
+        </p>
+      </template>
+
       <p v-if="aprobarError" class="mt-3 text-sm text-matchx-accent-orange">{{ aprobarError }}</p>
     </template>
 
