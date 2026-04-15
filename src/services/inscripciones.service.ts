@@ -1,6 +1,13 @@
 import api from './api'
 
-export type EstadoInscripcion = 'pendiente' | 'aprobada' | 'rechazada'
+export type EstadoInscripcion   = 'pendiente' | 'aprobada' | 'rechazada'
+export type EstadoPagoMatricula = 'pendiente' | 'en_revision' | 'pagado' | 'exento'
+export type MetodoPagoMatricula = 'efectivo' | 'nequi' | 'pse' | 'bancolombia' | 'daviplata'
+
+export interface RegistrarPagoInput {
+  pago_metodo:     MetodoPagoMatricula
+  pago_referencia: string
+}
 
 export interface Inscripcion {
   id: number
@@ -19,6 +26,11 @@ export interface Inscripcion {
   equipo_color_principal: string
   equipo_color_secundario: string
   equipo_escudo_url: string
+  // pago de matrícula
+  pago_estado:     EstadoPagoMatricula
+  pago_metodo:     MetodoPagoMatricula | null
+  pago_referencia: string | null
+  pago_fecha:      string | null
 }
 
 const estadoMap: Record<string, EstadoInscripcion> = {
@@ -52,6 +64,11 @@ function normalize(raw: any): Inscripcion {
     equipo_color_principal:  eq.color_principal ?? raw.equipo_color_principal ?? '',
     equipo_color_secundario: eq.color_secundario ?? raw.equipo_color_secundario ?? '',
     equipo_escudo_url:       raw.url_escudo ?? eq.url_escudo ?? raw.equipo_escudo_url ?? '',
+    // pago matrícula
+    pago_estado:     raw.pago_estado     ?? 'pendiente',
+    pago_metodo:     raw.pago_metodo     ?? null,
+    pago_referencia: raw.pago_referencia ?? null,
+    pago_fecha:      raw.pago_fecha      ?? null,
   }
 }
 
@@ -72,4 +89,42 @@ export const inscripcionesService = {
 
   delete: (id: number) =>
     api.delete(`/api/torneos/inscripciones/${id}`),
+
+  registrarPago: (id: number, payload: RegistrarPagoInput) =>
+    api.put(`/api/torneos/inscripciones/${id}/pago`, {
+      pago_estado: 'pagado',
+      ...payload,
+      pago_fecha: new Date().toISOString(),
+    }),
+
+  eximirPago: (id: number) =>
+    api.put(`/api/torneos/inscripciones/${id}/pago`, {
+      pago_estado: 'exento',
+      pago_metodo: null,
+      pago_referencia: null,
+      pago_fecha: new Date().toISOString(),
+    }),
+
+  /** Capitán envía comprobante de pago para revisión del admin */
+  submitReferencia: (id: number, payload: RegistrarPagoInput) =>
+    api.put(`/api/torneos/inscripciones/${id}/pago`, {
+      pago_estado: 'en_revision',
+      ...payload,
+      pago_fecha: new Date().toISOString(),
+    }),
+
+  /** Admin rechaza el comprobante y devuelve a pendiente */
+  rechazarReferencia: (id: number) =>
+    api.put(`/api/torneos/inscripciones/${id}/pago`, {
+      pago_estado: 'pendiente',
+      pago_metodo: null,
+      pago_referencia: null,
+      pago_fecha: null,
+    }),
+
+  /** Obtiene inscripciones de un equipo en todos los torneos */
+  getByEquipo: async (equipoId: number): Promise<Inscripcion[]> => {
+    const { data } = await api.get('/api/torneos/inscripciones', { params: { equipo_id: equipoId } })
+    return (data.data ?? data).map(normalize)
+  },
 }

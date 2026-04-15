@@ -66,6 +66,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Fixture y Resultados', requiresAuth: false },
       },
       {
+        path: 'goleadores',
+        name: 'PublicoGoleadores',
+        component: () => import('@/views/publico/GoleadoresPublicoView.vue'),
+        meta: { title: 'Goleadores', requiresAuth: false },
+      },
+      {
         path: 'sedes',
         name: 'PublicoSedes',
         component: () => import('@/views/publico/SedesPublicoView.vue'),
@@ -191,6 +197,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Tabla de Posiciones', requiereRol: ['admin_torneo'] },
       },
       {
+        path: 'goleadores',
+        name: 'TorneoGoleadores',
+        component: () => import('@/views/admin-torneo/GoleadoresView.vue'),
+        meta: { title: 'Goleadores', requiereRol: ['admin_torneo'] },
+      },
+      {
         path: 'solicitudes',
         name: 'TorneoSolicitudes',
         component: () => import('@/views/admin-torneo/SolicitudesView.vue'),
@@ -279,6 +291,12 @@ const routes: RouteRecordRaw[] = [
         name: 'JugadorPosiciones',
         component: () => import('@/views/capitan/PosicionesView.vue'),
         meta: { title: 'Tabla de Posiciones', requiereRol: ['jugador'] },
+      },
+      {
+        path: 'goleadores',
+        name: 'JugadorGoleadores',
+        component: () => import('@/views/capitan/GoleadoresView.vue'),
+        meta: { title: 'Goleadores', requiereRol: ['jugador'] },
       },
       {
         path: 'sanciones',

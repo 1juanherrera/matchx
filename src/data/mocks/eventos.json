@@ -1,0 +1,72 @@
+[
+  { "id": 1,  "partido_id": 1,  "tipo_evento": "gol",            "minuto": 12, "equipo_id": 1, "jugador_id": 4,  "es_autogol": 0, "creado_en": "2026-03-08T10:12:00Z" },
+  { "id": 2,  "partido_id": 1,  "tipo_evento": "gol",            "minuto": 28, "equipo_id": 1, "jugador_id": 5,  "es_autogol": 0, "creado_en": "2026-03-08T10:28:00Z" },
+  { "id": 3,  "partido_id": 1,  "tipo_evento": "gol",            "minuto": 35, "equipo_id": 2, "jugador_id": 9,  "es_autogol": 0, "creado_en": "2026-03-08T10:35:00Z" },
+  { "id": 4,  "partido_id": 1,  "tipo_evento": "gol",            "minuto": 52, "equipo_id": 1, "jugador_id": 41, "es_autogol": 0, "creado_en": "2026-03-08T10:52:00Z" },
+
+  { "id": 5,  "partido_id": 2,  "tipo_evento": "gol",            "minuto": 15, "equipo_id": 3, "jugador_id": 14, "es_autogol": 0, "creado_en": "2026-03-08T12:15:00Z" },
+  { "id": 6,  "partido_id": 2,  "tipo_evento": "gol",            "minuto": 30, "equipo_id": 4, "jugador_id": 19, "es_autogol": 0, "creado_en": "2026-03-08T12:30:00Z" },
+  { "id": 7,  "partido_id": 2,  "tipo_evento": "penal_convertido","minuto": 47, "equipo_id": 3, "jugador_id": 15, "es_autogol": 0, "creado_en": "2026-03-08T12:47:00Z" },
+  { "id": 8,  "partido_id": 2,  "tipo_evento": "gol",            "minuto": 68, "equipo_id": 4, "jugador_id": 18, "es_autogol": 0, "creado_en": "2026-03-08T13:08:00Z" },
+
+  { "id": 9,  "partido_id": 3,  "tipo_evento": "gol",            "minuto": 23, "equipo_id": 1, "jugador_id": 3,  "es_autogol": 0, "creado_en": "2026-03-15T10:23:00Z" },
+
+  { "id": 10, "partido_id": 4,  "tipo_evento": "gol",            "minuto": 8,  "equipo_id": 2, "jugador_id": 9,  "es_autogol": 0, "creado_en": "2026-03-15T12:08:00Z" },
+  { "id": 11, "partido_id": 4,  "tipo_evento": "gol",            "minuto": 22, "equipo_id": 2, "jugador_id": 10, "es_autogol": 0, "creado_en": "2026-03-15T12:22:00Z" },
+  { "id": 12, "partido_id": 4,  "tipo_evento": "gol",            "minuto": 44, "equipo_id": 2, "jugador_id": 9,  "es_autogol": 0, "creado_en": "2026-03-15T12:44:00Z" },
+  { "id": 13, "partido_id": 4,  "tipo_evento": "gol",            "minuto": 71, "equipo_id": 2, "jugador_id": 8,  "es_autogol": 0, "creado_en": "2026-03-15T13:11:00Z" },
+
+  { "id": 14, "partido_id": 5,  "tipo_evento": "gol",            "minuto": 20, "equipo_id": 2, "jugador_id": 8,  "es_autogol": 0, "creado_en": "2026-03-22T10:20:00Z" },
+  { "id": 15, "partido_id": 5,  "tipo_evento": "gol",            "minuto": 38, "equipo_id": 3, "jugador_id": 14, "es_autogol": 0, "creado_en": "2026-03-22T10:38:00Z" },
+  { "id": 16, "partido_id": 5,  "tipo_evento": "gol",            "minuto": 55, "equipo_id": 3, "jugador_id": 13, "es_autogol": 0, "creado_en": "2026-03-22T10:55:00Z" },
+
+  { "id": 17, "partido_id": 6,  "tipo_evento": "gol",            "minuto": 17, "equipo_id": 1, "jugador_id": 5,  "es_autogol": 0, "creado_en": "2026-03-22T12:17:00Z" },
+  { "id": 18, "partido_id": 6,  "tipo_evento": "gol",            "minuto": 34, "equipo_id": 1, "jugador_id": 4,  "es_autogol": 0, "creado_en": "2026-03-22T12:34:00Z" },
+  { "id": 19, "partido_id": 6,  "tipo_evento": "gol",            "minuto": 62, "equipo_id": 1, "jugador_id": 41, "es_autogol": 0, "creado_en": "2026-03-22T13:02:00Z" },
+
+  { "id": 20, "partido_id": 7,  "tipo_evento": "gol",            "minuto": 11, "equipo_id": 1, "jugador_id": 4,  "es_autogol": 0, "creado_en": "2026-03-29T10:11:00Z" },
+  { "id": 21, "partido_id": 7,  "tipo_evento": "penal_convertido","minuto": 42, "equipo_id": 4, "jugador_id": 19, "es_autogol": 0, "creado_en": "2026-03-29T10:42:00Z" },
+  { "id": 22, "partido_id": 7,  "tipo_evento": "gol",            "minuto": 76, "equipo_id": 1, "jugador_id": 5,  "es_autogol": 0, "creado_en": "2026-03-29T11:16:00Z" },
+
+  { "id": 23, "partido_id": 8,  "tipo_evento": "gol",            "minuto": 18, "equipo_id": 2, "jugador_id": 10, "es_autogol": 0, "creado_en": "2026-03-29T12:18:00Z" },
+  { "id": 24, "partido_id": 8,  "tipo_evento": "gol",            "minuto": 32, "equipo_id": 3, "jugador_id": 13, "es_autogol": 0, "creado_en": "2026-03-29T12:32:00Z" },
+  { "id": 25, "partido_id": 8,  "tipo_evento": "gol",            "minuto": 50, "equipo_id": 2, "jugador_id": 9,  "es_autogol": 0, "creado_en": "2026-03-29T12:50:00Z" },
+  { "id": 26, "partido_id": 8,  "tipo_evento": "gol",            "minuto": 83, "equipo_id": 2, "jugador_id": 10, "es_autogol": 0, "creado_en": "2026-03-29T13:23:00Z" },
+
+  { "id": 27, "partido_id": 9,  "tipo_evento": "gol",            "minuto": 28, "equipo_id": 2, "jugador_id": 7,  "es_autogol": 0, "creado_en": "2026-04-05T10:28:00Z" },
+  { "id": 28, "partido_id": 9,  "tipo_evento": "gol",            "minuto": 61, "equipo_id": 1, "jugador_id": 4,  "es_autogol": 0, "creado_en": "2026-04-05T11:01:00Z" },
+
+  { "id": 29, "partido_id": 10, "tipo_evento": "gol",            "minuto": 15, "equipo_id": 3, "jugador_id": 14, "es_autogol": 0, "creado_en": "2026-04-05T12:15:00Z" },
+  { "id": 30, "partido_id": 10, "tipo_evento": "gol",            "minuto": 78, "equipo_id": 3, "jugador_id": 15, "es_autogol": 0, "creado_en": "2026-04-05T13:18:00Z" },
+
+  { "id": 31, "partido_id": 13, "tipo_evento": "gol",            "minuto": 18, "equipo_id": 5, "jugador_id": 24, "es_autogol": 0, "creado_en": "2026-02-01T10:18:00Z" },
+  { "id": 32, "partido_id": 13, "tipo_evento": "gol",            "minuto": 55, "equipo_id": 5, "jugador_id": 25, "es_autogol": 0, "creado_en": "2026-02-01T10:55:00Z" },
+
+  { "id": 33, "partido_id": 14, "tipo_evento": "gol",            "minuto": 25, "equipo_id": 6, "jugador_id": 30, "es_autogol": 0, "creado_en": "2026-02-08T10:25:00Z" },
+  { "id": 34, "partido_id": 14, "tipo_evento": "gol",            "minuto": 62, "equipo_id": 5, "jugador_id": 23, "es_autogol": 0, "creado_en": "2026-02-08T11:02:00Z" },
+
+  { "id": 35, "partido_id": 15, "tipo_evento": "gol",            "minuto": 7,  "equipo_id": 5, "jugador_id": 24, "es_autogol": 0, "creado_en": "2026-02-15T10:07:00Z" },
+  { "id": 36, "partido_id": 15, "tipo_evento": "gol",            "minuto": 20, "equipo_id": 6, "jugador_id": 30, "es_autogol": 0, "creado_en": "2026-02-15T10:20:00Z" },
+  { "id": 37, "partido_id": 15, "tipo_evento": "gol",            "minuto": 41, "equipo_id": 6, "jugador_id": 32, "es_autogol": 0, "creado_en": "2026-02-15T10:41:00Z" },
+  { "id": 38, "partido_id": 15, "tipo_evento": "gol",            "minuto": 55, "equipo_id": 5, "jugador_id": 24, "es_autogol": 0, "creado_en": "2026-02-15T10:55:00Z" },
+  { "id": 39, "partido_id": 15, "tipo_evento": "gol",            "minuto": 78, "equipo_id": 5, "jugador_id": 25, "es_autogol": 0, "creado_en": "2026-02-15T11:18:00Z" },
+
+  { "id": 40, "partido_id": 16, "tipo_evento": "gol",            "minuto": 13, "equipo_id": 6, "jugador_id": 29, "es_autogol": 0, "creado_en": "2026-02-22T10:13:00Z" },
+  { "id": 41, "partido_id": 16, "tipo_evento": "gol",            "minuto": 62, "equipo_id": 6, "jugador_id": 32, "es_autogol": 0, "creado_en": "2026-02-22T11:02:00Z" },
+
+  { "id": 42, "partido_id": 18, "tipo_evento": "gol",            "minuto": 30, "equipo_id": 7, "jugador_id": 35, "es_autogol": 0, "creado_en": "2026-01-18T10:30:00Z" },
+
+  { "id": 43, "partido_id": 19, "tipo_evento": "gol",            "minuto": 12, "equipo_id": 8, "jugador_id": 37, "es_autogol": 0, "creado_en": "2026-01-25T10:12:00Z" },
+  { "id": 44, "partido_id": 19, "tipo_evento": "gol",            "minuto": 26, "equipo_id": 7, "jugador_id": 34, "es_autogol": 0, "creado_en": "2026-01-25T10:26:00Z" },
+  { "id": 45, "partido_id": 19, "tipo_evento": "gol",            "minuto": 44, "equipo_id": 8, "jugador_id": 37, "es_autogol": 0, "creado_en": "2026-01-25T10:44:00Z" },
+  { "id": 46, "partido_id": 19, "tipo_evento": "gol",            "minuto": 67, "equipo_id": 8, "jugador_id": 37, "es_autogol": 0, "creado_en": "2026-01-25T11:07:00Z" },
+
+  { "id": 47, "partido_id": 20, "tipo_evento": "gol",            "minuto": 19, "equipo_id": 7, "jugador_id": 35, "es_autogol": 0, "creado_en": "2026-02-01T10:19:00Z" },
+  { "id": 48, "partido_id": 20, "tipo_evento": "gol",            "minuto": 38, "equipo_id": 8, "jugador_id": 38, "es_autogol": 0, "creado_en": "2026-02-01T10:38:00Z" },
+  { "id": 49, "partido_id": 20, "tipo_evento": "gol",            "minuto": 56, "equipo_id": 7, "jugador_id": 36, "es_autogol": 0, "creado_en": "2026-02-01T10:56:00Z" },
+  { "id": 50, "partido_id": 20, "tipo_evento": "gol",            "minuto": 72, "equipo_id": 8, "jugador_id": 38, "es_autogol": 0, "creado_en": "2026-02-01T11:12:00Z" },
+
+  { "id": 51, "partido_id": 21, "tipo_evento": "gol",            "minuto": 8,  "equipo_id": 8, "jugador_id": 39, "es_autogol": 0, "creado_en": "2026-02-08T10:08:00Z" },
+  { "id": 52, "partido_id": 21, "tipo_evento": "gol",            "minuto": 33, "equipo_id": 7, "jugador_id": 35, "es_autogol": 0, "creado_en": "2026-02-08T10:33:00Z" },
+  { "id": 53, "partido_id": 21, "tipo_evento": "gol",            "minuto": 62, "equipo_id": 7, "jugador_id": 36, "es_autogol": 0, "creado_en": "2026-02-08T11:02:00Z" }
+]

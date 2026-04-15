@@ -6,7 +6,7 @@ import { useTheme } from '@/composables/useTheme'
 import {
   LayoutDashboard, Users, Layers, Building2, Settings,
   Trophy, ClipboardList, UserCheck, CircleDot, BarChart3,
-  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox, ShieldOff, Coins,
+  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox, ShieldOff, Coins, Target,
 } from 'lucide-vue-next'
 
 const router    = useRouter()
@@ -77,6 +77,7 @@ const navigationItems = computed(() => {
       { label: 'Plantilla',     icon: UserCheck,     route: '/torneo/plantilla' },
       { label: 'Partidos',      icon: CircleDot,     route: '/torneo/partidos' },
       { label: 'Posiciones',    icon: BarChart3,     route: '/torneo/posiciones' },
+      { label: 'Goleadores',    icon: Target,        route: '/torneo/goleadores' },
       { label: 'Solicitudes',   icon: Inbox,         route: '/torneo/solicitudes' },
       { label: 'Sanciones',     icon: Coins,         route: '/torneo/sanciones' },
     ]
@@ -107,6 +108,7 @@ const navigationItems = computed(() => {
       { label: 'Mi Equipo',  icon: Users,         route: '/capitan/equipo' },
       { label: 'Fixture',    icon: CalendarRange, route: '/capitan/fixture' },
       { label: 'Posiciones', icon: BarChart3,     route: '/capitan/posiciones' },
+      { label: 'Goleadores', icon: Target,        route: '/capitan/goleadores' },
     ]
     if (authStore.isCapitan) {
       items.push({ label: 'Sanciones', icon: ShieldOff, route: '/capitan/sanciones' })

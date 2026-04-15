@@ -57,6 +57,11 @@ function withDbFields(raw: any) {
     observaciones:    raw.observaciones    ?? null,
     // Objeto equipo anidado (JOIN con tabla equipos)
     equipo:           buildEquipoJoin(raw.equipo_id),
+    // Pago de matrícula
+    pago_estado:      raw.pago_estado     ?? 'pendiente',
+    pago_metodo:      raw.pago_metodo     ?? null,
+    pago_referencia:  raw.pago_referencia ?? null,
+    pago_fecha:       raw.pago_fecha      ?? null,
   }
 }
 
@@ -125,5 +130,20 @@ export const inscripcionesHandlers = [
     if (idx === -1) return mockNotFound('Inscripción')
     db.inscripciones.splice(idx, 1)
     return mockOk({ message: 'Inscripción eliminada correctamente' })
+  }),
+
+  // ── Pago de matrícula ──────────────────────────────────────────────────────
+  http.put('/api/torneos/inscripciones/:id/pago', async ({ params, request }) => {
+    const idx = db.inscripciones.findIndex(i => i.id === Number(params.id))
+    if (idx === -1) return mockNotFound('Inscripción')
+    const body = await request.json() as any
+    db.inscripciones[idx] = {
+      ...db.inscripciones[idx],
+      pago_estado:     body.pago_estado     ?? 'pagado',
+      pago_metodo:     body.pago_metodo     ?? null,
+      pago_referencia: body.pago_referencia ?? null,
+      pago_fecha:      body.pago_fecha      ?? new Date().toISOString(),
+    }
+    return mockOk(withDbFields(db.inscripciones[idx]))
   }),
 ]

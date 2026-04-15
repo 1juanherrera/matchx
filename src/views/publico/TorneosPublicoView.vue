@@ -10,10 +10,10 @@ const router = useRouter()
 onMounted(() => torneosStore.fetchTorneos())
 
 const estadoConfig: Record<string, { label: string; classes: string }> = {
-  en_curso:   { label: 'En curso',   classes: 'bg-matchx-accent-green text-white border border-matchx-accent-green/30' },
+  en_curso:   { label: 'En curso',     classes: 'bg-matchx-accent-green text-white border border-matchx-accent-green/30' },
   programado: { label: 'Próximamente', classes: 'bg-blue-500 text-white border border-blue-500/30' },
-  finalizado: { label: 'Finalizado', classes: 'bg-matchx-text-muted text-white border border-matchx-text-muted/20' },
-  cancelado:  { label: 'Cancelado',  classes: 'bg-matchx-accent-orange text-white border border-matchx-accent-orange/30' },
+  finalizado: { label: 'Finalizado',   classes: 'bg-matchx-text-muted text-white border border-matchx-text-muted/20' },
+  cancelado:  { label: 'Cancelado',    classes: 'bg-matchx-accent-orange text-white border border-matchx-accent-orange/30' },
 }
 
 const modalidadColor: Record<string, string> = {
@@ -76,7 +76,7 @@ const verFixture = (torneoId: number) =>
         <!-- Image -->
         <div class="relative h-36 overflow-hidden bg-matchx-bg-elevated">
           <img
-            :src="torneo.imagen_url"
+            :src="torneo.url_banner"
             :alt="torneo.nombre"
             class="w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity duration-200"
           />
@@ -117,7 +117,7 @@ const verFixture = (torneoId: number) =>
             </div>
             <div class="flex items-center gap-2 text-xs text-matchx-accent-green font-semibold">
               <Award class="w-3.5 h-3.5 shrink-0" :stroke-width="1.75" />
-              <span>{{ torneo.premio }}</span>
+              <span>{{ torneo.categoria }}</span>
             </div>
           </div>
 

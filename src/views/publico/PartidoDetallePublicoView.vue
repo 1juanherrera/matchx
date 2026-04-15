@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePartidosStore } from '@/stores/partidos'
 import { useEquiposStore } from '@/stores/equipos'
 import { useJugadoresStore } from '@/stores/jugadores'
 import { useTorneosStore } from '@/stores/torneos'
 import { useSedesStore } from '@/stores/sedes'
-import { ArrowLeft, Calendar, MapPin, Clock, Users, BarChart3 } from 'lucide-vue-next'
+import { eventosService } from '@/services/eventos.service'
+import type { EventoPartidoAPI } from '@/services/eventos.service'
+import { ArrowLeft, Calendar, MapPin, Clock, Users, BarChart3, Radio, Target, Square, AlertCircle, RefreshCw, Swords } from 'lucide-vue-next'
 
 const route  = useRoute()
 const router = useRouter()
@@ -18,15 +20,121 @@ const jugadoresStore = useJugadoresStore()
 const torneosStore   = useTorneosStore()
 const sedesStore     = useSedesStore()
 
-onMounted(() =>
-  Promise.all([
+// ─── Live polling ─────────────────────────────────────────────────────────────
+const POLL_INTERVAL_MS = 15_000
+
+const eventos       = ref<EventoPartidoAPI[]>([])
+const pollingTimer  = ref<ReturnType<typeof setInterval> | null>(null)
+const lastRefresh   = ref<Date | null>(null)
+const refreshing    = ref(false)
+
+const isLive = computed(() => partido.value?.estado === 'en_curso')
+
+async function fetchLiveData() {
+  if (!partido.value) return
+  refreshing.value = true
+  try {
+    const [evts] = await Promise.all([
+      eventosService.getByPartido(partido.value.id),
+      partidosStore.fetchPartidos(),           // actualiza goles_local / goles_visitante
+    ])
+    eventos.value = evts
+    lastRefresh.value = new Date()
+  } catch { /* sin conexión — silencioso */ } finally {
+    refreshing.value = false
+  }
+}
+
+function startPolling() {
+  if (pollingTimer.value) return
+  fetchLiveData()
+  pollingTimer.value = setInterval(fetchLiveData, POLL_INTERVAL_MS)
+}
+
+function stopPolling() {
+  if (pollingTimer.value) {
+    clearInterval(pollingTimer.value)
+    pollingTimer.value = null
+  }
+}
+
+// Arrancar/detener según estado del partido + auto-seleccionar tab
+watch(isLive, (live) => {
+  if (live) {
+    startPolling()
+    activeTab.value = 'eventos'
+  } else {
+    stopPolling()
+  }
+}, { immediate: false })
+
+onMounted(async () => {
+  await Promise.all([
     partidosStore.fetchPartidos(),
     equiposStore.fetchEquipos(),
     jugadoresStore.fetchJugadores(),
     torneosStore.fetchTorneos(),
     sedesStore.fetchSedes(),
-  ]),
+  ])
+  // Cargar eventos iniciales + arrancar polling si ya está en curso
+  await eventosService.getByPartido(partidoId).then(e => { eventos.value = e }).catch(() => {})
+  if (isLive.value) {
+    startPolling()
+    activeTab.value = 'eventos'
+  }
+})
+
+onUnmounted(stopPolling)
+
+// ─── Event helpers ────────────────────────────────────────────────────────────
+interface EventoUI {
+  id:         number
+  minuto:     number
+  tipo:       EventoPartidoAPI['tipo_evento']
+  lado:       'local' | 'visitante' | 'neutro'
+  labelIcon:  string
+  labelTipo:  string
+  jugadorId?: number
+}
+
+function eventoToUI(e: EventoPartidoAPI): EventoUI {
+  const esLocal = e.equipo_id === partido.value?.equipo_local_id
+
+  const meta: Record<EventoPartidoAPI['tipo_evento'], { label: string; icon: string }> = {
+    gol:              { label: 'Gol',             icon: 'Target'      },
+    tarjeta_amarilla: { label: 'Amarilla',         icon: 'Square'      },
+    tarjeta_roja:     { label: 'Roja',             icon: 'AlertCircle' },
+    cambio:           { label: 'Cambio',           icon: 'Swords'      },
+    penal_convertido: { label: 'Penal convertido', icon: 'Target'      },
+    penal_fallado:    { label: 'Penal fallado',    icon: 'X'           },
+    observacion:      { label: 'Observación',      icon: 'FileText'    },
+  }
+
+  return {
+    id:        e.id,
+    minuto:    e.minuto,
+    tipo:      e.tipo_evento,
+    lado:      e.equipo_id ? (esLocal ? 'local' : 'visitante') : 'neutro',
+    labelIcon: meta[e.tipo_evento]?.icon ?? 'Circle',
+    labelTipo: meta[e.tipo_evento]?.label ?? e.tipo_evento,
+    jugadorId: e.jugador_id,
+  }
+}
+
+const eventosUI = computed(() =>
+  [...eventos.value].sort((a, b) => b.minuto - a.minuto).map(eventoToUI),
 )
+
+const golesUI = computed(() =>
+  eventosUI.value.filter(e => e.tipo === 'gol' || e.tipo === 'penal_convertido'),
+)
+
+// Nombre corto de jugador para mostrar en timeline
+const nombreJugador = (jugadorId?: number) => {
+  if (!jugadorId) return ''
+  const j = jugadoresStore.jugadores.find(j => j.id === jugadorId)
+  return j ? `${j.apellido} #${j.numero_camiseta}` : ''
+}
 
 // ─── Entities ────────────────────────────────────────────────────────────────
 const partido        = computed(() => partidosStore.partidos.find(p => p.id === partidoId))
@@ -198,7 +306,7 @@ const fmtHora = (iso: string) =>
   new Date(iso).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
-const activeTab = ref<'lineup' | 'stats'>('lineup')
+const activeTab = ref<'lineup' | 'stats' | 'eventos'>('lineup')
 </script>
 
 <template>
@@ -231,14 +339,29 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
           <span class="text-xs text-matchx-text-muted font-medium tracking-wide">
             {{ torneo?.nombre }} &nbsp;·&nbsp; Jornada {{ partido.jornada }}
           </span>
+          <!-- Badge de estado -->
           <span
-            class="text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide"
-            :class="partido.estado === 'finalizado'
-              ? 'bg-matchx-accent-green/15 text-matchx-accent-green'
-              : 'bg-blue-500/15 text-blue-400'"
+            v-if="partido.estado === 'finalizado'"
+            class="text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide bg-matchx-accent-green/15 text-matchx-accent-green"
+          >Finalizado</span>
+          <span
+            v-else-if="partido.estado === 'en_curso'"
+            class="flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide bg-red-500/15 text-red-400"
           >
-            {{ partido.estado === 'finalizado' ? 'Finalizado' : 'Programado' }}
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-red-400" />
+            </span>
+            EN VIVO
           </span>
+          <span
+            v-else-if="partido.estado === 'suspendido' || partido.estado === 'aplazado'"
+            class="text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide bg-yellow-500/15 text-yellow-400"
+          >{{ partido.estado === 'suspendido' ? 'Suspendido' : 'Aplazado' }}</span>
+          <span
+            v-else
+            class="text-[11px] font-bold px-2.5 py-0.5 rounded-full tracking-wide bg-blue-500/15 text-blue-400"
+          >Programado</span>
         </div>
 
         <!-- Teams + score -->
@@ -254,7 +377,8 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
 
           <!-- Score / VS -->
           <div class="flex flex-col items-center gap-1">
-            <div v-if="partido.estado === 'finalizado'" class="flex items-center gap-1">
+            <!-- Marcador — visible si finalizado o en curso -->
+            <div v-if="partido.estado === 'finalizado' || partido.estado === 'en_curso'" class="flex items-center gap-1">
               <span
                 class="text-5xl font-black leading-none"
                 style="font-family:'Fira Code',monospace; letter-spacing:-0.04em"
@@ -271,6 +395,20 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
               class="text-3xl font-black text-matchx-text-muted"
               style="font-family:'Fira Code',monospace; letter-spacing:0.08em"
             >VS</div>
+
+            <!-- Goleadores rápidos bajo el marcador (en vivo) -->
+            <div v-if="isLive && golesUI.length" class="flex flex-col items-center gap-0.5 mt-1 max-w-[130px]">
+              <div
+                v-for="g in golesUI.slice(0, 3)"
+                :key="g.id"
+                class="text-[9px] text-matchx-text-muted truncate w-full text-center leading-tight"
+              >
+                <span :class="g.lado === 'local' ? 'text-left' : 'text-right'">
+                  {{ g.minuto }}' {{ nombreJugador(g.jugadorId) }}
+                </span>
+              </div>
+            </div>
+
             <div class="flex items-center gap-1 text-xs text-matchx-text-muted mt-1">
               <Clock class="w-3 h-3" :stroke-width="1.75" />
               {{ fmtHora(partido.fecha_hora) }}
@@ -297,6 +435,25 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
             <MapPin class="w-3.5 h-3.5" :stroke-width="1.75" />
             {{ sede.nombre }}, {{ sede.ciudad }}
           </span>
+        </div>
+
+        <!-- Live refresh bar -->
+        <div v-if="isLive" class="flex items-center justify-between px-4 py-2.5 border-t border-matchx-border-base bg-red-500/5">
+          <span class="text-[11px] text-matchx-text-muted">
+            <template v-if="lastRefresh">
+              Actualizado {{ lastRefresh.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }}
+            </template>
+            <template v-else>Conectando...</template>
+          </span>
+          <button
+            @click="fetchLiveData"
+            :disabled="refreshing"
+            class="flex items-center gap-1.5 text-[11px] font-semibold text-red-400 hover:text-red-300
+                   transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw class="w-3 h-3" :stroke-width="2" :class="refreshing ? 'animate-spin' : ''" />
+            Actualizar
+          </button>
         </div>
       </div>
 
@@ -440,6 +597,22 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
 
         <!-- Tab strip -->
         <div class="flex border-b border-matchx-border-base bg-matchx-bg-elevated">
+          <!-- Eventos tab — solo si hay eventos o partido en curso -->
+          <button
+            v-if="isLive || eventos.length > 0"
+            @click="activeTab = 'eventos'"
+            class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold
+                   transition-all duration-150 cursor-pointer border-b-2"
+            :class="activeTab === 'eventos'
+              ? 'text-red-400 border-red-400'
+              : 'text-matchx-text-muted border-transparent hover:text-matchx-text-primary'"
+          >
+            <Radio class="w-4 h-4" :stroke-width="2" />
+            <span class="relative">
+              En Vivo
+              <span v-if="isLive" class="absolute -top-1 -right-2 w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+            </span>
+          </button>
           <button
             @click="activeTab = 'lineup'"
             class="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold
@@ -460,12 +633,141 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
               : 'text-matchx-text-muted border-transparent hover:text-matchx-text-primary'"
           >
             <BarChart3 class="w-4 h-4" :stroke-width="2" />
-            Estadísticas
+            Stats
           </button>
         </div>
 
+        <!-- ── EVENTOS TAB ── -->
+        <div v-if="activeTab === 'eventos'" class="p-4">
+
+          <!-- Empty: sin eventos aún -->
+          <div v-if="eventosUI.length === 0" class="py-12 flex flex-col items-center gap-3 text-matchx-text-muted">
+            <Radio class="w-10 h-10 opacity-30" :stroke-width="1.5" />
+            <p class="text-sm font-medium">
+              {{ isLive ? 'Esperando eventos del partido...' : 'Sin eventos registrados' }}
+            </p>
+            <button
+              v-if="isLive"
+              @click="fetchLiveData"
+              :disabled="refreshing"
+              class="text-xs text-matchx-accent-green hover:underline cursor-pointer disabled:opacity-50"
+            >Verificar ahora</button>
+          </div>
+
+          <!-- Timeline de eventos -->
+          <div v-else class="relative">
+
+            <!-- Línea central vertical -->
+            <div class="absolute left-1/2 top-0 bottom-0 w-px bg-matchx-border-base/50 -translate-x-1/2" />
+
+            <div class="space-y-3">
+              <div
+                v-for="ev in eventosUI"
+                :key="ev.id"
+                class="relative flex items-center gap-3"
+                :class="ev.lado === 'local' ? 'flex-row' : ev.lado === 'visitante' ? 'flex-row-reverse' : 'justify-center'"
+              >
+                <!-- Contenido del evento: local (izq) o visitante (der) -->
+                <template v-if="ev.lado !== 'neutro'">
+                  <!-- Chip de evento -->
+                  <div
+                    class="flex-1 flex flex-col min-w-0 rounded-xl px-3 py-2 border"
+                    :class="[
+                      ev.lado === 'local' ? 'items-start' : 'items-end',
+                      ev.tipo === 'gol' || ev.tipo === 'penal_convertido'
+                        ? 'bg-matchx-accent-green/10 border-matchx-accent-green/30'
+                        : ev.tipo === 'tarjeta_roja'
+                          ? 'bg-red-500/10 border-red-500/30'
+                          : ev.tipo === 'tarjeta_amarilla'
+                            ? 'bg-yellow-500/10 border-yellow-500/30'
+                            : 'bg-matchx-bg-elevated border-matchx-border-base',
+                    ]"
+                  >
+                    <div class="flex items-center gap-1.5">
+                      <!-- Icono tipo -->
+                      <Target
+                        v-if="ev.tipo === 'gol' || ev.tipo === 'penal_convertido'"
+                        class="w-3.5 h-3.5 text-matchx-accent-green shrink-0"
+                        :stroke-width="2.5"
+                      />
+                      <Square
+                        v-else-if="ev.tipo === 'tarjeta_amarilla'"
+                        class="w-3.5 h-3.5 text-yellow-400 shrink-0 fill-yellow-400"
+                        :stroke-width="2"
+                      />
+                      <Square
+                        v-else-if="ev.tipo === 'tarjeta_roja'"
+                        class="w-3.5 h-3.5 text-red-400 shrink-0 fill-red-400"
+                        :stroke-width="2"
+                      />
+                      <Swords
+                        v-else-if="ev.tipo === 'cambio'"
+                        class="w-3.5 h-3.5 text-blue-400 shrink-0"
+                        :stroke-width="2"
+                      />
+                      <AlertCircle
+                        v-else
+                        class="w-3.5 h-3.5 text-matchx-text-muted shrink-0"
+                        :stroke-width="2"
+                      />
+                      <span
+                        class="text-xs font-bold truncate"
+                        :class="ev.tipo === 'gol' || ev.tipo === 'penal_convertido'
+                          ? 'text-matchx-accent-green'
+                          : 'text-matchx-text-primary'"
+                      >{{ ev.labelTipo }}</span>
+                    </div>
+                    <span
+                      v-if="nombreJugador(ev.jugadorId)"
+                      class="text-[10px] text-matchx-text-muted mt-0.5 truncate max-w-full"
+                    >{{ nombreJugador(ev.jugadorId) }}</span>
+                  </div>
+
+                  <!-- Minuto — nodo central -->
+                  <div class="shrink-0 z-10 flex items-center justify-center w-10 h-10 rounded-full
+                              bg-matchx-bg-elevated border-2
+                              text-xs font-black leading-none"
+                    style="font-family:'Fira Code',monospace"
+                    :class="ev.tipo === 'gol' || ev.tipo === 'penal_convertido'
+                      ? 'border-matchx-accent-green text-matchx-accent-green'
+                      : ev.tipo === 'tarjeta_roja'
+                        ? 'border-red-400 text-red-400'
+                        : ev.tipo === 'tarjeta_amarilla'
+                          ? 'border-yellow-400 text-yellow-400'
+                          : 'border-matchx-border-base text-matchx-text-muted'"
+                  >{{ ev.minuto }}'</div>
+
+                  <!-- Espacio opuesto vacío -->
+                  <div class="flex-1" />
+                </template>
+
+                <!-- Evento neutro (observación) — centrado -->
+                <template v-else>
+                  <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-matchx-bg-elevated
+                              border border-matchx-border-base text-[11px] text-matchx-text-muted z-10">
+                    <AlertCircle class="w-3 h-3 shrink-0" :stroke-width="2" />
+                    {{ ev.minuto }}' — {{ ev.labelTipo }}
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Separador de equipo leyenda -->
+          <div v-if="eventosUI.length > 0" class="flex justify-between mt-4 text-[10px] text-matchx-text-muted font-semibold uppercase tracking-wider">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: colorLocal }" />
+              {{ equipoLocal?.nombre }}
+            </span>
+            <span class="flex items-center gap-1.5">
+              {{ equipoVisit?.nombre }}
+              <span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: colorVisit }" />
+            </span>
+          </div>
+        </div>
+
         <!-- ── LINEUP TAB ── -->
-        <div v-if="activeTab === 'lineup'" class="p-4">
+        <div v-else-if="activeTab === 'lineup'" class="p-4">
 
           <!-- Headers de equipo -->
           <div class="grid grid-cols-2 gap-3 mb-5">
@@ -566,7 +868,7 @@ const activeTab = ref<'lineup' | 'stats'>('lineup')
         </div>
 
         <!-- ── STATS TAB ── -->
-        <div v-else class="p-4 space-y-5">
+        <div v-else-if="activeTab === 'stats'" class="p-4 space-y-5">
 
 
           <!-- Stat bars -->

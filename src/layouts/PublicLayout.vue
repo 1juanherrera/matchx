@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { Trophy, CalendarRange, BarChart3, Building2, Menu, X, LogIn } from 'lucide-vue-next'
+import { Trophy, CalendarRange, BarChart3, Building2, Menu, X, LogIn, Target } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -12,6 +12,7 @@ const menuOpen = ref(false)
 const navLinks = [
   { label: 'Torneos',    icon: Trophy,        route: '/publico/torneos' },
   { label: 'Posiciones', icon: BarChart3,     route: '/publico/posiciones' },
+  { label: 'Goleadores', icon: Target,        route: '/publico/goleadores' },
   { label: 'Fixture',    icon: CalendarRange, route: '/publico/fixture' },
   { label: 'Sedes',      icon: Building2,     route: '/publico/sedes' },
 ]
