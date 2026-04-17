@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1, "torneo_id": 1, "jugador_id": 4, "equipo_id": 1, "evento_id": 5,
+    "tipo_sancion": "suspension", "partidos_sancion": 2, "valor_multa": 0,
+    "estado": "activa",
+    "motivo": "Tarjeta roja directa en jornada 3 por agresión",
+    "creado_en": "2025-01-20T15:00:00Z"
+  },
+  {
+    "id": 2, "torneo_id": 1, "jugador_id": 9, "equipo_id": 2, "evento_id": null,
+    "tipo_sancion": "suspension", "partidos_sancion": 1, "valor_multa": 0,
+    "estado": "activa",
+    "motivo": "Acumulación de 3 tarjetas amarillas en el torneo",
+    "creado_en": "2025-01-22T10:00:00Z"
+  },
+  {
+    "id": 3, "torneo_id": 1, "jugador_id": 14, "equipo_id": 3, "evento_id": null,
+    "tipo_sancion": "amonestacion", "partidos_sancion": 0, "valor_multa": 0,
+    "estado": "activa",
+    "motivo": "Conducta antideportiva fuera del campo en jornada 4",
+    "creado_en": "2025-01-23T10:00:00Z"
+  },
+  {
+    "id": 4, "torneo_id": 1, "jugador_id": 2, "equipo_id": 1, "evento_id": 3,
+    "tipo_sancion": "multa", "partidos_sancion": 0, "valor_multa": 50000,
+    "estado": "activa",
+    "motivo": "Tarjeta roja por lenguaje ofensivo hacia el árbitro",
+    "creado_en": "2025-01-18T14:00:00Z"
+  },
+  {
+    "id": 5, "torneo_id": 1, "jugador_id": 7, "equipo_id": 2, "evento_id": 2,
+    "tipo_sancion": "suspension", "partidos_sancion": 0, "valor_multa": 0,
+    "estado": "cumplida",
+    "motivo": "Tarjeta roja en jornada 1",
+    "creado_en": "2025-01-10T09:00:00Z"
+  },
+  {
+    "id": 6, "torneo_id": 1, "jugador_id": 12, "equipo_id": 3, "evento_id": null,
+    "tipo_sancion": "suspension", "partidos_sancion": 1, "valor_multa": 0,
+    "estado": "apelada",
+    "motivo": "Expulsión por doble amarilla — apelación en curso",
+    "creado_en": "2025-01-24T11:00:00Z"
+  }
+]

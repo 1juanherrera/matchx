@@ -8,6 +8,11 @@ import _usuarios      from '@/data/mocks/usuarios.json'
 import _inscripciones from '@/data/mocks/inscripciones.json'
 import _solicitudes   from '@/data/mocks/solicitudes.json'
 import _eventos       from '@/data/mocks/eventos.json'
+import _comunicados   from '@/data/mocks/comunicados.json'
+import _sanciones     from '@/data/mocks/sanciones.json'
+import _pagos         from '@/data/mocks/pagos.json'
+import _multasEquipo  from '@/data/mocks/multas-equipo.json'
+import _asistencias   from '@/data/mocks/asistencias.json'
 
 function seed<T>(data: T[]): T[] {
   return JSON.parse(JSON.stringify(data))
@@ -29,7 +34,11 @@ const counters: Record<string, number> = {
   inscripciones: maxId(_inscripciones as any[]),
   solicitudes:   maxId(_solicitudes as any[]),
   eventos:       maxId(_eventos as any[]),
+  comunicados:   maxId(_comunicados as any[]),
   convocatorias: 0,
+  sanciones:     maxId(_sanciones as any[]),
+  pagos:         maxId(_pagos as any[]),
+  multasEquipo:  maxId(_multasEquipo as any[]),
 }
 
 export function nextId(entity: string): number {
@@ -48,5 +57,10 @@ export const db = {
   inscripciones: seed(_inscripciones as any[]),
   solicitudes:   seed(_solicitudes as any[]),
   eventos:       seed(_eventos as any[]),
+  comunicados:   seed(_comunicados as any[]),
   convocatorias: [] as any[],
+  sanciones:     seed(_sanciones as any[]),
+  pagos:         seed(_pagos as any[]),
+  multasEquipo:  seed(_multasEquipo as any[]),
+  asistencias:   seed(_asistencias as any[]),
 }

@@ -1,0 +1,22 @@
+[
+  { "jugador_id": 1,  "partido_id": 1, "estado": "confirmado" },
+  { "jugador_id": 2,  "partido_id": 1, "estado": "confirmado" },
+  { "jugador_id": 3,  "partido_id": 1, "estado": "ausente" },
+  { "jugador_id": 4,  "partido_id": 1, "estado": "no_habilitado" },
+  { "jugador_id": 5,  "partido_id": 1, "estado": "confirmado" },
+  { "jugador_id": 6,  "partido_id": 1, "estado": "confirmado" },
+  { "jugador_id": 7,  "partido_id": 1, "estado": "confirmado" },
+  { "jugador_id": 8,  "partido_id": 1, "estado": "ausente" },
+  { "jugador_id": 9,  "partido_id": 1, "estado": "confirmado" },
+  { "jugador_id": 10, "partido_id": 1, "estado": "pendiente" },
+  { "jugador_id": 1,  "partido_id": 2, "estado": "confirmado" },
+  { "jugador_id": 2,  "partido_id": 2, "estado": "ausente" },
+  { "jugador_id": 3,  "partido_id": 2, "estado": "confirmado" },
+  { "jugador_id": 4,  "partido_id": 2, "estado": "no_habilitado" },
+  { "jugador_id": 5,  "partido_id": 2, "estado": "confirmado" },
+  { "jugador_id": 6,  "partido_id": 2, "estado": "confirmado" },
+  { "jugador_id": 7,  "partido_id": 2, "estado": "pendiente" },
+  { "jugador_id": 8,  "partido_id": 2, "estado": "confirmado" },
+  { "jugador_id": 9,  "partido_id": 2, "estado": "ausente" },
+  { "jugador_id": 10, "partido_id": 2, "estado": "confirmado" }
+]

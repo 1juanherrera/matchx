@@ -1,0 +1,758 @@
+{
+  "info": {
+    "name": "matchX API — Contrato completo",
+    "description": "Colección generada desde los handlers MSW y services del frontend matchX.\n\nCada request refleja exactamente la estructura que el frontend envía y espera recibir.\n\n## Convenciones\n- **Base URL**: variable `{{base_url}}`\n- **Auth**: Bearer token en variable `{{token}}` (se setea automáticamente con el request 'Login directo')\n- **Wrapper de respuesta**: `{ data: ..., status: 'ok' }`\n- **Error shape**: `{ message, errors: { _general: [...] } }`\n\n## Ver también\n- docs/API_ENDPOINTS.md — documentación exhaustiva\n- docs/DATABASE_GAPS.md — tablas/campos nuevos por crear",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://35.243.241.205:8082",
+      "description": "URL base del backend"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "JWT obtenido del login. El request 'Login directo' lo setea automáticamente."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Login, logout y usuario actual",
+      "item": [
+        {
+          "name": "Login directo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.token) {",
+                  "    pm.collectionVariables.set('token', body.token);",
+                  "    console.log('Token guardado en {{token}}');",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"ana@matchx.com\",\n  \"password\": \"password\"\n}"
+            },
+            "description": "Login con credenciales. Response: { token, user }.\nSi credenciales inválidas → HTTP 422.\nSi usuario tiene múltiples roles → { status: 'select_profile', profiles: [] }."
+          }
+        },
+        {
+          "name": "Login con selectedRole",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"carlos@matchx.com\",\n  \"password\": \"password\",\n  \"selectedRole\": \"superadmin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/logout", "host": ["{{base_url}}"], "path": ["api", "logout"] }
+          }
+        },
+        {
+          "name": "User actual (opcional)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/user", "host": ["{{base_url}}"], "path": ["api", "user"] },
+            "description": "NO mockeado por MSW. Si el backend lo implementa, debe devolver el mismo objeto user del login."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Torneos",
+      "description": "CRUD de torneos + cambio de estado, asignación de sedes, stats",
+      "item": [
+        {
+          "name": "Listar torneos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/torneos?estado=en_curso",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "torneos"],
+              "query": [{ "key": "estado", "value": "en_curso", "description": "borrador|inscripciones_abiertas|en_curso|finalizado|cancelado" }]
+            }
+          }
+        },
+        {
+          "name": "Obtener torneo",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1"] }
+          }
+        },
+        {
+          "name": "Crear torneo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/torneos", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Copa Bogotá F5 2026\",\n  \"edicion\": \"2026\",\n  \"categoria\": \"Abierta\",\n  \"modalidad_id\": 1,\n  \"fecha_inicio\": \"2026-03-01\",\n  \"fecha_fin\": \"2026-04-30\",\n  \"fecha_limite_inscripcion\": \"2026-02-20\",\n  \"max_equipos\": 8,\n  \"min_jugadores\": 5,\n  \"max_jugadores\": 12,\n  \"admin_id\": 2,\n  \"descripcion\": \"Torneo relámpago de fútbol 5\",\n  \"reglamento\": \"\",\n  \"url_banner\": \"\",\n  \"valor_matricula\": 150000,\n  \"valor_tarjeta_amarilla\": 20000,\n  \"valor_tarjeta_roja\": 50000,\n  \"multa_inasistencia\": 100000,\n  \"valor_jugador_tardio\": 30000,\n  \"amarillas_para_suspension\": 3,\n  \"partidos_suspension_roja\": 1,\n  \"inscripcion_publica\": 1,\n  \"marcador_publico\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar torneo",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Copa Bogotá F5 2026 — Edición Premium\",\n  \"valor_matricula\": 180000\n}" }
+          }
+        },
+        {
+          "name": "Cambiar estado",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1/estado", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"inscripciones_abiertas\"\n}" }
+          }
+        },
+        {
+          "name": "Asignar sede al torneo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1/sedes", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "sedes"] },
+            "body": { "mode": "raw", "raw": "{ \"sede_id\": 3 }" }
+          }
+        },
+        {
+          "name": "Desasignar sede",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1/sedes/3", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "sedes", "3"] }
+          }
+        },
+        {
+          "name": "Partidos del torneo",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1/partidos", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "partidos"] }
+          }
+        },
+        {
+          "name": "Inscripciones del torneo",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1/inscripciones", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "inscripciones"] }
+          }
+        },
+        {
+          "name": "Goleadores del torneo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/torneos/1/goleadores?limite=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "torneos", "1", "goleadores"],
+              "query": [{ "key": "limite", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Fair play del torneo",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/torneos/torneos/1/fairplay", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "fairplay"] }
+          }
+        },
+        {
+          "name": "Tabla de posiciones (por fase)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/torneos/fases/1/posiciones", "host": ["{{base_url}}"], "path": ["api", "torneos", "fases", "1", "posiciones"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Equipos",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/equipos", "host": ["{{base_url}}"], "path": ["api", "torneos", "equipos"] } } },
+        { "name": "Obtener", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/equipos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "equipos", "1"] } } },
+        { "name": "Plantilla en torneo", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/equipos/1/plantilla/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "equipos", "1", "plantilla", "1"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/equipos", "host": ["{{base_url}}"], "path": ["api", "torneos", "equipos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Águilas FC\",\n  \"nombre_corto\": \"ÁGUILA\",\n  \"color_principal\": \"#1a56db\",\n  \"color_secundario\": \"#ffffff\",\n  \"color_terciario\": \"#000000\",\n  \"color_cuaternario\": \"#000000\",\n  \"url_escudo\": \"https://api.dicebear.com/7.x/shapes/svg?seed=aguilasfc\",\n  \"capitan_id\": 6\n}" }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/equipos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "equipos", "1"] },
+            "body": { "mode": "raw", "raw": "{ \"nombre_corto\": \"AGUIL\" }" }
+          }
+        },
+        { "name": "Toggle activo", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/equipos/1/toggle", "host": ["{{base_url}}"], "path": ["api", "torneos", "equipos", "1", "toggle"] } } }
+      ]
+    },
+    {
+      "name": "Jugadores",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/jugadores?nombre=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "jugadores"],
+              "query": [{ "key": "nombre", "value": "", "description": "Búsqueda por nombre o apellido" }]
+            }
+          }
+        },
+        { "name": "Obtener", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/jugadores/4", "host": ["{{base_url}}"], "path": ["api", "torneos", "jugadores", "4"] } } },
+        { "name": "Torneos del jugador", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/jugadores/4/torneos", "host": ["{{base_url}}"], "path": ["api", "torneos", "jugadores", "4", "torneos"] } } },
+        { "name": "Estadísticas en torneo", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/jugadores/4/estadisticas/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "jugadores", "4", "estadisticas", "1"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/jugadores", "host": ["{{base_url}}"], "path": ["api", "torneos", "jugadores"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"David\",\n  \"apellido\": \"Vargas\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1023456789\",\n  \"fecha_nacimiento\": \"1998-05-12\",\n  \"telefono\": \"+573001234567\",\n  \"correo\": \"david@ejemplo.com\",\n  \"url_foto\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=david\"\n}" }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/jugadores/4", "host": ["{{base_url}}"], "path": ["api", "torneos", "jugadores", "4"] },
+            "body": { "mode": "raw", "raw": "{ \"telefono\": \"+573009998888\" }" }
+          }
+        },
+        { "name": "Toggle activo", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/jugadores/4/toggle", "host": ["{{base_url}}"], "path": ["api", "torneos", "jugadores", "4", "toggle"] } } }
+      ]
+    },
+    {
+      "name": "Partidos",
+      "item": [
+        {
+          "name": "Listar (con filtros)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/partidos?torneo_id=1&estado=programado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "partidos"],
+              "query": [
+                { "key": "torneo_id", "value": "1" },
+                { "key": "estado", "value": "programado", "description": "programado|en_curso|finalizado|suspendido|aplazado|cancelado|walkover" },
+                { "key": "arbitro_id", "value": "", "disabled": true },
+                { "key": "delegado_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Próximos partidos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/partidos/proximos?limite=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "partidos", "proximos"],
+              "query": [{ "key": "limite", "value": "5" }]
+            }
+          }
+        },
+        { "name": "Obtener", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/partidos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"torneo_id\": 1,\n  \"fase_id\": 1,\n  \"grupo_id\": null,\n  \"equipo_local_id\": 1,\n  \"equipo_visitante_id\": 2,\n  \"sede_id\": 1,\n  \"cancha_id\": 102,\n  \"numero_jornada\": 1,\n  \"fecha_hora_programada\": \"2026-03-08T10:00:00Z\",\n  \"delegado_id\": 4,\n  \"arbitro_id\": 5\n}" }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1"] },
+            "body": { "mode": "raw", "raw": "{ \"cancha_id\": 103 }" }
+          }
+        },
+        { "name": "Iniciar partido", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/partidos/1/iniciar", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "iniciar"] } } },
+        {
+          "name": "Finalizar partido",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos/1/finalizar", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "finalizar"] },
+            "body": { "mode": "raw", "raw": "{ \"goles_local\": 3, \"goles_visitante\": 1, \"minutos_adicionales\": 5 }" }
+          }
+        },
+        {
+          "name": "Cambiar estado",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos/1/estado", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "estado"] },
+            "body": { "mode": "raw", "raw": "{ \"estado\": \"suspendido\" }" }
+          }
+        },
+        {
+          "name": "Actualizar marcador",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos/1/marcador", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "marcador"] },
+            "body": { "mode": "raw", "raw": "{ \"goles_local\": 2, \"goles_visitante\": 1 }" }
+          }
+        },
+        { "name": "Convocatoria — listar", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/partidos/1/convocatoria", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "convocatoria"] } } },
+        {
+          "name": "Convocatoria — agregar",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos/1/convocatoria", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "convocatoria"] },
+            "body": { "mode": "raw", "raw": "{\n  \"jugador_id\": 4,\n  \"equipo_id\": 1,\n  \"numero_dorsal\": 10,\n  \"posicion\": \"delantero\",\n  \"es_titular\": 1\n}" }
+          }
+        },
+        { "name": "Convocatoria — eliminar", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/torneos/convocatoria/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "convocatoria", "1"] } } }
+      ]
+    },
+    {
+      "name": "Sedes y canchas",
+      "item": [
+        { "name": "Listar sedes", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/sedes", "host": ["{{base_url}}"], "path": ["api", "torneos", "sedes"] } } },
+        { "name": "Obtener sede (con canchas)", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/sedes/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "sedes", "1"] } } },
+        { "name": "Canchas de la sede", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/sedes/1/canchas", "host": ["{{base_url}}"], "path": ["api", "torneos", "sedes", "1", "canchas"] } } },
+        {
+          "name": "Crear sede",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/sedes", "host": ["{{base_url}}"], "path": ["api", "torneos", "sedes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Sede Norte\",\n  \"nombre_comercial\": \"Sede Norte Premium\",\n  \"descripcion\": \"\",\n  \"email\": \"norte@matchx.com\",\n  \"web\": \"\",\n  \"estado\": 1,\n  \"direccion\": \"Cra 15 #123-45\",\n  \"barrio\": \"Usaquén\",\n  \"telefono\": \"+573001112222\",\n  \"celular\": \"+573001112222\",\n  \"ciudad\": \"Bogotá\",\n  \"departamento\": \"Cundinamarca\",\n  \"capacidad\": 500\n}" }
+          }
+        },
+        {
+          "name": "Actualizar sede",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/sedes/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "sedes", "1"] },
+            "body": { "mode": "raw", "raw": "{ \"capacidad\": 600 }" }
+          }
+        },
+        { "name": "Toggle sede", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/sedes/1/toggle", "host": ["{{base_url}}"], "path": ["api", "torneos", "sedes", "1", "toggle"] } } },
+        {
+          "name": "Crear cancha",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/canchas", "host": ["{{base_url}}"], "path": ["api", "torneos", "canchas"] },
+            "body": { "mode": "raw", "raw": "{\n  \"sede_id\": 1,\n  \"nombre\": \"Cancha 1\",\n  \"tipo_superficie\": \"sintetica\",\n  \"largo_metros\": 30,\n  \"ancho_metros\": 20,\n  \"capacidad\": 30\n}" }
+          }
+        },
+        {
+          "name": "Actualizar cancha",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/canchas/102", "host": ["{{base_url}}"], "path": ["api", "torneos", "canchas", "102"] },
+            "body": { "mode": "raw", "raw": "{ \"tipo_superficie\": \"natural\" }" }
+          }
+        },
+        { "name": "Toggle cancha", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/canchas/102/toggle", "host": ["{{base_url}}"], "path": ["api", "torneos", "canchas", "102", "toggle"] } } },
+        { "name": "Eliminar cancha", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/torneos/canchas/102", "host": ["{{base_url}}"], "path": ["api", "torneos", "canchas", "102"] } } }
+      ]
+    },
+    {
+      "name": "Modalidades",
+      "item": [
+        { "name": "Listar", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/modalidades", "host": ["{{base_url}}"], "path": ["api", "torneos", "modalidades"] } } },
+        { "name": "Obtener", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/modalidades/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "modalidades", "1"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/modalidades", "host": ["{{base_url}}"], "path": ["api", "torneos", "modalidades"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Fútbol 5\",\n  \"codigo\": \"F5\",\n  \"descripcion\": \"Modalidad rápida en cancha reducida\",\n  \"jugadores_por_equipo\": 5,\n  \"duracion_tiempo_minutos\": 20,\n  \"numero_tiempos\": 2,\n  \"max_cambios\": 5\n}" }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/modalidades/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "modalidades", "1"] },
+            "body": { "mode": "raw", "raw": "{ \"max_cambios\": 7 }" }
+          }
+        },
+        { "name": "Toggle", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/modalidades/1/toggle", "host": ["{{base_url}}"], "path": ["api", "torneos", "modalidades", "1", "toggle"] } } },
+        { "name": "Eliminar", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/torneos/modalidades/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "modalidades", "1"] } } }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar (con rol)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/usuarios?rol=admin_torneo",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "usuarios"],
+              "query": [{ "key": "rol", "value": "admin_torneo", "description": "superadmin|admin_torneo|admin_sede|delegado|arbitro|jugador|publico" }]
+            }
+          }
+        },
+        { "name": "Delegados", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/usuarios/delegados", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios", "delegados"] } } },
+        { "name": "Árbitros disponibles", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/usuarios/arbitros-disponibles", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios", "arbitros-disponibles"] } } },
+        { "name": "Obtener", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/usuarios/2", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios", "2"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/usuarios", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Ana\",\n  \"correo\": \"ana@matchx.com\",\n  \"contrasena\": \"password123\",\n  \"rol\": \"admin_torneo\"\n}" }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/usuarios/2", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios", "2"] },
+            "body": { "mode": "raw", "raw": "{ \"telefono\": \"+573001234567\" }" }
+          }
+        },
+        {
+          "name": "Cambiar contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/usuarios/2/password", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios", "2", "password"] },
+            "body": { "mode": "raw", "raw": "{ \"nueva_contrasena\": \"NuevaPass2026!\" }" }
+          }
+        },
+        { "name": "Toggle activo", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/usuarios/2/toggle", "host": ["{{base_url}}"], "path": ["api", "torneos", "usuarios", "2", "toggle"] } } }
+      ]
+    },
+    {
+      "name": "Eventos de partido",
+      "item": [
+        { "name": "Listar eventos del partido", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/partidos/1/eventos", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "eventos"] } } },
+        {
+          "name": "Registrar gol",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/eventos", "host": ["{{base_url}}"], "path": ["api", "torneos", "eventos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"partido_id\": 1,\n  \"tipo_evento\": \"gol\",\n  \"minuto\": 23,\n  \"equipo_id\": 1,\n  \"jugador_id\": 4,\n  \"es_autogol\": 0,\n  \"registrado_por\": 5\n}" },
+            "description": "Side effect: el backend debe incrementar goles_local o goles_visitante del partido."
+          }
+        },
+        {
+          "name": "Registrar tarjeta amarilla",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/eventos", "host": ["{{base_url}}"], "path": ["api", "torneos", "eventos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"partido_id\": 1,\n  \"tipo_evento\": \"tarjeta_amarilla\",\n  \"minuto\": 35,\n  \"equipo_id\": 2,\n  \"jugador_id\": 9,\n  \"observaciones\": \"Falta táctica\",\n  \"registrado_por\": 5\n}" }
+          }
+        },
+        {
+          "name": "Registrar cambio",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/eventos", "host": ["{{base_url}}"], "path": ["api", "torneos", "eventos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"partido_id\": 1,\n  \"tipo_evento\": \"cambio\",\n  \"minuto\": 60,\n  \"equipo_id\": 1,\n  \"jugador_sale_id\": 4,\n  \"jugador_entra_id\": 7,\n  \"registrado_por\": 5\n}" }
+          }
+        },
+        { "name": "Eliminar evento", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/torneos/eventos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "eventos", "1"] } } }
+      ]
+    },
+    {
+      "name": "Inscripciones",
+      "item": [
+        { "name": "Listar por torneo", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/torneos/1/inscripciones", "host": ["{{base_url}}"], "path": ["api", "torneos", "torneos", "1", "inscripciones"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/inscripciones", "host": ["{{base_url}}"], "path": ["api", "torneos", "inscripciones"] },
+            "body": { "mode": "raw", "raw": "{\n  \"torneo_id\": 1,\n  \"equipo_id\": 1,\n  \"observaciones\": \"Pendiente confirmación del capitán\"\n}" },
+            "description": "422 si ya existe (unique torneo_id + equipo_id)."
+          }
+        },
+        {
+          "name": "Aprobar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/inscripciones/1/aprobar", "host": ["{{base_url}}"], "path": ["api", "torneos", "inscripciones", "1", "aprobar"] },
+            "body": { "mode": "raw", "raw": "{ \"admin_id\": 2 }" }
+          }
+        },
+        {
+          "name": "Rechazar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/inscripciones/1/rechazar", "host": ["{{base_url}}"], "path": ["api", "torneos", "inscripciones", "1", "rechazar"] },
+            "body": { "mode": "raw", "raw": "{ \"motivo_rechazo\": \"Documentación incompleta\" }" }
+          }
+        },
+        { "name": "Eliminar", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/torneos/inscripciones/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "inscripciones", "1"] } } },
+        {
+          "name": "Registrar pago de matrícula",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/inscripciones/1/pago", "host": ["{{base_url}}"], "path": ["api", "torneos", "inscripciones", "1", "pago"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pago_estado\": \"pagado\",\n  \"pago_metodo\": \"nequi\",\n  \"pago_referencia\": \"NEQ-20260215-8473\",\n  \"pago_fecha\": \"2026-02-15T14:32:00Z\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Solicitudes",
+      "description": "Solicitudes de capitanes (alta/baja/transferencia de jugadores). Tabla por crear — ver DATABASE_GAPS.md",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/solicitudes?estado=pendiente",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "solicitudes"],
+              "query": [
+                { "key": "estado", "value": "pendiente", "description": "pendiente|aprobado|rechazado" },
+                { "key": "equipo_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear — alta de jugador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/solicitudes", "host": ["{{base_url}}"], "path": ["api", "torneos", "solicitudes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"alta_jugador\",\n  \"equipo_id\": 1,\n  \"datos\": {\n    \"nombre\": \"Rodrigo\",\n    \"apellido\": \"Palomino\",\n    \"numero_camiseta\": 17,\n    \"posicion\": \"delantero\",\n    \"tipo_documento\": \"CC\",\n    \"numero_documento\": \"1098765432\"\n  }\n}" }
+          }
+        },
+        {
+          "name": "Crear — baja de jugador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/solicitudes", "host": ["{{base_url}}"], "path": ["api", "torneos", "solicitudes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"baja_jugador\",\n  \"equipo_id\": 1,\n  \"jugador_id\": 4,\n  \"datos\": null\n}" }
+          }
+        },
+        { "name": "Aprobar", "request": { "method": "PUT", "url": { "raw": "{{base_url}}/api/torneos/solicitudes/1/aprobar", "host": ["{{base_url}}"], "path": ["api", "torneos", "solicitudes", "1", "aprobar"] }, "description": "Side effect: si tipo=alta_jugador crea el jugador; si tipo=baja_jugador lo desactiva." } },
+        {
+          "name": "Rechazar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/solicitudes/1/rechazar", "host": ["{{base_url}}"], "path": ["api", "torneos", "solicitudes", "1", "rechazar"] },
+            "body": { "mode": "raw", "raw": "{ \"motivo\": \"Documentos incompletos\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comunicados",
+      "description": "Tablón de comunicados. Tabla por crear — ver DATABASE_GAPS.md",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/comunicados?torneo_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "comunicados"],
+              "query": [
+                { "key": "torneo_id", "value": "1" },
+                { "key": "tipo", "value": "", "description": "general|urgente|informativo", "disabled": true },
+                { "key": "activo", "value": "1", "description": "1 (default) o 0 para soft-deleted", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/comunicados", "host": ["{{base_url}}"], "path": ["api", "torneos", "comunicados"] },
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Suspensión por lluvia\",\n  \"cuerpo\": \"Por las fuertes lluvias, el partido queda suspendido.\",\n  \"tipo\": \"urgente\",\n  \"torneo_id\": 1,\n  \"imagen_url\": null\n}" }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/comunicados/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "comunicados", "1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Reprogramación confirmada\",\n  \"tipo\": \"informativo\"\n}" }
+          }
+        },
+        { "name": "Eliminar (soft delete)", "request": { "method": "DELETE", "url": { "raw": "{{base_url}}/api/torneos/comunicados/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "comunicados", "1"] }, "description": "SOLO setea activo=false." } }
+      ]
+    },
+    {
+      "name": "Sanciones",
+      "item": [
+        {
+          "name": "Listar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/sanciones?torneo_id=1&estado=activa,apelada",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "sanciones"],
+              "query": [
+                { "key": "torneo_id", "value": "1" },
+                { "key": "estado", "value": "activa,apelada", "description": "CSV: activa,apelada,cumplida,revertida" },
+                { "key": "equipo_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/sanciones/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "sanciones", "1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"revertida\",\n  \"motivo\": \"Apelación aceptada por comité disciplinario\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagos de tarjetas",
+      "item": [
+        {
+          "name": "Listar pagos del torneo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/torneos/1/pagos?tipo=tarjeta_amarilla,tarjeta_roja",
+              "host": ["{{base_url}}"],
+              "path": ["api", "torneos", "1", "pagos"],
+              "query": [{ "key": "tipo", "value": "tarjeta_amarilla,tarjeta_roja" }]
+            }
+          }
+        },
+        {
+          "name": "Confirmar pago",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/1/pagos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "1", "pagos", "1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"pagado\",\n  \"metodo_pago\": \"efectivo\",\n  \"numero_recibo\": \"REC-007\"\n}" }
+          }
+        },
+        {
+          "name": "Condonar pago",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/1/pagos/1", "host": ["{{base_url}}"], "path": ["api", "torneos", "1", "pagos", "1"] },
+            "body": { "mode": "raw", "raw": "{ \"estado\": \"condonado\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Multas internas de equipo",
+      "description": "Multas internas del equipo (disciplina interna). Tabla por crear — ver DATABASE_GAPS.md",
+      "item": [
+        { "name": "Listar del equipo", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/equipos/1/multas", "host": ["{{base_url}}"], "path": ["api", "equipos", "1", "multas"] } } },
+        {
+          "name": "Crear",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/equipos/1/multas", "host": ["{{base_url}}"], "path": ["api", "equipos", "1", "multas"] },
+            "body": { "mode": "raw", "raw": "{\n  \"jugador_id\": 2,\n  \"motivo\": \"Inasistencia al entrenamiento sin justificación\",\n  \"valor\": 30000\n}" }
+          }
+        },
+        {
+          "name": "Actualizar estado",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/equipos/1/multas/1", "host": ["{{base_url}}"], "path": ["api", "equipos", "1", "multas", "1"] },
+            "body": { "mode": "raw", "raw": "{ \"estado\": \"pagada\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Asistencias",
+      "description": "Asistencia de jugadores a partidos. Tabla por crear — ver DATABASE_GAPS.md",
+      "item": [
+        { "name": "Listar del partido", "request": { "method": "GET", "url": { "raw": "{{base_url}}/api/torneos/partidos/1/asistencia", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "asistencia"] } } },
+        {
+          "name": "Registrar / actualizar (upsert)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/torneos/partidos/1/asistencia", "host": ["{{base_url}}"], "path": ["api", "torneos", "partidos", "1", "asistencia"] },
+            "body": { "mode": "raw", "raw": "{\n  \"jugador_id\": 4,\n  \"estado\": \"confirmado\"\n}" },
+            "description": "Upsert por (partido_id, jugador_id). estado: confirmado|ausente|no_habilitado|pendiente"
+          }
+        }
+      ]
+    }
+  ]
+}

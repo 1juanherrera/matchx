@@ -9,10 +9,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **matchX** — Sistema gestor de sedes, partidos y torneos de fútbol para el mercado colombiano.
 
 - **Tech Stack**: Vue 3 + Vite + Tailwind CSS + Pinia + Vue Router + TypeScript
-- **Architecture**: SPA modular con 7 roles y 8 módulos funcionales
-- **Status**: Hitos 0–6 completados. Backend real conectado. En fase de integración y bugfixes.
+- **Architecture**: SPA modular con 8 roles y 12+ módulos funcionales
+- **Status**: Hitos 0–7 completados. MSW implementado para desarrollo. Backend real conectado solo en Auth + Sedes.
 - **Model**: 20 tablas relacionales definidas en `sistema_torneos.mwb`
 - **Backend**: API REST real (Laravel). Variable de entorno `VITE_API_BASE_URL` en `.env`.
+- **Mock layer**: MSW (Mock Service Worker) en `src/mocks/` — intercepta todas las llamadas API para desarrollo.
 
 ---
 
@@ -37,7 +38,7 @@ npm run preview
 npm run test
 ```
 
-# CLAUDE.md - Token Efficient Rules
+# Token Efficient Rules
 
 1. Think before acting. Read existing files before writing code.
 2. Be concise in output but thorough in reasoning.
@@ -54,93 +55,158 @@ npm run test
 
 ```
 src/
-├── main.ts                 ← App entry point
-├── App.vue                 ← Root component with RouterView
+├── main.ts                 ← App entry point (inicializa MSW en dev)
+├── App.vue                 ← Root component con RouterView
 ├── style.css               ← Tailwind + custom styles
 ├── router/
 │   └── index.ts            ← Vue Router con guards por rol
-├── services/               ← Capa de API (axios) — BACKEND REAL
+├── mocks/                  ← MSW — intercepta llamadas API en desarrollo
+│   ├── browser.ts          ← Setup del service worker
+│   ├── index.ts            ← Exporta setupMocks()
+│   ├── db/
+│   │   └── index.ts        ← In-memory DB seeded desde data/mocks/*.json
+│   ├── handlers/           ← Un handler por dominio
+│   │   ├── index.ts        ← Spread de todos los handlers
+│   │   ├── auth.handlers.ts
+│   │   ├── comunicados.handlers.ts
+│   │   ├── equipos.handlers.ts
+│   │   ├── eventos.handlers.ts
+│   │   ├── inscripciones.handlers.ts
+│   │   ├── jugadores.handlers.ts
+│   │   ├── modalidades.handlers.ts
+│   │   ├── partidos.handlers.ts
+│   │   ├── sedes.handlers.ts
+│   │   ├── solicitudes.handlers.ts
+│   │   ├── torneos.handlers.ts
+│   │   └── usuarios.handlers.ts
+│   └── utils/
+│       ├── response.ts     ← mockOk / mockCreated / mockNotFound / mockError
+│       └── routes.ts       ← Prepend VITE_API_BASE_URL a rutas
+├── services/               ← Capa de API (axios) — apunta al backend real o MSW
 │   ├── api.ts              ← Instancia axios + interceptor JWT + redirect 401
-│   ├── auth.service.ts     ← /api/login, /api/logout, /api/user
-│   ├── sedes.service.ts    ← /api/torneos/sedes + normalizeCancha/normalizeSede
-│   ├── torneos.service.ts
+│   ├── auth.service.ts
+│   ├── asistencias.service.ts
+│   ├── comunicados.service.ts
 │   ├── equipos.service.ts
+│   ├── eventos.service.ts
+│   ├── inscripciones.service.ts
 │   ├── jugadores.service.ts
-│   ├── partidos.service.ts
 │   ├── modalidades.service.ts
-│   ├── usuarios.service.ts
-│   └── eventos.service.ts
+│   ├── multas-equipo.service.ts
+│   ├── pagos.service.ts
+│   ├── partidos.service.ts
+│   ├── sanciones.service.ts
+│   ├── sedes.service.ts
+│   ├── torneos.service.ts
+│   └── usuarios.service.ts
 ├── stores/
-│   ├── auth.ts             ← Pinia auth store (session, roles, perms, select_profile flow)
-│   ├── torneos.ts          ✅ CRUD torneos + torneosActivos
-│   ├── equipos.ts          ✅ CRUD equipos + equiposPorTorneo computed
-│   ├── jugadores.ts        ✅ CRUD jugadores + jugadoresPorEquipo computed
-│   ├── partidos.ts         ✅ CRUD partidos + proximosPartidos + partidosPorTorneo
-│   ├── sedes.ts            ✅ CRUD sedes + canchas (agregarCancha, actualizarCancha, eliminarCancha)
-│   ├── modalidades.ts      ✅ Modalidades (F5, F7, F11)
-│   ├── usuarios.ts         ✅ CRUD usuarios del sistema
-│   └── configuracion.ts   ✅ Key-value configuración global
+│   ├── auth.ts             ← Pinia auth store (session, roles, perms, select_profile)
+│   ├── asistencias.ts      ← Asistencias a partidos
+│   ├── comunicados.ts      ← Comunicados del tablón (sort urgentes+fecha)
+│   ├── configuracion.ts    ← Key-value configuración global
+│   ├── delegado.ts         ← Estado offline/sync del delegado
+│   ├── equipos.ts          ← CRUD equipos + equiposPorTorneo computed
+│   ├── jugadores.ts        ← CRUD jugadores + jugadoresPorEquipo computed
+│   ├── modalidades.ts      ← Modalidades (F5, F7, F11)
+│   ├── multas-equipo.ts    ← Multas por equipo
+│   ├── pagos.ts            ← Pagos / tesorería
+│   ├── partidos.ts         ← CRUD partidos + proximosPartidos + partidosPorTorneo
+│   ├── sanciones.ts        ← Sanciones a jugadores
+│   ├── sedes.ts            ← CRUD sedes + canchas
+│   ├── torneos.ts          ← CRUD torneos + torneosActivos
+│   └── usuarios.ts         ← CRUD usuarios del sistema
+├── composables/
+│   ├── useArbitrosDisponibilidad.ts
+│   └── useTheme.ts         ← Dark/light toggle
 ├── layouts/
-│   ├── AppLayout.vue       ✅ Sidebar + topbar con nav por rol (7 roles)
-│   ├── AuthLayout.vue      ✅ Centered login/error layout
-│   ├── PublicLayout.vue    ✅ Simple navbar público
-│   └── DelegadoLayout.vue  ✅ Mobile-first mesa de control
+│   ├── AppLayout.vue       ← Sidebar + topbar con nav por rol (8 roles)
+│   ├── AuthLayout.vue      ← Centered login/error layout
+│   ├── PublicLayout.vue    ← Simple navbar público
+│   └── DelegadoLayout.vue  ← Mobile-first mesa de control
 ├── views/
 │   ├── auth/
-│   │   ├── LoginView.vue           ✅ Login real con select_profile flow
-│   │   └── NoAutorizadoView.vue   ✅
+│   │   ├── LoginView.vue           ← Login real con select_profile flow
+│   │   └── NoAutorizadoView.vue
 │   ├── admin-sistema/              ✅ HITO 1 COMPLETO
 │   │   ├── DashboardView.vue
 │   │   ├── UsuariosView.vue        ← CRUD usuarios
 │   │   ├── ModalidadesView.vue     ← CRUD modalidades
 │   │   ├── SedesView.vue           ← CRUD sedes + canchas (modal dual)
 │   │   └── ConfiguracionView.vue  ← Key-value config
-│   ├── admin-torneo/               ✅ HITO 2 COMPLETO
+│   ├── admin-torneo/               ✅ HITO 2+ COMPLETO
 │   │   ├── TorneoDashboardView.vue ← Métricas, torneos, próximos partidos
-│   │   ├── TorneosView.vue         ← CRUD torneos (skeleton, empty state, iconos)
-│   │   ├── InscripcionesView.vue   ← Equipos por torneo (progress bar cupos)
-│   │   ├── PlantillaView.vue       ← Jugadores por equipo (avatares iniciales, búsqueda)
-│   │   ├── PartidosView.vue        ← Calendario partidos (escudos, skeleton)
-│   │   └── PosicionesView.vue      ← Tabla posiciones (AppDataTable, medallero)
+│   │   ├── TorneosView.vue         ← CRUD torneos
+│   │   ├── EquiposView.vue         ← Gestión de equipos
+│   │   ├── InscripcionesView.vue   ← Inscripciones por torneo (progress bar cupos)
+│   │   ├── PlantillaView.vue       ← Jugadores por equipo
+│   │   ├── PartidosView.vue        ← Calendario partidos
+│   │   ├── ActaPartidoView.vue     ← Acta de partido (/torneo/partidos/:id/acta)
+│   │   ├── EstadisticasView.vue    ← Estadísticas y goleadores
+│   │   ├── SolicitudesView.vue     ← Solicitudes de inscripción/transferencia
+│   │   ├── SancionesView.vue       ← Sanciones a jugadores
+│   │   ├── ComunicadosView.vue     ← Tablón (lista + periódico toggle, CRUD)
+│   │   └── TesoreriaView.vue       ⚠️ ARCHIVO EXISTE pero SIN RUTA en router
 │   ├── admin-sede/                 ✅ HITO 4 COMPLETO
-│   │   ├── SedeDashboardView.vue   ← Métricas sede, canchas, próximos partidos
-│   │   ├── CanchasView.vue         ← CRUD canchas + toggle disponibilidad
-│   │   └── CalendarioView.vue      ← Partidos en la sede por fecha y cancha
+│   │   ├── SedeDashboardView.vue
+│   │   ├── CanchasView.vue
+│   │   └── CalendarioView.vue
 │   ├── arbitro/                    ✅ HITO 5 COMPLETO
-│   │   ├── ArbitroDashboardView.vue ← Stats árbitro + próximos + resultados
-│   │   └── MisPartidosView.vue      ← Partidos asignados filtrable por estado
-│   ├── capitan/                    ✅ HITO 5 COMPLETO
-│   │   ├── CapitanDashboardView.vue ← Equipo + stats + próximos + resultados
-│   │   ├── MiEquipoView.vue         ← Plantilla con avatares, búsqueda, resumen posición
-│   │   └── FixtureView.vue          ← Fixture del equipo (filtrable, equipo propio resaltado)
+│   │   ├── ArbitroDashboardView.vue
+│   │   └── MisPartidosView.vue
+│   ├── capitan/                    ✅ HITO 5+ COMPLETO
+│   │   ├── CapitanDashboardView.vue
+│   │   ├── MiEquipoView.vue
+│   │   ├── FixtureView.vue
+│   │   ├── PosicionesView.vue      ← Tabla de posiciones del torneo
+│   │   ├── GoleadoresView.vue      ← Tabla de goleadores
+│   │   ├── SancionesView.vue       ← Sanciones del equipo (solo capitán)
+│   │   ├── PerfilView.vue          ← Perfil del jugador/capitán
+│   │   └── ComunicadosView.vue     ← Tablón periódico (solo lectura)
 │   ├── delegado/                   ✅ HITO 3 COMPLETO
 │   │   ├── MisPartidosView.vue
 │   │   └── EnVivoView.vue
 │   └── publico/                    ✅ HITO 6 COMPLETO
+│       ├── TorneosPublicoView.vue
+│       ├── PosicionesPublicoView.vue
+│       ├── FixturePublicoView.vue
+│       ├── GoleadoresPublicoView.vue
+│       ├── SedesPublicoView.vue
+│       └── PartidoDetallePublicoView.vue
 ├── components/
+│   ├── auth/               ← Componentes del flujo de login
+│   │   ├── LoginForm.vue
+│   │   ├── ProfileSelector.vue
+│   │   ├── RoleSelector.vue
+│   │   ├── FieldCard.vue
+│   │   └── PlayerCard.vue
 │   └── ui/
-│       ├── AppButton.vue      ✅ Variants: primary/secondary/ghost/danger + sizes
-│       ├── AppInput.vue       ✅
-│       ├── AppSelect.vue      ✅
-│       ├── AppCard.vue        ✅ hover prop
-│       ├── AppBadge.vue       ✅ dot prop, variants: green/orange/blue/gray
-│       ├── AppModal.vue       ✅ size prop (sm/md/lg)
-│       └── AppDataTable.vue   ✅ sortable, slots por columna, empty slot
+│       ├── AppButton.vue      ← Variants: primary/secondary/ghost/danger + sizes
+│       ├── AppInput.vue
+│       ├── AppSelect.vue
+│       ├── AppCard.vue        ← hover prop
+│       ├── AppBadge.vue       ← dot/pulse props, variants: green/orange/blue/gray
+│       ├── AppModal.vue       ← size prop (sm/md/lg)
+│       ├── AppDataTable.vue   ← sortable, slots por columna, empty slot
+│       └── PartidoCard.vue    ← Card reutilizable para partido
 └── data/
-    └── mocks/                 ← YA NO SE USAN EN PRODUCCIÓN, solo referencia
-        ├── usuarios.json
-        ├── torneos.json
+    └── mocks/              ← JSON seed data para MSW (YA NO SON MOCK DIRECTOS)
+        ├── comunicados.json
+        ├── configuracion_sistema.json
         ├── equipos.json
+        ├── eventos.json
+        ├── inscripciones.json
         ├── jugadores.json
+        ├── modalidades.json
         ├── partidos.json
         ├── sedes.json
-        ├── modalidades.json
-        └── configuracion_sistema.json
+        ├── solicitudes.json
+        ├── torneos.json
+        └── usuarios.json
 ```
 
 ---
 
-## Usuarios de Prueba (Backend Real)
+## Usuarios de Prueba
 
 > Login contra `/api/login`. Soporta flujo `select_profile` cuando un usuario tiene múltiples roles.
 
@@ -151,48 +217,126 @@ src/
 | Juan Admin Sede | juan@matchx.com | admin_sede | /sede/dashboard |
 | Miguel Delegado | miguel@matchx.com | delegado | /delegado/partidos |
 | Pedro Árbitro | pedro@matchx.com | arbitro | /arbitro/dashboard |
-| Luis Capitán | luis@matchx.com | capitan | /capitan/dashboard |
+| Luis Capitán | luis@matchx.com | jugador (isCapitan=true) | /capitan/dashboard |
 | Felipe Jugador | jugador@matchx.com | jugador | /capitan/dashboard |
 | Usuario Público | publico@matchx.com | publico | /publico/torneos |
+
+> **Nota**: No existe un rol separado `capitan`. Los capitanes tienen `rol = 'jugador'` con `isCapitan = true`. Las rutas `/capitan/*` usan `requiereRol: ['jugador']`.
 
 ---
 
 ## Rutas Implementadas
 
 ```
-/login                      → LoginView
-/admin/dashboard            → superadmin
-/admin/usuarios             → superadmin
-/admin/modalidades          → superadmin
-/admin/sedes                → superadmin
-/admin/configuracion        → superadmin
+/login                            → LoginView
+/no-autorizado                    → NoAutorizadoView
 
-/torneo/dashboard           → admin_torneo
-/torneo/torneos             → admin_torneo
-/torneo/inscripciones       → admin_torneo
-/torneo/plantilla           → admin_torneo
-/torneo/partidos            → admin_torneo
-/torneo/posiciones          → admin_torneo
+/admin/dashboard                  → superadmin
+/admin/usuarios
+/admin/modalidades
+/admin/sedes
+/admin/configuracion
 
-/sede/dashboard             → admin_sede
-/sede/canchas               → admin_sede
-/sede/calendario            → admin_sede
+/torneo/dashboard                 → admin_torneo
+/torneo/torneos
+/torneo/equipos
+/torneo/inscripciones
+/torneo/plantilla
+/torneo/partidos
+/torneo/partidos/:id/acta         → ActaPartidoView
+/torneo/estadisticas              → EstadisticasView (goleadores + stats)
+/torneo/solicitudes
+/torneo/sanciones
+/torneo/comunicados
 
-/arbitro/dashboard          → arbitro
-/arbitro/partidos           → arbitro
+/sede/dashboard                   → admin_sede
+/sede/canchas
+/sede/calendario
 
-/capitan/dashboard          → capitan
-/capitan/equipo             → capitan
-/capitan/fixture            → capitan
+/arbitro/dashboard                → arbitro
+/arbitro/partidos
 
-/delegado/partidos          → delegado
-/delegado/en-vivo/:id       → delegado (DelegadoLayout)
+/capitan/dashboard                → jugador (+ capitan)
+/capitan/equipo
+/capitan/fixture
+/capitan/posiciones
+/capitan/goleadores
+/capitan/sanciones                → solo capitan (isCapitan=true)
+/capitan/perfil
+/capitan/comunicados
+/capitan/partidos/:id             → PartidoDetallePublicoView reutilizado
 
-/publico/torneos            → público (sin login)
-/publico/posiciones         → público
-/publico/fixture            → público
-/publico/sedes              → público
-/publico/partidos/:id       → público
+/delegado/partidos                → delegado
+/delegado/en-vivo/:id            → DelegadoLayout
+
+/publico/torneos                  → público (sin login)
+/publico/posiciones
+/publico/fixture
+/publico/goleadores
+/publico/sedes
+/publico/partidos/:id
+```
+
+---
+
+## ⚠️ Gaps Conocidos
+
+Cosas que existen en código pero están incompletas o rotas:
+
+| Problema | Detalle |
+|----------|---------|
+| `TesoreriaView.vue` sin ruta | El archivo existe en `admin-torneo/` pero no tiene entrada en el router ni en el nav |
+| Stores sin MSW handler | `sanciones`, `pagos`, `multas-equipo`, `asistencias` tienen store y service pero **no tienen handler en `src/mocks/handlers/`** — las vistas que los usen devuelven error 404 en dev |
+| Backend pendiente | Solo Auth + Sedes apuntan al backend real. El resto usa MSW |
+| Light mode | TODO — todo el sistema está diseñado para dark mode |
+| PWA / Service Worker | Pendiente de implementar |
+| Tests | Vitest no configurado |
+| `PosicionesView.vue` admin_torneo | Eliminada (era redundante con EstadisticasView). El nav del admin_torneo apunta correctamente a `/torneo/estadisticas` |
+
+---
+
+## MSW Architecture
+
+MSW intercepta **todas** las llamadas en desarrollo. El flujo es:
+
+```
+Componente → store → service (axios) → MSW handler → in-memory DB → response
+```
+
+### In-memory DB (`src/mocks/db/index.ts`)
+- Seeded desde `src/data/mocks/*.json` al arrancar
+- Contador autoincremental por entidad (`nextId('comunicados')`)
+- Mutaciones persistentes durante la sesión (se resetea al recargar)
+
+### Response helpers (`src/mocks/utils/response.ts`)
+```ts
+mockOk(data)         // 200
+mockCreated(data)    // 201
+mockNotFound()       // 404
+mockError(msg, 500)  // 5xx
+```
+
+### Rutas (`src/mocks/utils/routes.ts`)
+Prepend automático de `VITE_API_BASE_URL` a todos los paths del handler.
+
+### Agregar un nuevo handler
+```ts
+// src/mocks/handlers/miEntidad.handlers.ts
+import { http } from 'msw'
+import { db, nextId } from '@/mocks/db'
+import { route } from '@/mocks/utils/routes'
+import { mockOk, mockCreated } from '@/mocks/utils/response'
+
+export const miEntidadHandlers = [
+  http.get(route('/api/mi-entidad'), () => mockOk(db.miEntidad)),
+  http.post(route('/api/mi-entidad'), async ({ request }) => {
+    const body = await request.json() as any
+    const nuevo = { id: nextId('miEntidad'), ...body }
+    db.miEntidad.push(nuevo)
+    return mockCreated(nuevo)
+  }),
+]
+// Luego agregar ...miEntidadHandlers en src/mocks/handlers/index.ts
 ```
 
 ---
@@ -200,64 +344,83 @@ src/
 ## Key Decisions
 
 ### Authentication
-- **Login real** contra API (`/api/login`). Soporta flujo `select_profile` (2 pasos).
-- Session persisted to `localStorage` key: `matchx_session`
-- Guards check role on every route transition
-- `initSession()` se llama en el redirect de `/` para evitar race condition con localStorage
-- **IMPORTANTE**: `handleLogout` debe ser `async/await` — si no, el `router.push('/login')` dispara antes de que `user.value = null` y el guard rebota al usuario de vuelta al dashboard.
+- Login real contra API (`/api/login`). Soporta flujo `select_profile` (2 pasos).
+- Session persisted en localStorage: `matchx_session`
+- Guards revisan rol en cada transición de ruta
+- `initSession()` solo se llama en rutas protegidas para evitar race conditions
+- **CRÍTICO**: `handleLogout` debe ser `async/await` — si no, `router.push('/login')` dispara antes de que `user.value = null` y el guard rebota al dashboard.
+
+### Roles y permisos
+- `capitan` NO es un rol separado. Es `rol = 'jugador'` con `authStore.isCapitan === true`
+- Las rutas `/capitan/*` usan `requiereRol: ['jugador']`
+- El nav en AppLayout muestra `Sanciones` solo cuando `authStore.isCapitan`
 
 ### Design System
 - **Dark Mode OLED**: `#0f1923` base, `#00d4aa` accent green, `#ff6b35` accent orange
-- **Typography**: Fira Code (headings) + Fira Sans (body)
+- **Typography**: Fira Code (headings mono) + Fira Sans (body)
 - **Depth**: Borders + minimal shadows (elevation scale)
-- **Responsive**: Mobile-first, sidebar collapses on small screens
+- **Responsive**: Mobile-first, sidebar collapses en pantallas pequeñas
 - **Iconos**: Lucide Vue Next (ya instalado)
+
+### Comunicados — sort rule
+```ts
+// Urgentes primero, dentro de cada grupo más recientes primero
+(a, b) => {
+  if (a.tipo === 'urgente' && b.tipo !== 'urgente') return -1
+  if (a.tipo !== 'urgente' && b.tipo === 'urgente') return 1
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+}
+```
+Se aplica tanto en `fetchComunicados` como en `crearComunicado`.
+
+### Newspaper layout (Comunicados)
+```
+lista[0] → hero      (lg:col-span-2 cuando hay secondary, full-width si no)
+lista[1] → secondary (lg:col-span-1)
+lista[2+] → grid 3-col
+```
+- El grid portada recibe `lg:grid-cols-3` SOLO cuando `secondary !== null`
+- Items solos en su fila del grid resto usan `restoItemClass(index)`:
+  - Último en fila de 3 → `lg:col-span-3`
+  - Último en fila de 2 (sm) → `sm:col-span-2`
 
 ### State Management
 - **Pinia stores** por dominio — Composition API style (`defineStore(() => { ... })`)
 - Getters filtrados usan `computed(() => (param) => filter...)` — se llaman SIN `.value` desde el template
-- **Backend real** — los stores consumen `src/services/*.service.ts` vía axios. Los mocks en `src/data/mocks/` ya no se usan en producción.
+- Los stores consumen `src/services/*.service.ts` vía axios → MSW lo intercepta en dev
 
 ### Integración con API (patrones críticos)
 
 #### Normalización de respuestas
-El backend Laravel usa snake_case con prefijos de tabla (ej: `id_sedes`, `id_canchas`). Cada service tiene funciones `normalize*` que mapean al modelo interno del frontend.
+El backend Laravel usa snake_case con prefijos de tabla (`id_sedes`, `id_canchas`). Cada service tiene `normalize*` que mapea al modelo interno.
 
 ```ts
-// sedes.service.ts — el backend devuelve id_sedes, tipo_superficie, estado
 function normalizeSede(raw: any): Sede {
   return {
     id:      raw.id_sedes  ?? raw.id,
     activo:  raw.estado    ?? raw.activo ?? 1,
     canchas: (raw.canchas ?? []).map(normalizeCancha),
-    // ...
   }
 }
 ```
 
 #### Canchas incluidas solo en getById
-`GET /api/torneos/sedes` (lista) NO incluye canchas. Solo `GET /api/torneos/sedes/:id` las trae.
-Por eso `fetchSedes` en el store usa `Promise.all` + `getById` para enriquecer cada sede:
-
+`GET /api/torneos/sedes` (lista) NO incluye canchas. `fetchSedes` usa `Promise.all` + `getById`:
 ```ts
 const lista = await sedesService.getAll()
 sedes.value = await Promise.all(lista.map(s => sedesService.getById(s.id)))
 ```
 
-#### Manejo de errores del API en stores
-Si el backend responde `{ status: 'error', message: '...' }` con HTTP 200, hay que comprobarlo explícitamente y lanzar un Error — axios no lo detecta como error automáticamente:
-
+#### Manejo de errores del API
+Si el backend responde `{ status: 'error', message: '...' }` con HTTP 200, verificar explícitamente:
 ```ts
 const body = res.data
 if (body.status === 'error') throw new Error(body.message)
 ```
 
 #### Formularios con errores del API
-Los formularios deben ser `async`, awaitar la acción del store, y mostrar el mensaje de error dentro del modal si falla:
-
 ```ts
 const saveSede = async () => {
-  if (!validateSedeForm()) return
   saveError.value = ''
   try {
     await store.crearSede({ ... })
@@ -284,12 +447,8 @@ const equipos = equiposStore.equiposPorTorneo(selectedTorneoId.value)
 #### AppDataTable con slots
 ```vue
 <AppDataTable :columns="columns" :rows="rows" row-key="id">
-  <template #cell-nombre="{ row, value }">
-    <!-- custom cell -->
-  </template>
-  <template #empty>
-    <!-- custom empty state -->
-  </template>
+  <template #cell-nombre="{ row, value }"><!-- custom cell --></template>
+  <template #empty><!-- custom empty state --></template>
 </AppDataTable>
 ```
 
@@ -304,7 +463,7 @@ const equipos = equiposStore.equiposPorTorneo(selectedTorneoId.value)
 </div>
 ```
 
-#### Avatares con iniciales (patrón en Plantilla/MiEquipo)
+#### Avatares con iniciales
 ```ts
 const avatarColors = [
   'bg-matchx-accent-green/20 text-matchx-accent-green',
@@ -319,11 +478,11 @@ const initiales = (nombre: string, apellido: string) =>
 
 ---
 
-## Offline Architecture (Hito 3 — Implementado)
+## Offline Architecture (Hito 3)
 - **IndexedDB** para cache local de eventos del delegado (`dbAdd/dbGetAll/dbDelete`)
 - **localStorage** para sesión + datos simples (`matchx_session`)
-- **Cola de sync manual** — delegado registra eventos sin conexión, se sincronizan al reconectar
-- **Service Worker** (PWA) — pendiente de implementar
+- **Cola de sync manual** — delegado registra eventos offline, se sincronizan al reconectar
+- **Service Worker** (PWA) — pendiente
 
 ---
 
@@ -331,14 +490,16 @@ const initiales = (nombre: string, apellido: string) =>
 
 ### 1. New View
 ```ts
-// 1. Create src/views/your-feature/YourView.vue
-// 2. Add route to src/router/index.ts with:
-//    - path, name, component
-//    - meta: { requiereRol: ['admin_torneo'], title: 'Your Title' }
-// 3. Create store if needed: src/stores/yourFeature.ts
-// 4. Add link to AppLayout.vue navigation
-// 5. Add destination to LoginView.vue roleDestinations map
-// 6. Update dashboardRoute in AppLayout.vue if needed
+// 1. Crear src/views/role-area/YourView.vue
+// 2. Agregar ruta en src/router/index.ts:
+//    meta: { requiereRol: ['admin_torneo'], title: 'Título' }
+// 3. Crear store si necesario: src/stores/yourFeature.ts
+// 4. Crear service: src/services/yourFeature.service.ts
+// 5. Crear handler MSW: src/mocks/handlers/yourFeature.handlers.ts
+// 6. Agregar handler en src/mocks/handlers/index.ts
+// 7. Agregar seed data en src/data/mocks/yourFeature.json
+// 8. Agregar al db en src/mocks/db/index.ts
+// 9. Agregar al nav en src/layouts/AppLayout.vue
 ```
 
 ### 2. New Store
@@ -348,9 +509,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useYourFeatureStore = defineStore('yourFeature', () => {
-  const state = ref([])
-  const getData = async () => { /* ... */ }
-  return { state, getData }
+  const items = ref<Item[]>([])
+  const loading = ref(false)
+  const fetchItems = async () => {
+    loading.value = true
+    try { items.value = await yourService.getAll() }
+    finally { loading.value = false }
+  }
+  return { items, loading, fetchItems }
 })
 ```
 
@@ -359,49 +525,29 @@ export const useYourFeatureStore = defineStore('yourFeature', () => {
 // src/services/yourEntity.service.ts
 import api from './api'
 
-function normalizeEntity(raw: any): Entity {
-  return {
-    id:   raw.id_entity ?? raw.id,
-    // mapear todos los campos del backend al modelo interno
-  }
+function normalize(raw: any): Entity {
+  return { id: raw.id_entity ?? raw.id, /* ... */ }
 }
 
 export const yourEntityService = {
-  getAll: async () => {
-    const { data } = await api.get('/api/your-entity')
-    return (data.data ?? data).map(normalizeEntity)
-  },
-  create: (payload: Partial<Entity>) => api.post('/api/your-entity', payload),
-  update: (id: number, payload: Partial<Entity>) => api.put(`/api/your-entity/${id}`, payload),
+  getAll:  async ()               => { const { data } = await api.get('/api/entity'); return (data.data ?? data).map(normalize) },
+  create:  async (p: Payload)     => { const { data } = await api.post('/api/entity', p); return normalize(data.data ?? data) },
+  update:  async (id: number, p)  => { const { data } = await api.put(`/api/entity/${id}`, p); return normalize(data.data ?? data) },
+  delete:  async (id: number)     => api.delete(`/api/entity/${id}`),
 }
 ```
-
-### 4. New Component
-- **UI atoms** → `src/components/ui/AppButton.vue`, etc.
-- **Feature components** → `src/components/<feature>/MyComponent.vue`
-- Use `<script setup lang="ts">` + TypeScript
-- Props/emits explicitly typed with `defineProps`, `defineEmits`
 
 ---
 
 ## Naming Conventions
 
-### Files
 - **Stores**: `src/stores/featureName.ts` → `useFeatureNameStore`
+- **Services**: `src/services/featureName.service.ts`
 - **Composables**: `src/composables/useFeatureName.ts`
-- **Components**: `src/components/ui/AppButton.vue` (UI atoms con prefijo App)
+- **Components**: `src/components/ui/AppButton.vue` (UI atoms con prefijo `App`)
 - **Views**: `src/views/role-area/ViewName.vue`
-- **Layouts**: `src/layouts/LayoutName.vue`
-
-### TypeScript
-- Interfaces: `interface Torneo { ... }`
-- Types: `type EstadoTorneo = 'programado' | 'en_curso' | 'finalizado' | 'cancelado'`
-- Enums: evitar, usar type unions
-
-### CSS
-- Dark mode → usar Tailwind classes: `bg-matchx-bg-base`, `text-matchx-accent-green`
-- Custom colors en `tailwind.config.js` theme extend
-- Scoped styles solo para comportamiento específico del componente
+- **TypeScript**: interfaces > enums. Preferir type unions (`type Estado = 'a' | 'b'`).
+- **CSS**: usar tokens `bg-matchx-bg-base`, `text-matchx-accent-green`. Sin hex hardcodeados.
 
 ---
 
@@ -409,20 +555,19 @@ export const yourEntityService = {
 
 ### Before Coding
 1. **Load skills** — `interface-design`, `vue-best-practices`, `ui-ux-pro-max`
-2. **Explore domain** — Leer el service y el store del dominio antes de proponer cambios
-3. **Verificar el contrato de la API** — el backend puede devolver campos con prefijo (`id_sedes`) o estructura anidada (`ubicacion.ciudad`)
+2. **Read the service + store** del dominio antes de proponer cambios
+3. **Verificar el handler MSW** — si no existe, crearlo antes de la vista
 
 ### During Coding
-1. **Composition API** + `<script setup>` es el estándar
+1. **Composition API** + `<script setup lang="ts">` es el estándar
 2. **Props down, events up** — flujo de datos explícito
 3. **One responsibility per component** — dividir si tiene 3+ secciones
-4. **No hardcoded values** — usar composables o stores
 
 ### Before Completing
-1. **Verificar TypeScript** — no usar tipos genéricos sin necesidad
-2. **Test all routes** — especialmente acceso por rol
+1. `npm run build` — debe pasar sin errores
+2. **Verificar rutas** — que la ruta exista en router, que el nav apunte correctamente
 3. **Check dark mode** — consistencia visual
-4. **Test on mobile** — viewport mínimo 375px
+4. **Test mobile** — viewport mínimo 375px
 
 ---
 
@@ -435,147 +580,48 @@ export const yourEntityService = {
 | `matchx-bg-surface` | #1a2533 | Cards, panels |
 | `matchx-bg-elevated` | #243040 | Modals, dropdowns |
 | `matchx-accent-green` | #00d4aa | Primary actions |
-| `matchx-accent-orange` | #ff6b35 | Alerts, goles |
+| `matchx-accent-orange` | #ff6b35 | Alerts, urgentes |
 | `matchx-text-primary` | #f0f4f8 | Main text |
 | `matchx-text-secondary` | #b8c5d6 | Secondary text |
 | `matchx-text-muted` | #8899aa | Disabled, metadata |
 | `matchx-border-base` | #2a3a4a | Standard borders |
 
 ### Typography
-- **Heading font**: Fira Code (monospace, technical feel)
-- **Body font**: Fira Sans (readable, friendly)
-- **Base size**: 16px (mobile), 18px (desktop)
-- **Line height**: 1.5-1.75 for body text
+- **Heading**: Fira Code (monospace, technical feel)
+- **Body**: Fira Sans (readable, friendly)
+- **Line height**: 1.5–1.75 body text
 
-### Spacing (base unit: 4px)
-- `xs`: 4px | `sm`: 8px | `md`: 12px | `lg`: 16px | `xl`: 24px | `2xl`: 32px | `3xl`: 48px
+### Spacing (base 4px)
+`xs`:4 | `sm`:8 | `md`:12 | `lg`:16 | `xl`:24 | `2xl`:32 | `3xl`:48
 
 ### Border Radius
-- `xs`: 4px | `sm`: 6px | `md`: 8px | `lg`: 12px | `xl`: 16px
+`xs`:4 | `sm`:6 | `md`:8 | `lg`:12 | `xl`:16
 
 ---
 
-## Hitos
+## Roadmap / Pendientes
 
-### Hito 0 ✅ COMPLETO
-- [x] Vite + Vue 3 + TypeScript setup
-- [x] Tailwind dark mode configurado
-- [x] 4 layouts creados
-- [x] Vue Router con auth guards
-- [x] Pinia auth store
-- [x] Login real contra API + flujo select_profile
-- [x] Capa de servicios axios con interceptors JWT
-
-### Hito 1 ✅ COMPLETO — Admin Sistema
-- [x] DashboardView con métricas
-- [x] UsuariosView (CRUD completo)
-- [x] ModalidadesView (F5, F7, F11)
-- [x] SedesView + gestión de canchas (modal dual)
-- [x] ConfiguracionView (key-value)
-
-### Hito 2 ✅ COMPLETO — Admin Torneo
-- [x] TorneoDashboardView (métricas + iconos)
-- [x] TorneosView (CRUD + skeleton + empty state)
-- [x] InscripcionesView (equipos + barra de progreso cupos)
-- [x] PlantillaView (jugadores + avatares iniciales + búsqueda)
-- [x] PartidosView (calendario + escudos equipos)
-- [x] PosicionesView (AppDataTable + medallero Trophy/Medal)
-- [x] Mejoras visuales: iconos Lucide, empty states, skeleton loaders
-
-### Hito 3 ✅ COMPLETO — Delegado Mesa de Control
-- [x] EnVivoView (mobile-first, 6 botones acción, timeline eventos)
-- [x] Cronómetro widget (start/pause/reset) con indicador pulsante
-- [x] Marcador en tiempo real (golesLocal / golesVisitante reactivos)
-- [x] Cola offline con IndexedDB (dbAdd/dbGetAll/dbDelete + sync automático)
-- [x] DelegadoLayout (optimizado teléfono en cancha, indicador online/offline)
-- [x] MisPartidosView con botón "Mesa de Control" por partido
-- [x] Rutas: /delegado/partidos (AppLayout) + /delegado/en-vivo/:id (DelegadoLayout)
-
-### Hito 4 ✅ COMPLETO — Admin Sede
-- [x] SedeDashboardView (métricas sede)
-- [x] CanchasView (CRUD + toggle disponibilidad con switch visual)
-- [x] CalendarioView (partidos por fecha y cancha)
-
-### Hito 5 ✅ COMPLETO — Árbitro y Capitán
-- [x] ArbitroDashboardView (stats + próximos + últimos resultados)
-- [x] MisPartidosView (filtrable por estado, agrupado por jornada)
-- [x] CapitanDashboardView (header equipo + stats + fixture mini)
-- [x] MiEquipoView (plantilla con avatares, búsqueda, resumen posición)
-- [x] FixtureView (partidos filtrable, equipo propio resaltado en verde)
-
-### Hito 6 ✅ COMPLETO — Vista Pública
-- [x] Tabla de posiciones pública (sin login)
-- [x] Fixture y resultados
-- [x] Información de sedes
-- [x] PublicLayout
-
-### Integración Backend ⚠️ EN CURSO
-- [x] Auth: login real + select_profile + logout async
-- [x] Sedes: CRUD + canchas (getById para traer canchas incluidas)
-- [ ] Torneos: conectar store al service real
-- [ ] Equipos: conectar store al service real
-- [ ] Jugadores: conectar store al service real
-- [ ] Partidos: conectar store al service real
-- [ ] Modalidades: conectar store al service real
-- [ ] Usuarios: conectar store al service real
-
-### Bugs Resueltos ✅
-- **Sedes — campos faltantes en create**: `ciudad`, `departamento`, `capacidad` no se enviaban al API (`stores/sedes.ts`)
-- **Sedes — error del API ignorado**: el store hacía push local aunque el backend respondiera `status: error` (`stores/sedes.ts`)
-- **Sedes — modal cerraba sin await**: `saveSede` en `SedesView.vue` no era async, cerraba el modal antes de confirmar éxito
-- **Sedes — canchas no visibles**: `fetchSedes` usaba solo `getAll()` (sin canchas); corregido con `Promise.all + getById` (`stores/sedes.ts`)
-- **Logout doble clic**: `handleLogout` en `AppLayout.vue` no awaita `authStore.logout()`, el guard redirigía al dashboard antes de que `user.value = null`
-
-### Later
-- [ ] PWA + Service Worker
-- [ ] Reports PDF (jsPDF + html2canvas)
-- [ ] WebSocket para tiempo real
-- [ ] Tests (Vitest)
+- [ ] **Agregar MSW handlers faltantes**: `sanciones`, `pagos`, `multas-equipo`, `asistencias`
+- [ ] **Rutear TesoreriaView**: agregar `/torneo/tesoreria` en router + nav
+- [ ] **Conectar stores al backend real**: Torneos, Equipos, Jugadores, Partidos, etc.
+- [ ] **PWA + Service Worker**
+- [ ] **Reports PDF** (jsPDF + html2canvas)
+- [ ] **WebSocket** para tiempo real en EnVivoView
+- [ ] **Light mode**
+- [ ] **Tests** (Vitest)
 
 ---
 
 ## Resources
 
-- **API Base URL**: configurar en `.env` → `VITE_API_BASE_URL=http://...`
-- **Mock data (referencia)**: `src/data/mocks/*.json` — ya no se usan en producción
-- **Schema reference**: `explorador_tablas_torneos.html` (abrir en browser)
+- **API Base URL**: `.env` → `VITE_API_BASE_URL=http://...`
+- **Schema reference**: `explorador_tablas_torneos.html`
 - **DB Model**: `sistema_torneos.mwb` (MySQL Workbench)
-- **Design specs**: `.claude/skills/ui-ux-pro-max/` (design system database)
+- **Design specs**: `.claude/skills/ui-ux-pro-max/`
 - **Skills**: `interface-design`, `vue-best-practices`, `ui-ux-pro-max`
 
 ---
 
-## Commands Reference
-
-```bash
-# Development
-npm run dev              # Start dev server on http://localhost:5173
-
-# Production
-npm run build            # Build to dist/
-npm run preview          # Preview built version locally
-
-# Utils (TODO)
-npm run test             # Run tests (not yet configured)
-npm run lint             # Check code quality (not yet configured)
-npm run type-check       # TypeScript check (not yet configured)
-```
-
----
-
-## Notes
-
-1. **Backend real conectado** — Laravel REST API via axios. Configurar `VITE_API_BASE_URL` en `.env`.
-2. **Normalización obligatoria** — El backend usa `id_sedes`, `id_canchas`, `estado` etc. Siempre pasar por `normalize*` en el service antes de guardar en el store.
-3. **Campos lista vs detalle** — Algunos endpoints de lista no retornan relaciones (ej: canchas). Usar `getById` cuando se necesiten datos completos.
-4. **Session Storage** — Auth state lives in localStorage key `matchx_session`. Token JWT adjuntado automáticamente por interceptor en `api.ts`.
-5. **Dark Mode Default** — All interfaces designed for dark mode, light mode TODO.
-6. **Mobile First** — Delegado views optimized for 360px+ phones on cancha.
-7. **Offline Critical** — Delegado puede perder conexión; eventos se guardan en IndexedDB y sincronizan al reconectar.
-
----
-
-**Last Updated**: 2026-04-06
-**Completed**: Hitos 0–6. Backend conectado en Auth + Sedes.
-**Next Focus**: Conectar stores restantes al backend (Torneos, Equipos, Jugadores, Partidos, Modalidades, Usuarios)
+**Last Updated**: 2026-04-16
+**Completed**: Hitos 0–7. MSW completo (excepto sanciones/pagos/multas). Auth + Sedes en backend real.
 **Skills Used**: interface-design, vue-best-practices, ui-ux-pro-max

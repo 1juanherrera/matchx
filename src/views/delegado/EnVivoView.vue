@@ -354,7 +354,7 @@ const formatHoraCorta = (iso: string) =>
                    bg-matchx-accent-green/10 border-2 border-matchx-accent-green/40
                    text-matchx-accent-green font-bold cursor-pointer
                    transition-all duration-150 active:scale-95 active:bg-matchx-accent-green/20 min-h-[80px]">
-            <Target class="w-7 h-7" :stroke-width="2" />
+            <v-icon name="co-football" scale="0.9" />
             <span class="text-sm text-center leading-tight">Gol<br>Local</span>
           </button>
 
@@ -363,7 +363,7 @@ const formatHoraCorta = (iso: string) =>
                    bg-matchx-accent-orange/10 border-2 border-matchx-accent-orange/40
                    text-matchx-accent-orange font-bold cursor-pointer
                    transition-all duration-150 active:scale-95 active:bg-matchx-accent-orange/20 min-h-[80px]">
-            <Target class="w-7 h-7" :stroke-width="2" />
+            <v-icon name="co-football" scale="0.9" />
             <span class="text-sm text-center leading-tight">Gol<br>Visitante</span>
           </button>
 
@@ -803,7 +803,7 @@ const formatHoraCorta = (iso: string) =>
       <!-- Goles -->
       <div v-if="goles.length > 0">
         <div class="flex items-center gap-2 mb-2.5">
-          <Target class="w-4 h-4 text-matchx-text-secondary" :stroke-width="2" />
+          <v-icon class="w-4 h-4 text-matchx-text-secondary" name="co-football" scale="0.9" />
           <p class="text-sm font-bold text-matchx-text-primary">Goles ({{ goles.length }})</p>
         </div>
         <div class="space-y-1.5">
@@ -811,7 +811,7 @@ const formatHoraCorta = (iso: string) =>
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl border text-xs"
                :class="colorClasses[colorEvento(ev.tipo)]">
             <span class="font-black font-mono w-7 text-right shrink-0">{{ ev.minuto }}'</span>
-            <Target class="w-3.5 h-3.5 shrink-0" :stroke-width="2" />
+            <v-icon name="co-football" scale="0.9" />
             <span class="font-semibold flex-1 truncate">{{ ev.jugador_nombre ?? '—' }}</span>
             <span class="opacity-60 shrink-0 text-[10px]">
               {{ ev.tipo === 'gol_local' ? equipoLocal?.nombre : equipoVisitante?.nombre }}

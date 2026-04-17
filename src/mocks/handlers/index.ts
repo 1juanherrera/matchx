@@ -14,6 +14,11 @@ import { usuariosHandlers }      from './usuarios.handlers'
 import { eventosHandlers }       from './eventos.handlers'
 import { inscripcionesHandlers } from './inscripciones.handlers'
 import { solicitudesHandlers }   from './solicitudes.handlers'
+import { comunicadosHandlers }   from './comunicados.handlers'
+import { sancionesHandlers }     from './sanciones.handlers'
+import { pagosHandlers }         from './pagos.handlers'
+import { multasEquipoHandlers }  from './multas-equipo.handlers'
+import { asistenciasHandlers }   from './asistencias.handlers'
 
 export const handlers = [
   ...authHandlers,
@@ -27,4 +32,9 @@ export const handlers = [
   ...eventosHandlers,
   ...inscripcionesHandlers,
   ...solicitudesHandlers,
+  ...comunicadosHandlers,
+  ...sancionesHandlers,
+  ...pagosHandlers,
+  ...multasEquipoHandlers,
+  ...asistenciasHandlers,
 ]

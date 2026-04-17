@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1, "equipo_id": 1, "jugador_id": 2,
+    "motivo": "Inasistencia al entrenamiento sin justificación",
+    "valor": 30000, "estado": "pendiente",
+    "creado_por": 5, "creado_en": "2025-01-21T08:00:00Z"
+  },
+  {
+    "id": 2, "equipo_id": 1, "jugador_id": 5,
+    "motivo": "Llegó tarde al partido sin avisar",
+    "valor": 15000, "estado": "pendiente",
+    "creado_por": 5, "creado_en": "2025-01-22T09:30:00Z"
+  },
+  {
+    "id": 3, "equipo_id": 1, "jugador_id": 3,
+    "motivo": "No entregó el uniforme después del partido",
+    "valor": 10000, "estado": "pagada",
+    "creado_por": 5, "creado_en": "2025-01-15T10:00:00Z"
+  },
+  {
+    "id": 4, "equipo_id": 1, "jugador_id": 1,
+    "motivo": "Ausencia sin avisar a la reunión de equipo",
+    "valor": 20000, "estado": "condonada",
+    "creado_por": 5, "creado_en": "2025-01-10T08:00:00Z"
+  }
+]

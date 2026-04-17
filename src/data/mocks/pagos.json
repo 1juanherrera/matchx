@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1, "torneo_id": 1, "equipo_id": 1, "jugador_id": 2,
+    "tipo_pago": "tarjeta_amarilla", "valor": 20000,
+    "estado": "pendiente", "recibido_por": null, "metodo_pago": null, "numero_recibo": null,
+    "creado_en": "2025-01-18T14:00:00Z", "pagado_en": null
+  },
+  {
+    "id": 2, "torneo_id": 1, "equipo_id": 1, "jugador_id": 4,
+    "tipo_pago": "tarjeta_roja", "valor": 50000,
+    "estado": "pendiente", "recibido_por": null, "metodo_pago": null, "numero_recibo": null,
+    "creado_en": "2025-01-20T15:00:00Z", "pagado_en": null
+  },
+  {
+    "id": 3, "torneo_id": 1, "equipo_id": 2, "jugador_id": 9,
+    "tipo_pago": "tarjeta_amarilla", "valor": 20000,
+    "estado": "pendiente", "recibido_por": null, "metodo_pago": null, "numero_recibo": null,
+    "creado_en": "2025-01-22T10:00:00Z", "pagado_en": null
+  },
+  {
+    "id": 4, "torneo_id": 1, "equipo_id": 2, "jugador_id": 7,
+    "tipo_pago": "tarjeta_roja", "valor": 50000,
+    "estado": "pagado", "recibido_por": 2, "metodo_pago": "efectivo", "numero_recibo": "REC-007",
+    "creado_en": "2025-01-10T09:00:00Z", "pagado_en": "2025-01-12T11:00:00Z"
+  },
+  {
+    "id": 5, "torneo_id": 1, "equipo_id": 3, "jugador_id": 12,
+    "tipo_pago": "tarjeta_amarilla", "valor": 20000,
+    "estado": "condonado", "recibido_por": 2, "metodo_pago": null, "numero_recibo": null,
+    "creado_en": "2025-01-24T11:00:00Z", "pagado_en": null
+  }
+]

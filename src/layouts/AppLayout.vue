@@ -6,7 +6,7 @@ import { useTheme } from '@/composables/useTheme'
 import {
   LayoutDashboard, Users, Layers, Building2, Settings,
   Trophy, ClipboardList, UserCheck, CircleDot, BarChart3,
-  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox, ShieldOff, Coins, Target,
+  Calendar, CalendarRange, Flag, Menu, Bell, LogOut, Sun, Moon, X, Inbox, ShieldOff, Coins, Target, Megaphone, Wallet,
 } from 'lucide-vue-next'
 
 const router    = useRouter()
@@ -76,10 +76,11 @@ const navigationItems = computed(() => {
       { label: 'Inscripciones', icon: ClipboardList, route: '/torneo/inscripciones' },
       { label: 'Plantilla',     icon: UserCheck,     route: '/torneo/plantilla' },
       { label: 'Partidos',      icon: CircleDot,     route: '/torneo/partidos' },
-      { label: 'Posiciones',    icon: BarChart3,     route: '/torneo/posiciones' },
-      { label: 'Goleadores',    icon: Target,        route: '/torneo/goleadores' },
+      { label: 'Estadísticas',  icon: BarChart3,     route: '/torneo/estadisticas' },
       { label: 'Solicitudes',   icon: Inbox,         route: '/torneo/solicitudes' },
       { label: 'Sanciones',     icon: Coins,         route: '/torneo/sanciones' },
+      { label: 'Tesorería',     icon: Wallet,        route: '/torneo/tesoreria' },
+      { label: 'Comunicados',   icon: Megaphone,     route: '/torneo/comunicados' },
     ]
   }
 
@@ -92,6 +93,7 @@ const navigationItems = computed(() => {
       ...baseItems,
       { label: 'Canchas',    icon: Building2, route: '/sede/canchas' },
       { label: 'Calendario', icon: Calendar,  route: '/sede/calendario' },
+      { label: 'Tesorería',  icon: Wallet,    route: '/sede/tesoreria' },
     ]
   }
 
@@ -113,6 +115,7 @@ const navigationItems = computed(() => {
     if (authStore.isCapitan) {
       items.push({ label: 'Sanciones', icon: ShieldOff, route: '/capitan/sanciones' })
     }
+    items.push({ label: 'Comunicados', icon: Megaphone, route: '/capitan/comunicados' })
     return items
   }
 

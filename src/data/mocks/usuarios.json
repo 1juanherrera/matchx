@@ -13,7 +13,7 @@
   },
   {
     "id": 2,
-    "nombre": "Ana Admin Torneo",
+    "nombre": "Ana",
     "correo": "ana@matchx.com",
     "contrasena_hash": "hash_mock_2",
     "telefono": "+573009876543",

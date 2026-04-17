@@ -16,6 +16,7 @@ import AppBadge from '@/components/ui/AppBadge.vue'
 import {
   Wallet, TrendingUp, Clock, ShieldCheck, CheckCircle, AlertCircle,
   CreditCard, Banknote, Eye, X, AlertTriangle, ReceiptText,
+  Smartphone, Landmark, Globe, Zap, CircleDollarSign, RefreshCw,
 } from 'lucide-vue-next'
 
 const torneosStore = useTorneosStore()
@@ -35,16 +36,16 @@ const formPago = ref<{ pago_metodo: MetodoPagoMatricula | null; pago_referencia:
   pago_metodo: null, pago_referencia: '',
 })
 
-const metodosPago: { value: MetodoPagoMatricula; label: string; emoji: string; color: string }[] = [
-  { value: 'efectivo',    label: 'Efectivo',    emoji: '💵', color: 'border-matchx-accent-green/40 bg-matchx-accent-green/5 text-matchx-accent-green' },
-  { value: 'nequi',       label: 'Nequi',       emoji: '💜', color: 'border-purple-500/40 bg-purple-500/5 text-purple-400' },
-  { value: 'bancolombia', label: 'Bancolombia', emoji: '🏦', color: 'border-yellow-500/40 bg-yellow-500/5 text-yellow-400' },
-  { value: 'pse',         label: 'PSE',         emoji: '🔒', color: 'border-blue-500/40 bg-blue-500/5 text-blue-400' },
-  { value: 'daviplata',   label: 'Daviplata',   emoji: '❤️', color: 'border-red-500/40 bg-red-500/5 text-red-400' },
+const metodosPago: { value: MetodoPagoMatricula; label: string; icon: any; color: string }[] = [
+  { value: 'efectivo',    label: 'Efectivo',    icon: Banknote,    color: 'border-matchx-accent-green/40 bg-matchx-accent-green/5 text-matchx-accent-green' },
+  { value: 'nequi',       label: 'Transferencia', icon: Smartphone,  color: 'border-purple-500/40 bg-purple-500/5 text-purple-400' },
+  { value: 'bancolombia', label: 'Bancolombia', icon: Landmark,    color: 'border-yellow-500/40 bg-yellow-500/5 text-yellow-400' },
+  { value: 'pse',         label: 'PSE',         icon: Globe,       color: 'border-blue-500/40 bg-blue-500/5 text-blue-400' },
+  { value: 'daviplata',   label: 'Daviplata',   icon: Zap,         color: 'border-red-500/40 bg-red-500/5 text-red-400' },
 ]
 
 const metodoLabel: Record<MetodoPagoMatricula, string> = {
-  efectivo: 'Efectivo', nequi: 'Nequi', bancolombia: 'Bancolombia', pse: 'PSE', daviplata: 'Daviplata',
+  efectivo: 'Efectivo', nequi: 'Transferencia', bancolombia: 'Bancolombia', pse: 'PSE', daviplata: 'Daviplata',
 }
 
 const formatCOP = (v: number) =>
@@ -95,7 +96,7 @@ const breakdownMetodos = computed(() => {
   return Object.entries(m).map(([metodo, count]) => ({
     metodo, count,
     total: count * valorMatricula.value,
-    emoji: metodosPago.find(mp => mp.value === metodo)?.emoji ?? '💰',
+    icon:  metodosPago.find(mp => mp.value === metodo)?.icon ?? CircleDollarSign,
     label: metodoLabel[metodo as MetodoPagoMatricula] ?? metodo,
   }))
 })
@@ -122,6 +123,19 @@ const inscFiltradas = computed(() => {
   if (filtro.value === 'todos') return activas.value
   return activas.value.filter(i => i.pago_estado === filtro.value)
 })
+
+// ── Generador de referencia ────────────────────────────────────────────────
+const prefijos: Record<string, string> = {
+  efectivo: 'EFE', nequi: 'TRF', bancolombia: 'BAN', pse: 'PSE', daviplata: 'DVP',
+}
+
+const generarReferencia = () => {
+  const metodo  = formPago.value.pago_metodo ?? 'efectivo'
+  const prefijo = prefijos[metodo] ?? 'MX'
+  const fecha   = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const seq     = String(Math.floor(Math.random() * 9000) + 1000)
+  formPago.value.pago_referencia = `${prefijo}-${fecha}-${seq}`
+}
 
 // ── Acciones ────────────────────────────────────────────────────────────────
 const openModalPago = (insc: Inscripcion) => {
@@ -269,10 +283,10 @@ const eximirPago = async (insc: Inscripcion) => {
           v-for="b in breakdownMetodos" :key="b.metodo"
           class="flex items-center gap-2 px-3 py-2 rounded-lg bg-matchx-bg-surface border border-matchx-border-base text-sm"
         >
-          <span class="text-base leading-none">{{ b.emoji }}</span>
+          <component :is="b.icon" class="w-4 h-4 shrink-0" :stroke-width="1.75" />
           <span class="font-semibold text-matchx-text-primary">{{ b.label }}</span>
           <span class="text-matchx-text-muted">{{ b.count }} cobros</span>
-          <span class="font-mono text-matchx-accent-green text-xs">{{ formatCOP(b.total) }}</span>
+          <span class="text-matchx-accent-green text-xs">{{ formatCOP(b.total) }}</span>
         </div>
       </div>
     </div>
@@ -352,47 +366,36 @@ const eximirPago = async (insc: Inscripcion) => {
             </p>
           </div>
 
-          <!-- Estado de pago -->
-          <div class="hidden sm:flex items-center gap-2 shrink-0">
-            <!-- En revisión: mostrar referencia enviada -->
+          <!-- Estado de pago — solo el badge, sin texto secundario, altura siempre igual -->
+          <div class="hidden sm:flex items-center justify-center w-36 shrink-0">
             <template v-if="insc.pago_estado === 'en_revision'">
-              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+              <div class="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
                 <Eye class="w-3.5 h-3.5 text-yellow-400 shrink-0" :stroke-width="2" />
                 <span class="text-xs font-semibold text-yellow-400">En revisión</span>
               </div>
-              <div v-if="insc.pago_referencia" class="text-xs text-matchx-text-muted font-mono">
-                {{ insc.pago_referencia }}
-              </div>
             </template>
-
             <template v-else-if="insc.pago_estado === 'pagado'">
-              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-matchx-accent-green/10 border border-matchx-accent-green/30">
+              <div class="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg bg-matchx-accent-green/10 border border-matchx-accent-green/30">
                 <CheckCircle class="w-3.5 h-3.5 text-matchx-accent-green shrink-0" :stroke-width="2" />
                 <span class="text-xs font-semibold text-matchx-accent-green">Pagado</span>
-                <span v-if="insc.pago_metodo" class="text-xs text-matchx-text-muted">· {{ metodoLabel[insc.pago_metodo] }}</span>
               </div>
-              <span v-if="valorMatricula > 0" class="text-xs font-mono text-matchx-text-secondary">{{ formatCOP(valorMatricula) }}</span>
             </template>
-
             <template v-else-if="insc.pago_estado === 'exento'">
-              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <div class="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/30">
                 <ShieldCheck class="w-3.5 h-3.5 text-blue-400 shrink-0" :stroke-width="2" />
                 <span class="text-xs font-semibold text-blue-400">Exento</span>
               </div>
             </template>
-
             <template v-else>
-              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-matchx-accent-orange/10 border border-matchx-accent-orange/30">
+              <div class="w-full flex items-center justify-center gap-1.5 py-1 rounded-lg bg-matchx-accent-orange/10 border border-matchx-accent-orange/30">
                 <Banknote class="w-3.5 h-3.5 text-matchx-accent-orange shrink-0" :stroke-width="2" />
                 <span class="text-xs font-semibold text-matchx-accent-orange">Sin pagar</span>
-                <span v-if="valorMatricula > 0" class="text-xs text-matchx-text-muted">· {{ formatCOP(valorMatricula) }}</span>
               </div>
             </template>
           </div>
 
-          <!-- Acciones -->
-          <div class="flex items-center gap-1.5 shrink-0 ml-2">
-            <!-- En revisión: Confirmar o Rechazar -->
+          <!-- Acciones — ancho fijo para que no empujen el badge -->
+          <div class="flex items-center justify-end gap-1.5 w-28 shrink-0">
             <template v-if="insc.pago_estado === 'en_revision'">
               <button
                 @click="openModalPago(insc)"
@@ -403,15 +406,14 @@ const eximirPago = async (insc: Inscripcion) => {
               </button>
               <button
                 @click="rechazarReferencia(insc)"
-                class="text-xs font-semibold px-2 py-1.5 rounded-lg text-matchx-accent-orange
-                       border border-matchx-accent-orange/30 hover:bg-matchx-accent-orange/10 transition-colors cursor-pointer"
+                class="p-1.5 rounded-lg text-matchx-accent-orange border border-matchx-accent-orange/30
+                       hover:bg-matchx-accent-orange/10 transition-colors cursor-pointer"
                 title="Rechazar comprobante"
               >
                 <X class="w-3.5 h-3.5" :stroke-width="2.5" />
               </button>
             </template>
 
-            <!-- Sin pagar: Registrar pago o Eximir -->
             <template v-else-if="insc.pago_estado === 'pendiente'">
               <button
                 @click="openModalPago(insc)"
@@ -424,17 +426,16 @@ const eximirPago = async (insc: Inscripcion) => {
                 @click="eximirPago(insc)"
                 class="text-xs font-medium px-2 py-1.5 rounded-lg text-matchx-text-muted
                        hover:text-matchx-text-secondary hover:bg-matchx-bg-elevated transition-colors cursor-pointer"
-                title="Eximir de pago"
               >
                 Eximir
               </button>
             </template>
 
-            <!-- Pagado: ver recibo -->
             <template v-else-if="insc.pago_estado === 'pagado'">
               <button
                 @click="openModalPago(insc)"
-                class="p-1.5 rounded-lg text-matchx-text-muted hover:text-matchx-text-secondary hover:bg-matchx-bg-elevated transition-colors cursor-pointer"
+                class="p-1.5 rounded-lg text-matchx-text-muted hover:text-matchx-text-secondary
+                       hover:bg-matchx-bg-elevated transition-colors cursor-pointer"
                 title="Ver comprobante"
               >
                 <ReceiptText class="w-4 h-4" :stroke-width="1.75" />
@@ -484,7 +485,7 @@ const eximirPago = async (insc: Inscripcion) => {
           <AlertTriangle class="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" :stroke-width="2" />
           <div>
             <p class="text-xs font-semibold text-yellow-400 mb-0.5">Comprobante enviado por el capitán</p>
-            <p class="text-sm font-mono text-matchx-text-primary">{{ inscSeleccionada.pago_referencia }}</p>
+            <p class="text-sm  text-matchx-text-primary">{{ inscSeleccionada.pago_referencia }}</p>
             <p v-if="inscSeleccionada.pago_metodo" class="text-xs text-matchx-text-muted mt-0.5">
               Método: {{ metodoLabel[inscSeleccionada.pago_metodo] }}
             </p>
@@ -503,7 +504,7 @@ const eximirPago = async (insc: Inscripcion) => {
                 ? m.color + ' border-current ring-2 ring-current/20 scale-105'
                 : 'border-matchx-border-base text-matchx-text-muted hover:border-matchx-border-base/70 hover:text-matchx-text-secondary'"
             >
-              <span class="text-xl leading-none">{{ m.emoji }}</span>
+              <component :is="m.icon" class="w-5 h-5 shrink-0" :stroke-width="1.75" />
               {{ m.label }}
               <CheckCircle
                 v-if="formPago.pago_metodo === m.value"
@@ -515,16 +516,35 @@ const eximirPago = async (insc: Inscripcion) => {
         </div>
 
         <!-- Referencia -->
-        <div v-if="formPago.pago_metodo">
-          <AppInput
-            v-model="formPago.pago_referencia"
-            :label="formPago.pago_metodo === 'efectivo' ? 'Número de recibo (opcional)' : 'Número de referencia / comprobante'"
-            :placeholder="formPago.pago_metodo === 'nequi'       ? 'Ej: NEQ-20260415-1234'
-                        : formPago.pago_metodo === 'bancolombia' ? 'Ej: BAN-20260415-CTA'
-                        : formPago.pago_metodo === 'pse'         ? 'Ej: PSE-2026-00123'
-                        : formPago.pago_metodo === 'daviplata'   ? 'Ej: DVP-20260415-5678'
-                        : 'Ej: REC-001'"
-          />
+        <div v-if="formPago.pago_metodo" class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-matchx-text-secondary">
+            {{ formPago.pago_metodo === 'efectivo' ? 'Número de recibo (opcional)' : 'Número de referencia / comprobante' }}
+          </label>
+          <div class="flex gap-2">
+            <input
+              v-model="formPago.pago_referencia"
+              type="text"
+              :placeholder="formPago.pago_metodo === 'nequi'       ? 'Ej: TRF-20260415-1234'
+                          : formPago.pago_metodo === 'bancolombia' ? 'Ej: BAN-20260415-1234'
+                          : formPago.pago_metodo === 'pse'         ? 'Ej: PSE-20260415-1234'
+                          : formPago.pago_metodo === 'daviplata'   ? 'Ej: DVP-20260415-1234'
+                          : 'Ej: EFE-20260415-1234'"
+              class="flex-1 px-3 py-2 rounded-lg text-sm text-matchx-text-primary placeholder-matchx-text-muted
+                     bg-matchx-bg-base border border-matchx-border-base
+                     focus:border-matchx-accent-green focus:ring-2 focus:ring-matchx-accent-green/20 outline-none transition-colors"
+            />
+            <button
+              type="button"
+              @click="generarReferencia"
+              title="Generar número automáticamente"
+              class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium shrink-0
+                     bg-matchx-bg-elevated border border-matchx-border-base text-matchx-text-secondary
+                     hover:border-matchx-accent-green/40 hover:text-matchx-accent-green transition-colors cursor-pointer"
+            >
+              <RefreshCw class="w-3.5 h-3.5" :stroke-width="2" />
+              Generar
+            </button>
+          </div>
         </div>
 
         <p v-if="saveErrorPago" class="text-sm text-matchx-accent-orange flex items-center gap-1.5">
